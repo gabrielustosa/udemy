@@ -1,0 +1,6 @@
+-r base.txt
+pytest-django
+coverage
+selenium
+faker
+factory_boy
