@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'crispy_tailwind',
     'tailwind',
     'rest_framework',
+    'rest_framework.authtoken',
+    'drf_spectacular',
 
     # my apps
     'udemy.apps.core',
@@ -160,3 +162,7 @@ LOGOUT_REDIRECT_URL = '/'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'tailwind'
 
 CRISPY_TEMPLATE_PACK = 'tailwind'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
