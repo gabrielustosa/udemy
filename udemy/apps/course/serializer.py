@@ -7,11 +7,12 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
-            'id', 'title', 'slug', 'headline',
+            'id', 'title', 'slug', 'headline', 'categories',
             'is_paid', 'price', 'language', 'instructors',
         ]
         extra_kwargs = {
-            'instructors': {'read_only': True}
+            'instructors': {'read_only': True},
+            'categories': {'read_only': True},
         }
 
     def create(self, validated_data):

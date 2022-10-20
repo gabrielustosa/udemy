@@ -62,7 +62,7 @@ class PrivateCourseApiTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.user = UserFactory(email='admin@admin.com', password='admin123')
+        self.user = UserFactory()
         self.client.force_authenticate(self.user)
 
     def test_create_course(self):

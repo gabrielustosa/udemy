@@ -9,3 +9,13 @@ class IsInstructor(permissions.BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return obj.instructors.filter(id=request.user.id).exists()
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Allow access to admin user or read only for non-authenticated."""
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        return bool(request.user and request.user.is_staff)
