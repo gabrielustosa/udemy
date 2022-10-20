@@ -1,6 +1,5 @@
 def import_name(modulename, name):
-    """ Import a named object from a module in the context of this function.
-    """
+    """Import a named object from a module in the context of this function."""
     try:
         module = __import__(modulename, globals(), locals(), [name])
     except ImportError:
