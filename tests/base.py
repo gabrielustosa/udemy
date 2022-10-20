@@ -1,7 +1,6 @@
 import time
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
 
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import Keys
@@ -69,16 +68,3 @@ class TestFunctionalBase(StaticLiveServerTestCase):
                 time.sleep(0.3)
 
 
-class TestCustomBase(TestCase):
-
-    def login(self, email='admin@admin.net', password='admin', is_superuser=False):
-        user = UserFactory(email=email)
-        user.set_password(password)
-        if is_superuser:
-            user.is_superuser = True
-            user.is_staff = True
-        user.save()
-
-        self.client.login(username=email, password=password)
-
-        return user

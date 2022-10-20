@@ -1,28 +1,18 @@
-from django.conf import settings
-from django.contrib.auth import authenticate, login
-from django.core.exceptions import PermissionDenied
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from udemy.apps.user.forms import UserCreateForm
+from udemy.apps.user.serializer import UserSerializer
 
 
-class UserRegisterView(CreateView):
-    template_name = 'registration/../../../templates/registration/register.html'
-    form_class = UserCreateForm
-    success_url = reverse_lazy('home')
+class CreateUserView(generics.CreateAPIView):
+    serializer_class = UserSerializer
 
-    def dispatch(self, request, *args, **kwargs):
-        if not settings.ALLOW_REGISTRATION:
-            raise PermissionDenied()
-        return super().dispatch(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        result = super().form_valid(form)
-        cd = form.cleaned_data
-        user = authenticate(
-            username=cd['username'],
-            password=cd['password1']
-        )
-        login(request=self.request, user=user)
-        return result
+class A(APIView):
+    """API TESTE"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        return Response({'ola': 1, 'seu_nome': self.request.user.name})

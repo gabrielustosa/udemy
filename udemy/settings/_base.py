@@ -44,17 +44,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # 3rd apps
-    'crispy_forms',
-    'crispy_tailwind',
-    'tailwind',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
+    'rest_framework_simplejwt',
 
     # my apps
     'udemy.apps.core',
     'udemy.apps.user',
-    'theme',
+    'udemy.apps.course',
+    'udemy.apps.category',
 
 ]
 
@@ -165,4 +164,7 @@ CRISPY_TEMPLATE_PACK = 'tailwind'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
 }
