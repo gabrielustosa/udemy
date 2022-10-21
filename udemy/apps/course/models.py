@@ -19,7 +19,7 @@ class Course(TimeStampedBase):
     )
     students = models.ManyToManyField(
         User,
-        related_name='students_courses',
+        related_name='enrolled_courses',
         through='CourseRelation',
     )
     categories = models.ManyToManyField(

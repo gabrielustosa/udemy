@@ -1,5 +1,6 @@
+from rest_framework.permissions import IsAuthenticated
+
 from udemy.apps.core.decorator import component
-from udemy.apps.core.permissions import IsInstructor
 
 
 @component()
@@ -12,6 +13,6 @@ def do_other(request, *args, **kwargs):
     return {'other': -1}
 
 
-@component(permission_classes=[IsInstructor])
+@component(permission_classes=[IsAuthenticated])
 def do_might(request, *args, **kwargs):
     return {'other': kwargs}

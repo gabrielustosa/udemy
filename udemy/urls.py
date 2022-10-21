@@ -20,6 +20,7 @@ urlpatterns = [
 
     path('api/course/', include('udemy.apps.course.urls')),
     path('api/category/', include('udemy.apps.category.urls')),
+    path('api/rating/', include('udemy.apps.rating.urls')),
 
     path("__reload__/", include("django_browser_reload.urls")),
 

@@ -8,7 +8,8 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             'id', 'title', 'slug', 'headline', 'language',
-            'is_paid', 'price', 'categories', 'instructors',
+            'is_paid', 'price', 'created', 'modified',
+            'categories', 'instructors',
         ]
         extra_kwargs = {
             'instructors': {'required': False},
