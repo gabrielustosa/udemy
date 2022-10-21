@@ -1,9 +1,10 @@
+from rest_framework import status
 from rest_framework.response import Response
 
-from utils.module import import_name
+components_list = dict()
 
 
-def componentize(result_name='result', component_class=None):
+def componentize(result_name='result'):
     """
     A decorator used to componentize an endpoint to accept query params with components name registered with @component
     that are retrieved and attached to the response.
@@ -14,8 +15,6 @@ def componentize(result_name='result', component_class=None):
 
     def decorator(func):
         def inner(self, request, *args, **kwargs):
-            nonlocal component_class
-
             old_response = func(self, request, *args, **kwargs)
 
             response = old_response.data
@@ -25,20 +24,49 @@ def componentize(result_name='result', component_class=None):
                     result_name: old_response.data,
                 }
 
-            if not component_class:
-                component_class = f"{'.'.join(self.__module__.split('.')[0:-1])}.components"
-
             components = request.query_params.get('components')
             if components:
-                for component in components.split(','):
-                    function = import_name(component_class, component)
-                    if not function:
+                for component_name in components.split(','):
+                    component = components_list.get(component_name)
+                    if not component:
                         continue
+
+                    permission_classes = component.permission_classes
+                    if permission_classes:
+                        for permission in permission_classes:
+                            if not permission.has_object_permission(self, request, func, self.get_object()):
+                                return Response(
+                                    {'details': f'Access denied for component {component_name}'},
+                                    status=status.HTTP_403_FORBIDDEN
+                                )
+                            if not permission.has_permission(self, request, func):
+                                return Response(
+                                    {'details': f'Access denied for component {component_name}'},
+                                    status=status.HTTP_403_FORBIDDEN
+                                )
+
                     response.update({
-                        component: function(**kwargs)
+                        component_name: component(request, *args, **kwargs)
                     })
             return Response(response, status=old_response.status_code)
 
         return inner
+
+    return decorator
+
+
+def component(name=None, permission_classes=None):
+    """
+    A decorator used to transform a function in a component.
+    """
+
+    def decorator(func):
+        nonlocal name
+        if not name:
+            name = func.__name__
+
+        func.permission_classes = permission_classes
+
+        components_list[name] = func
 
     return decorator

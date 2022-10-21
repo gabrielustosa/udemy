@@ -27,23 +27,3 @@ class CourseViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
-# class AddCategoriesAPIView(GenericAPIView):
-#     permission_classes = [IsInstructor]
-#
-#     def post(self, request, *args, **kwargs):
-#         course = Course.objects.filter(id=kwargs.get('course_id')).first()
-#         if not course:
-#             return Response({'detail': 'Course not found.'}, status.HTTP_404_NOT_FOUND)
-#
-#         categories_id = request.data.get('categories')
-#
-#         categories = Category.objects.filter(id__in=categories_id)
-#
-#         if not categories:
-#             return Response({'detail': 'Category not found.'}, status.HTTP_404_NOT_FOUND)
-#
-#         course.categories.add(*[category.id for category in categories])
-#
-#         serializer = CourseSerializer(course)
-#
-#         return Response(serializer.data, status=status.HTTP_200_OK)
