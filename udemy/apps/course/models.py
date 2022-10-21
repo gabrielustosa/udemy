@@ -30,6 +30,9 @@ class Course(TimeStampedBase):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['-created']
+
 
 class CourseRelation(TimeStampedBase):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)

@@ -6,9 +6,10 @@ class IsInstructor(permissions.BasePermission):
     """Object permission to allow only course instructors to modify them courses."""
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        return obj.instructors.filter(id=request.user.id).exists()
+        return bool(
+            obj.instructors.filter(id=request.user.id).exists()
+            or request.method in SAFE_METHODS
+        )
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):

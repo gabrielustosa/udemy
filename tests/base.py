@@ -68,5 +68,6 @@ class TestFunctionalBase(StaticLiveServerTestCase):
                 time.sleep(0.3)
 
 
-def create_factory_in_batch(factory, amount=1):
-    return [factory() for _ in range(amount)]
+def create_factory_in_batch(factory, amount=1, reverse=False):
+    batch = [factory() for _ in range(amount)]
+    return reversed(batch) if reverse else batch
