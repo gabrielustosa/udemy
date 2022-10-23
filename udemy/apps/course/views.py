@@ -10,7 +10,6 @@ from udemy.apps.course.serializer import CourseSerializer
 
 class CoursePagination(PageNumberPagination):
     page_size = 25
-    page_size_query_param = 'page_size'
 
 
 class CourseViewSet(ModelViewSet):

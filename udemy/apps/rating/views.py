@@ -22,4 +22,4 @@ class RatingViewSet(ModelViewSet):
         if user_already_enrolled:
             return Response({'detail': 'You have already rated this course.'}, status.HTTP_400_BAD_REQUEST)
 
-        return self.create(request, *args, **kwargs)
+        return super().create(request, *args, **kwargs)

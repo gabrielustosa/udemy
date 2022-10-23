@@ -59,6 +59,62 @@ class PrivateRatingApiTests(TestCase):
         self.user = UserFactory()
         self.client.force_authenticate(self.user)
 
+    def test_rating_create(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+
+        payload = {
+            'course': course.id,
+            'rating': 3,
+            'comment': 'test',
+        }
+
+        response = self.client.post(RATING_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_user_cant_rating_course_twice(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        RatingFactory(creator=self.user, course=course)
+
+        payload = {
+            'course': course.id,
+            'rating': 3,
+            'comment': 'test',
+        }
+
+        response = self.client.post(RATING_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_cant_rate_a_course_not_enrolled(self):
+        course = CourseFactory()
+
+        payload = {
+            'course': course.id,
+            'rating': 3,
+            'comment': 'test',
+        }
+
+        response = self.client.post(RATING_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_cant_create_a_rating_with_rate_greater_than_5_less_than_1(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+
+        payload = {
+            'course': course.id,
+            'rating': 6,
+            'comment': 'test',
+        }
+
+        response = self.client.post(RATING_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_partial_rating_update(self):
         original_comment = 'original comment'
         rating = RatingFactory(comment=original_comment, creator=self.user)
@@ -82,6 +138,7 @@ class PrivateRatingApiTests(TestCase):
         rating = RatingFactory(creator=self.user)
 
         payload = {
+            'course': 1,
             'rating': 3,
             'comment': 'new comment',
         }
@@ -90,8 +147,8 @@ class PrivateRatingApiTests(TestCase):
         rating.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for k, v in payload.items():
-            self.assertEqual(getattr(rating, k), v)
+        self.assertEqual(rating.rating, payload['rating'])
+        self.assertEqual(rating.comment, payload['comment'])
 
     def test_delete_rating(self):
         course = CourseFactory()
