@@ -1,4 +1,5 @@
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -23,7 +24,7 @@ class ModuleViewSet(ModelViewSet):
 
         if 'order' in request.data:
             course = self.get_object().course
-            module_query = Module.objects.filter(course=course).order_by('order')
+            module_query = Module.objects.filter(course=course)
             last_order = module_query.aggregate(last_order=Max('order'))['last_order']
             new_order = int(request.data['order'])
 
@@ -33,13 +34,9 @@ class ModuleViewSet(ModelViewSet):
 
             current_order = self.get_object().order
 
-            if current_order != new_order:
-                if current_order > new_order:
-                    # TODO Update lesson order
-                    module_query.filter(order__gte=new_order, order__lt=current_order).update(
-                        order=ExpressionWrapper(F('order') + 1, output_field=PositiveIntegerField()))
-                else:
-                    module_query.filter(order__lte=new_order, order__gt=current_order).update(
-                        order=ExpressionWrapper(F('order') - 1, output_field=PositiveIntegerField()))
+            number, query = (1, {'order__gte': new_order, 'order__lt': current_order}) if current_order > new_order \
+                else (-1, {'order__lte': new_order, 'order__gt': current_order})
+            module_query.filter(**query).update(
+                order=ExpressionWrapper(F('order') + number, output_field=PositiveIntegerField()))
 
         return super().update(request, *args, **kwargs)

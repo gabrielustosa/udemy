@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from tests.base import create_factory_in_batch
+from tests.utils import create_factory_in_batch
 from tests.factories.course import CourseFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.user import UserFactory
@@ -178,6 +178,7 @@ class PrivateModuleApiTests(TestCase):
         (1, 10),
         (9, 2),
         (10, 2),
+        (5, 5),
     ])
     def test_module_reorder_field(self, current_order, new_order):
         course = CourseFactory()
@@ -198,5 +199,14 @@ class PrivateModuleApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(module.order, new_order)
 
-        for index, model in enumerate(Module.objects.order_by('order'), start=1):
+        for index, model in enumerate(Module.objects.all(), start=1):
+            self.assertEqual(model.order, index)
+
+    def test_module_order_is_generated_correctly(self):
+        course = CourseFactory()
+        course.instructors.add(self.user)
+
+        create_factory_in_batch(ModuleFactory, 10, course=course)
+
+        for index, model in enumerate(Module.objects.all(), start=1):
             self.assertEqual(model.order, index)

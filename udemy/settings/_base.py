@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'udemy.apps.category',
     'udemy.apps.rating',
     'udemy.apps.module',
+    'udemy.apps.lesson',
 
 ]
 

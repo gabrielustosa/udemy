@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from tests.base import create_factory_in_batch
+from tests.utils import create_factory_in_batch
 from tests.factories.category import CategoryFactory
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory

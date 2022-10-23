@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
@@ -32,6 +33,9 @@ class Course(TimeStampedBase):
 
     class Meta:
         ordering = ['-created']
+
+    def get_last_lesson_order(self):
+        return self.lessons.aggregate(last_order=Max('order'))['last_order']
 
 
 class CourseRelation(TimeStampedBase):
