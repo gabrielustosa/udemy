@@ -197,3 +197,6 @@ class PrivateModuleApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(module.order, new_order)
+
+        for index, model in enumerate(Module.objects.order_by('order'), start=1):
+            self.assertEqual(model.order, index)
