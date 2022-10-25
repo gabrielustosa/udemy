@@ -10,6 +10,7 @@ from tests.utils import create_factory_in_batch
 from tests.factories.course import CourseFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.user import UserFactory
+
 from udemy.apps.module.models import Module
 from udemy.apps.module.serializer import ModuleSerializer
 

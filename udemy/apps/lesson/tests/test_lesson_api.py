@@ -15,7 +15,6 @@ from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.lesson.serializer import LessonSerializer
-from udemy.apps.module.models import Module
 
 LESSON_LIST_URL = reverse('lesson-list')
 

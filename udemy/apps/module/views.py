@@ -1,5 +1,3 @@
-from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField
-
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -17,26 +15,17 @@ class ModuleViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         if 'order' in request.data:
-            return Response({'detail': 'Order is automatically generated.'}, status.HTTP_400_BAD_REQUEST)
+            return Response({'order': 'Order is automatically generated.'}, status.HTTP_400_BAD_REQUEST)
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
 
         if 'order' in request.data:
-            course = self.get_object().course
-            module_query = Module.objects.filter(course=course)
-            last_order = module_query.aggregate(last_order=Max('order'))['last_order']
+            last_order = self.get_object().get_last_order()
             new_order = int(request.data['order'])
 
             if new_order > last_order:
-                return Response({'detail': 'The order can not be greater than last order of the module.'},
+                return Response({'order': 'The order can not be greater than last order of the module.'},
                                 status.HTTP_400_BAD_REQUEST)
-
-            current_order = self.get_object().order
-
-            number, query = (1, {'order__gte': new_order, 'order__lt': current_order}) if current_order > new_order \
-                else (-1, {'order__lte': new_order, 'order__gt': current_order})
-            module_query.filter(**query).update(
-                order=ExpressionWrapper(F('order') + number, output_field=PositiveIntegerField()))
 
         return super().update(request, *args, **kwargs)
