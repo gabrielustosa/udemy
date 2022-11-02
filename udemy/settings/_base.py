@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'rest_framework_simplejwt',
+    'generic_relations',
 
     # my apps
     'udemy.apps.core',
