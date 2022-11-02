@@ -46,3 +46,13 @@ class IsCreatorObject(permissions.BasePermission):
             obj.creator == request.user
             or request.method in SAFE_METHODS
         )
+
+
+class IsEnrolled(permissions.BasePermission):
+    """Allow access only for students enrolled in course."""
+
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.user.enrolled_courses.filter(obj.course).exists()
+            or request.method in SAFE_METHODS
+        )
