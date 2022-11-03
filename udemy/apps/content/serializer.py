@@ -54,12 +54,13 @@ class ContentSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         ret = super().to_internal_value(data)
 
-        item = ret.pop('item')
-        Model = self.get_model_for_data(item)
+        if 'item' in ret:
+            item = ret.pop('item')
+            Model = self.get_model_for_data(item)
 
-        item = Model.objects.create(**item)
+            item = Model.objects.create(**item)
 
-        ret['item'] = item
+            ret['item'] = item
 
         return ret
 

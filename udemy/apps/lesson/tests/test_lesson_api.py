@@ -120,13 +120,13 @@ class PrivateLessonApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(lesson.title, payload['title'])
 
-    def test_delete_course(self):
+    def test_delete_lesson(self):
         course = CourseFactory()
         course.instructors.add(self.user)
         module = ModuleFactory(course=course)
         lesson = LessonFactory(course=course, module=module)
 
-        response = self.client.delete(lesson_detail_url(pk=module.id))
+        response = self.client.delete(lesson_detail_url(pk=lesson.id))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Lesson.objects.filter(id=lesson.id).exists())
