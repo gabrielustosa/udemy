@@ -29,13 +29,13 @@ class LinkSerializer(serializers.ModelSerializer):
 
 
 class ContentSerializer(serializers.ModelSerializer):
-    content_models = {
+    content_types = {
         models.Link: LinkSerializer(),
         models.Text: TextSerializer(),
         models.File: FileSerializer(),
         models.Image: ImageSerializer()
     }
-    item = GenericRelatedField(content_models)
+    item = GenericRelatedField(content_types)
 
     class Meta:
         model = models.Content
@@ -51,16 +51,25 @@ class ContentSerializer(serializers.ModelSerializer):
             'order': {'required': False},
         }
 
-    def get_model_by_fields(self, fields):
-        content_models = [model for model in self.content_models.keys()]
-        for model in content_models:
-            model_fields = [field.name for field in model._meta.get_fields() if field.name != 'id']
-            if model_fields == list(fields):
-                return model
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
 
-    def create(self, validated_data):
-        item = validated_data['item']
-        model = self.get_model_by_fields(item.keys())
-        validated_data['item'] = model.objects.create(**item)
+        item = ret.pop('item')
+        Model = self.get_model_for_data(item)
 
-        return super().create(validated_data)
+        item = Model.objects.create(**item)
+
+        ret['item'] = item
+
+        return ret
+
+    def get_model_for_data(self, data):
+        object_model = None
+        for model, serializer in self.content_types.items():
+            try:
+                result = serializer.to_internal_value(data)
+                if bool(result):
+                    object_model = model
+            except Exception:
+                pass
+        return object_model

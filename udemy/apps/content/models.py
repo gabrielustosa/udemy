@@ -35,6 +35,13 @@ class Content(OrderedModel, TimeStampedBase):
     class Meta:
         ordering = ['order']
 
+    def __str__(self):
+        return self.title
+
+    def delete(self, using=None, keep_parents=False):
+        self.item.delete()
+        return super().delete(using, keep_parents)
+
 
 class Text(models.Model):
     content = models.TextField()

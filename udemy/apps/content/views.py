@@ -16,5 +16,4 @@ class ContentViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         if 'order' in request.data:
             return Response({'order': 'Order is automatically generated.'}, status.HTTP_400_BAD_REQUEST)
-
         return super().create(request, *args, **kwargs)
