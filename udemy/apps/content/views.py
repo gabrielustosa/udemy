@@ -19,7 +19,6 @@ class ContentViewSet(ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-
         if 'order' in request.data:
             last_order = self.get_object().get_last_order()
             new_order = int(request.data['order'])
