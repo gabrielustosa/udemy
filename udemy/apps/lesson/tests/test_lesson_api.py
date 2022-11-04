@@ -213,19 +213,10 @@ class PrivateLessonApiTests(TestCase):
     ])
     def test_lesson_reorder_field(self, current_order, new_order):
         course = CourseFactory()
-        ModuleFactory(course=course)
+        module = ModuleFactory(course=course)
         course.instructors.add(self.user)
 
-        for _ in range(10):
-            payload = {
-                'title': 'string',
-                'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
-                'video_id': 'E6CdIawPTh0',
-                'video_duration': 1,
-                'module': 1,
-                'course': 1
-            }
-            self.client.post(LESSON_LIST_URL, payload)
+        create_factory_in_batch(LessonFactory, 10, course=course, module=module)
 
         lesson = Lesson.objects.filter(order=current_order).first()
 
@@ -245,20 +236,10 @@ class PrivateLessonApiTests(TestCase):
 
     def test_order_lesson_is_generated_correctly(self):
         course = CourseFactory()
-        create_factory_in_batch(ModuleFactory, 5, course=course)
+        modules = create_factory_in_batch(ModuleFactory, 5, course=course)
         course.instructors.add(self.user)
 
-        for n in range(20):
-            payload = {
-                'title': 'string',
-                'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
-                'video_id': 'E6CdIawPTh0',
-                'video_duration': 1,
-                'module': randint(1, 5),
-                'course': 1
-            }
-            response = self.client.post(LESSON_LIST_URL, payload)
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        create_factory_in_batch(LessonFactory, 25, module=modules[0])
 
         for index, model in enumerate(Lesson.objects.all(), start=1):
             self.assertEqual(model.order, index)

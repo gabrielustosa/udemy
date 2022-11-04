@@ -1,4 +1,3 @@
-from PIL.ImageFile import ImageFile
 from django.test import TestCase
 
 from parameterized import parameterized
