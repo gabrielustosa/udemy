@@ -61,7 +61,7 @@ class PrivateRatingApiTests(TestCase):
 
     def test_rating_create(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
 
         payload = {
             'course': course.id,
@@ -75,7 +75,7 @@ class PrivateRatingApiTests(TestCase):
 
     def test_user_cant_rating_course_twice(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
         RatingFactory(creator=self.user, course=course)
 
         payload = {
@@ -103,7 +103,7 @@ class PrivateRatingApiTests(TestCase):
 
     def test_user_cant_create_a_rating_with_rate_greater_than_5_less_than_1(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
 
         payload = {
             'course': course.id,
@@ -119,7 +119,7 @@ class PrivateRatingApiTests(TestCase):
         original_comment = 'original comment'
         rating = RatingFactory(comment=original_comment, creator=self.user)
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
 
         payload = {
             'rating': 3,
@@ -134,7 +134,7 @@ class PrivateRatingApiTests(TestCase):
 
     def test_rating_full_update(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
         rating = RatingFactory(creator=self.user)
 
         payload = {
@@ -152,7 +152,7 @@ class PrivateRatingApiTests(TestCase):
 
     def test_delete_rating(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, user=self.user, current_lesson=1)
+        CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
         rating = RatingFactory(creator=self.user)
 
         response = self.client.delete(rating_detail_url(pk=rating.id))

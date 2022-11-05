@@ -46,6 +46,3 @@ class ContentSerializer(serializers.ModelSerializer):
             'order',
             'item',
         ]
-        extra_kwargs = {
-            'order': {'required': False},
-        }

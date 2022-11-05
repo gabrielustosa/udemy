@@ -1,6 +1,7 @@
 from django.db import models
 
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
+from udemy.apps.course.models import Course
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.user.models import User
 
@@ -11,12 +12,16 @@ class Question(CreatorBase, TimeStampedBase):
         related_name='questions',
         on_delete=models.CASCADE
     )
+    course = models.ForeignKey(
+        Course,
+        related_name='questions',
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=255)
     content = models.TextField()
     liked_by = models.ManyToManyField(
         User,
         related_name='questions_liked',
-        blank=True
     )
 
     def __str__(self):

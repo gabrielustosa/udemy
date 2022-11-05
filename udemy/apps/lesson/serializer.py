@@ -16,6 +16,3 @@ class LessonSerializer(serializers.ModelSerializer):
             'course',
             'order',
         ]
-        extra_kwargs = {
-            'order': {'required': False}
-        }

@@ -1,7 +1,7 @@
 from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS
 
-from udemy.apps.course.models import Course
+from udemy.apps.course.models import Course, CourseRelation
 
 
 class IsInstructor(permissions.BasePermission):
@@ -52,7 +52,18 @@ class IsEnrolled(permissions.BasePermission):
     """Allow access only for students enrolled in course."""
 
     def has_object_permission(self, request, view, obj):
+        is_enrolled = CourseRelation.objects.filter(course=obj.course, creator=request.user).exists()
         return bool(
-            request.user.enrolled_courses.filter(obj.course).exists()
-            or request.method in SAFE_METHODS
+            is_enrolled or request.method in SAFE_METHODS
         )
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        course_id = request.data.get('course')
+        if not course_id:
+            return True
+
+        is_enrolled = CourseRelation.objects.filter(course__id=course_id, creator=request.user).exists()
+        return is_enrolled

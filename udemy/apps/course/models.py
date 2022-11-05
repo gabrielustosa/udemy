@@ -3,7 +3,7 @@ from django.db.models import Max
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
-from udemy.apps.core.models import TimeStampedBase
+from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.user.models import User
 
 
@@ -38,7 +38,6 @@ class Course(TimeStampedBase):
         return self.lessons.aggregate(last_order=Max('order'))['last_order']
 
 
-class CourseRelation(TimeStampedBase):
+class CourseRelation(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     current_lesson = models.PositiveSmallIntegerField()
