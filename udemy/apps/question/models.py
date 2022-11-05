@@ -1,9 +1,9 @@
 from django.db import models
 
+from udemy.apps.action.models import Action
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.course.models import Course
 from udemy.apps.lesson.models import Lesson
-from udemy.apps.user.models import User
 
 
 class Question(CreatorBase, TimeStampedBase):
@@ -19,10 +19,7 @@ class Question(CreatorBase, TimeStampedBase):
     )
     title = models.CharField(max_length=255)
     content = models.TextField()
-    liked_by = models.ManyToManyField(
-        User,
-        related_name='questions_liked',
-    )
+    action = models.ManyToManyField(Action)
 
     def __str__(self):
         return self.title
@@ -34,9 +31,10 @@ class Answer(CreatorBase, TimeStampedBase):
         related_name='answers',
         on_delete=models.CASCADE
     )
-    content = models.TextField()
-    liked_by = models.ManyToManyField(
-        User,
-        related_name='answer_liked',
-        blank=True
+    course = models.ForeignKey(
+        Course,
+        related_name='answers',
+        on_delete=models.CASCADE
     )
+    content = models.TextField()
+    action = models.ManyToManyField(Action)

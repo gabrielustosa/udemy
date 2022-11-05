@@ -99,3 +99,33 @@ class PrivateQuestionApiTests(TestCase):
         response = self.client.delete(question_detail_url(pk=question.id))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_question_title_less_than_5(self):
+        course = CourseFactory()
+        LessonFactory(course=course)
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+
+        payload = {
+            'title': 't',
+            'content': 'content',
+            'lesson': 1,
+            'course': 1
+        }
+        response = self.client.post(QUESTION_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_question_content_greater_than_999(self):
+        course = CourseFactory()
+        LessonFactory(course=course)
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+
+        payload = {
+            'title': 'title',
+            'content': ''.join(['a' for _ in range(1000)]),
+            'lesson': 1,
+            'course': 1
+        }
+        response = self.client.post(QUESTION_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

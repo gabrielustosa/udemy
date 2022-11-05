@@ -1,4 +1,5 @@
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from django.shortcuts import reverse
@@ -101,13 +102,17 @@ class PrivateRatingApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_user_cant_create_a_rating_with_rate_greater_than_5_less_than_1(self):
+    @parameterized.expand([
+        (0,),
+        (6,)
+    ])
+    def test_user_cant_create_a_rating_with_rate_greater_than_5_less_than_1(self, rating):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
 
         payload = {
             'course': course.id,
-            'rating': 6,
+            'rating': rating,
             'comment': 'test',
         }
 

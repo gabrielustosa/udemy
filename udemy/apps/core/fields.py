@@ -1,4 +1,4 @@
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as s
@@ -54,3 +54,31 @@ class GenericField(s.Field):
             except Exception:
                 pass
         return serializer, model
+
+
+class ActionGenericField(s.Field):
+    def __init__(self, allowed_models, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.allowed_models = {model.__name__.lower(): model for model in allowed_models}
+
+    def to_internal_value(self, data):
+        if 'model' not in data:
+            raise s.ValidationError('You must provide a model to this action.')
+        if 'object_id' not in data:
+            raise s.ValidationError('You must provide the object id.')
+
+        model_names = [model_name for model_name in self.allowed_models.keys()]
+        if data['model'] not in model_names:
+            raise s.ValidationError('Invalid model - model not found.')
+
+        Model = self.allowed_models[data['model']]
+
+        try:
+            content_object = Model.objects.get(id=data['object_id'])
+        except ObjectDoesNotExist:
+            raise s.ValidationError('Object not found.')
+
+        return content_object
+
+    def to_representation(self, value):
+        return f'{value.__class__.__name__} ({value.id})'
