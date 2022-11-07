@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'udemy.apps.content',
     'udemy.apps.question',
     'udemy.apps.action',
+    'udemy.apps.note',
 
 ]
 

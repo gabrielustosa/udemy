@@ -15,3 +15,8 @@ class Action(CreatorBase, TimeStampedBase):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    def save(self, *args, force_insert=False, **kwargs):
+        super().save(*args, **kwargs)
+        if force_insert:
+            self.content_object.action.add(self)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from udemy.apps.course.models import Course
+from udemy.apps.course.models import Course, CourseRelation
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -23,3 +23,15 @@ class CourseSerializer(serializers.ModelSerializer):
         course.instructors.add(user)
 
         return course
+
+
+class CourseRelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseRelation
+        fields = [
+            'id', 'creator', 'course',
+            'modified', 'created', 'current_lesson',
+        ]
+        extra_kwargs = {
+            'current_lesson': {'required': False}
+        }

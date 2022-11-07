@@ -15,10 +15,9 @@ urlpatterns = [
 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
     path('api/user/', include('udemy.apps.user.urls')),
 
-    path('api/course/', include('udemy.apps.course.urls')),
+    path('api/', include('udemy.apps.course.urls')),
     path('api/category/', include('udemy.apps.category.urls')),
     path('api/rating/', include('udemy.apps.rating.urls')),
     path('api/module/', include('udemy.apps.module.urls')),
@@ -26,6 +25,7 @@ urlpatterns = [
     path('api/content/', include('udemy.apps.content.urls')),
     path('api/', include('udemy.apps.question.urls')),
     path('api/action/', include('udemy.apps.action.urls')),
+    path('api/note/', include('udemy.apps.note.urls')),
 
     path("__reload__/", include("django_browser_reload.urls")),
 

@@ -59,26 +59,29 @@ class GenericField(s.Field):
 class ActionGenericField(s.Field):
     def __init__(self, allowed_models, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.allowed_models = {model.__name__.lower(): model for model in allowed_models}
+        self.allowed_models = allowed_models
+
+    def get_model_by_name(self, name):
+        models = {model.__name__.lower(): model for model in self.allowed_models.keys()}
+        return models.get(name)
 
     def to_internal_value(self, data):
         if 'model' not in data:
-            raise s.ValidationError('You must provide a model to this action.')
+            raise s.ValidationError('You must refer a model to this action.')
         if 'object_id' not in data:
             raise s.ValidationError('You must provide the object id.')
 
-        model_names = [model_name for model_name in self.allowed_models.keys()]
-        if data['model'] not in model_names:
+        Model = self.get_model_by_name(data['model'])
+        if not Model:
             raise s.ValidationError('Invalid model - model not found.')
-
-        Model = self.allowed_models[data['model']]
 
         try:
             content_object = Model.objects.get(id=data['object_id'])
         except ObjectDoesNotExist:
-            raise s.ValidationError('Object not found.')
+            raise s.ValidationError('Invalid id - object not found.')
 
         return content_object
 
     def to_representation(self, value):
-        return f'{value.__class__.__name__} ({value.id})'
+        serializer = self.allowed_models[value.__class__]
+        return serializer.to_representation(instance=value)

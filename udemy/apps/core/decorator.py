@@ -4,7 +4,7 @@ from rest_framework.response import Response
 components_list = dict()
 
 
-def componentize(result_name='result'):
+def componentize(result_name=None):
     """
     A decorator used to componentize an endpoint to accept query params with components name registered with @component
     that are retrieved and attached to the response.
