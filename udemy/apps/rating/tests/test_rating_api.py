@@ -1,9 +1,9 @@
 from django.test import TestCase
+from django.shortcuts import reverse
+
 from parameterized import parameterized
 
 from rest_framework import status
-from django.shortcuts import reverse
-from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
 from tests.utils import create_factory_in_batch
@@ -14,10 +14,10 @@ from udemy.apps.course.models import CourseRelation
 from udemy.apps.rating.models import Rating
 from udemy.apps.rating.serializer import RatingSerializer
 
-RATING_LIST_URL = reverse('rating-list')
+RATING_LIST_URL = reverse('rating:list')
 
 
-def rating_detail_url(pk): return reverse('rating-detail', kwargs={'pk': pk})
+def rating_detail_url(pk): return reverse('rating:detail', kwargs={'pk': pk})
 
 
 class PublicRatingAPITest(TestCase):

@@ -1,7 +1,9 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.action.models import Action
+from udemy.apps.answer.models import Answer
 from udemy.apps.core.models import CreatorBase, TimeStampedBase
 from udemy.apps.course.models import Course
 
@@ -14,7 +16,8 @@ class Rating(CreatorBase, TimeStampedBase):
     )
     rating = models.FloatField(verbose_name=_('Rating'))
     comment = models.TextField(_('Comment'))
-    action = models.ManyToManyField(Action)
+    actions = GenericRelation(Action)
+    answers = GenericRelation(Answer)
 
     class Meta:
         ordering = ['created', ]

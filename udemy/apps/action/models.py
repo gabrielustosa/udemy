@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from udemy.apps.core.models import CreatorBase, TimeStampedBase
+from udemy.apps.course.models import Course
 
 
 class ActionName(models.IntegerChoices):
@@ -12,11 +13,10 @@ class ActionName(models.IntegerChoices):
 
 class Action(CreatorBase, TimeStampedBase):
     action = models.CharField(max_length=2, choices=ActionName.choices)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE
+    )
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-
-    def save(self, *args, force_insert=False, **kwargs):
-        super().save(*args, **kwargs)
-        if force_insert:
-            self.content_object.action.add(self)

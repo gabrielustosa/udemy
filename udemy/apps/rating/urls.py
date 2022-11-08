@@ -1,8 +1,25 @@
-from rest_framework.routers import SimpleRouter
+from django.urls import path
 
 from . import views
+from udemy.apps.action import views as action_views
 
-router = SimpleRouter()
-router.register('', views.RatingViewSet, basename='rating')
+app_name = 'rating'
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', views.RatingViewSet.as_view({'post': 'create'}), name='list'),
+    path(
+        '<int:id>/',
+        views.RatingViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update'}),
+        name='detail'
+    ),
+    path(
+        '<int:rating_id>/action/',
+        action_views.RatingActionViewSet.as_view({'get': 'list', 'post': 'create', 'delete': 'destroy'}),
+        name='action-list'
+    ),
+    path(
+        '<int:rating_id>/action/<int:action>/',
+        action_views.RatingActionViewSet.as_view({'get': 'retrieve'}),
+        name='action-detail'
+    ),
+]

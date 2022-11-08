@@ -56,32 +56,10 @@ class GenericField(s.Field):
         return serializer, model
 
 
-class ActionGenericField(s.Field):
-    def __init__(self, allowed_models, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.allowed_models = allowed_models
+class GenericRelatedField(s.Field):
+    def __init__(self, serializer, *args, **kwargs):
+        super().__init__(*args, **kwargs, required=False)
+        self.serializer = serializer
 
-    def get_model_by_name(self, name):
-        models = {model.__name__.lower(): model for model in self.allowed_models.keys()}
-        return models.get(name)
-
-    def to_internal_value(self, data):
-        if 'model' not in data:
-            raise s.ValidationError('You must refer a model to this action.')
-        if 'object_id' not in data:
-            raise s.ValidationError('You must provide the object id.')
-
-        Model = self.get_model_by_name(data['model'])
-        if not Model:
-            raise s.ValidationError('Invalid model - model not found.')
-
-        try:
-            content_object = Model.objects.get(id=data['object_id'])
-        except ObjectDoesNotExist:
-            raise s.ValidationError('Invalid id - object not found.')
-
-        return content_object
-
-    def to_representation(self, value):
-        serializer = self.allowed_models[value.__class__]
-        return serializer.to_representation(instance=value)
+    def to_representation(self, instance):
+        return self.serializer.to_representation(instance)
