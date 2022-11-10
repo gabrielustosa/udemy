@@ -24,24 +24,21 @@ class ActionSerializerBase(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        object_id = self.context['kwargs'].get(self.pk_url_kwarg)
+        object_id = self.context.get('object_id')
         validated_data['content_object'] = self.model.objects.get(id=object_id)
         return super().create(validated_data)
 
 
 class RatingActionSerializer(ActionSerializerBase):
     model = Rating
-    pk_url_kwarg = 'rating_id'
     content_object = GenericRelatedField(serializer=RatingSerializer())
 
 
 class QuestionActionSerializer(ActionSerializerBase):
     model = Question
-    pk_url_kwarg = 'question_id'
     content_object = GenericRelatedField(serializer=QuestionSerializer())
 
 
 class AnswerActionSerializer(ActionSerializerBase):
     model = Answer
-    pk_url_kwarg = 'answer_id'
     content_object = GenericRelatedField(serializer=AnswerSerializer())

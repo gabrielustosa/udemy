@@ -16,10 +16,10 @@ class RatingSerializer(serializers.ModelSerializer):
         ]
 
     def get_likes_count(self, instance):
-        return instance.action.filter(action=1).count()
+        return instance.actions.filter(action=1).count()
 
     def get_dislikes_count(self, instance):
-        return instance.action.filter(action=2).count()
+        return instance.actions.filter(action=2).count()
 
     def validate_rating(self, value):
         if value < 1 or value > 5:

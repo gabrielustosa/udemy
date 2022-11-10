@@ -1,4 +1,5 @@
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from django.shortcuts import reverse
@@ -17,6 +18,13 @@ QUESTION_LIST_URL = reverse('question:list')
 
 
 def question_detail_url(pk): return reverse('question:detail', kwargs={'pk': pk})
+
+
+def question_action_url(pk): return reverse('question:action-list', kwargs={'question_id': pk})
+
+
+def question_action_url_detail(pk, action):
+    return reverse('question:action-detail', kwargs={'question_id': pk, 'action': action})
 
 
 class PublicQuestionAPITest(TestCase):
@@ -128,3 +136,22 @@ class PrivateQuestionApiTests(TestCase):
         response = self.client.post(QUESTION_LIST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @parameterized.expand([
+        (1,),
+        (2,)
+    ])
+    def test_send_action_to_question(self, action):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        question = QuestionFactory(course=course, creator=self.user)
+
+        payload = {
+            'course': 1,
+            'action': action,
+        }
+
+        response = self.client.post(question_action_url(1), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(question.actions.filter(action=action).count(), 1)

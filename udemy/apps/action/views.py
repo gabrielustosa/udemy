@@ -8,21 +8,25 @@ from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import RatingActionSerializer, QuestionActionSerializer, AnswerActionSerializer
-from udemy.apps.core.permissions import IsEnrolled, IsCreatorObject
+from udemy.apps.core.permissions import IsEnrolled
 
 
 class ActionViewSetBase(ModelViewSet):
     queryset = Action.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly, IsCreatorObject, IsEnrolled]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsEnrolled]
 
     def get_object(self):
         filter_kwargs = {
             'creator': self.request.user,
-            'content_type__model': self.model,
+            'content_type__model': self.model_name,
             'action': self.kwargs.get('action') or self.request.data['action'],
             'object_id': self.kwargs.get(self.pk_url_kwarg)
         }
-        return get_object_or_404(Action, **filter_kwargs)
+        obj = get_object_or_404(Action, **filter_kwargs)
+
+        self.check_object_permissions(self.request, obj)
+
+        return obj
 
     def create(self, request, *args, **kwargs):
         try:
@@ -34,23 +38,23 @@ class ActionViewSetBase(ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['kwargs'] = self.kwargs
+        context['object_id'] = self.kwargs.get(self.pk_url_kwarg)
         return context
 
 
 class RatingActionViewSet(ActionViewSetBase):
     serializer_class = RatingActionSerializer
-    model = 'rating'
+    model_name = 'rating'
     pk_url_kwarg = 'rating_id'
 
 
 class QuestionActionViewSet(ActionViewSetBase):
     serializer_class = QuestionActionSerializer
-    model = 'question'
+    model_name = 'question'
     pk_url_kwarg = 'question_id'
 
 
 class AnswerActionViewSet(ActionViewSetBase):
     serializer_class = AnswerActionSerializer
-    model = 'answer'
+    model_name = 'answer'
     pk_url_kwarg = 'answer_id'

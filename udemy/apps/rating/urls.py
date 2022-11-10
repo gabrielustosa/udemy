@@ -6,10 +6,12 @@ from udemy.apps.action import views as action_views
 app_name = 'rating'
 
 urlpatterns = [
-    path('', views.RatingViewSet.as_view({'post': 'create'}), name='list'),
+    path('', views.RatingViewSet.as_view({'post': 'create', 'get': 'list'}), name='list'),
     path(
         '<int:id>/',
-        views.RatingViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update'}),
+        views.RatingViewSet.as_view(
+            {'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}
+        ),
         name='detail'
     ),
     path(

@@ -14,6 +14,10 @@ from udemy.apps.question.models import Question
 def question_action_url(pk): return reverse('question:action-list', kwargs={'question_id': pk})
 
 
+def question_action_url_detail(pk, action):
+    return reverse('question:action-detail', kwargs={'question_id': pk, 'action': action})
+
+
 class PublicActionTestAPI(TestCase):
     """Test unauthenticated API requests."""
 
@@ -48,3 +52,16 @@ class PrivateActionApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Question.objects.first().actions.filter(action=1).count(), 1)
+
+    def test_user_not_enrolled_can_create_action(self):
+        course = CourseFactory()
+        ActionFactory(creator=self.user, course=course)
+
+        payload = {
+            'course': 1,
+            'action': 1,
+        }
+
+        response = self.client.post(question_action_url(1), payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
