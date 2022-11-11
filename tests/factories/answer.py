@@ -9,9 +9,9 @@ from udemy.apps.question.models import Answer
 class AnswerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Answer
-        django_get_or_create = ('creator', 'question', 'course', 'content')
+        django_get_or_create = ('creator', 'course', 'content')
 
     creator = factory.SubFactory(UserFactory)
-    question = factory.SubFactory(QuestionFactory)
+    content_object = factory.SubFactory(QuestionFactory)
     course = factory.SubFactory(CourseFactory)
     content = factory.Faker('sentence')

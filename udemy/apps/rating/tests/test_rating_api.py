@@ -7,12 +7,14 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from tests.factories.action import ActionFactory
+from tests.factories.answer import AnswerFactory
 from tests.utils import create_factory_in_batch
 from tests.factories.course import CourseFactory
 from tests.factories.rating import RatingFactory
 from tests.factories.user import UserFactory
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
+from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.rating.models import Rating
 from udemy.apps.rating.serializer import RatingSerializer
@@ -26,8 +28,11 @@ def rating_detail_url(pk): return reverse('rating:detail', kwargs={'pk': pk})
 def rating_action_url(pk): return reverse('rating:action-list', kwargs={'rating_id': pk})
 
 
-def rating_action_url_detail(pk, action): return reverse('rating:action-detail',
-                                                         kwargs={'rating_id': pk, 'action': action})
+def rating_action_url_detail(pk, action):
+    return reverse('rating:action-detail', kwargs={'rating_id': pk, 'action': action})
+
+
+def rating_answer_url(pk): return reverse('rating:answer-list', kwargs={'rating_id': pk})
 
 
 class PublicRatingAPITest(TestCase):
@@ -246,3 +251,32 @@ class PrivateRatingApiTests(TestCase):
         response = self.client.get(rating_action_url_detail(rating.id, 1))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_user_create_rating_answer(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        rating = RatingFactory(course=course, creator=self.user)
+
+        payload = {
+            'course': 1,
+            'content': 'answer content'
+        }
+
+        response = self.client.post(rating_answer_url(rating.id), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(rating.answers.count(), 1)
+
+    def test_answer_rating_list(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        rating = RatingFactory(course=course, creator=self.user)
+
+        answers = create_factory_in_batch(AnswerFactory, 10, content_object=rating, course=course)
+
+        response = self.client.get(rating_answer_url(rating.id))
+
+        serializer = AnswerSerializer(answers, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)

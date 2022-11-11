@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/content/', include('udemy.apps.content.urls')),
     path('api/question/', include('udemy.apps.question.urls')),
     path('api/note/', include('udemy.apps.note.urls')),
+    path('api/answer/', include('udemy.apps.answer.urls')),
 
     path("__reload__/", include("django_browser_reload.urls")),
 

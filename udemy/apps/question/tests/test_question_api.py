@@ -6,6 +6,7 @@ from django.shortcuts import reverse
 from rest_framework.test import APIClient
 
 from tests.factories.action import ActionFactory
+from tests.factories.answer import AnswerFactory
 from tests.factories.course import CourseFactory
 from tests.factories.lesson import LessonFactory
 from tests.factories.question import QuestionFactory
@@ -13,6 +14,7 @@ from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
+from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.question.models import Question
 
@@ -27,6 +29,9 @@ def question_action_url(pk): return reverse('question:action-list', kwargs={'que
 
 def question_action_url_detail(pk, action):
     return reverse('question:action-detail', kwargs={'question_id': pk, 'action': action})
+
+
+def question_answer_url(pk): return reverse('question:answer-list', kwargs={'question_id': pk})
 
 
 class PublicQuestionAPITest(TestCase):
@@ -200,3 +205,32 @@ class PrivateQuestionApiTests(TestCase):
         response = self.client.get(question_action_url_detail(question.id, 1))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_user_create_question_answer(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        question = QuestionFactory(course=course, creator=self.user)
+
+        payload = {
+            'course': 1,
+            'content': 'answer content'
+        }
+
+        response = self.client.post(question_answer_url(question.id), payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(question.answers.count(), 1)
+
+    def test_answer_question_list(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        question = QuestionFactory(course=course, creator=self.user)
+
+        answers = create_factory_in_batch(AnswerFactory, 10, content_object=question, course=course)
+
+        response = self.client.get(question_answer_url(question.id))
+
+        serializer = AnswerSerializer(answers, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)

@@ -30,11 +30,4 @@ urlpatterns = [
         answer_views.QuestionAnswerViewSet.as_view({'post': 'create', 'get': 'list'}),
         name='answer-list'
     ),
-    path(
-        '<int:question_id>/answer/<int:answer_id>/',
-        answer_views.QuestionAnswerViewSet.as_view(
-            {'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}
-        ),
-        name='answer-detail'
-    ),
 ]
