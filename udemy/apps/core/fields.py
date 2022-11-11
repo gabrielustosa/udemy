@@ -1,4 +1,4 @@
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as s
@@ -55,11 +55,3 @@ class GenericField(s.Field):
                 pass
         return serializer, model
 
-
-class GenericRelatedField(s.Field):
-    def __init__(self, serializer, *args, **kwargs):
-        super().__init__(*args, **kwargs, required=False)
-        self.serializer = serializer
-
-    def to_representation(self, instance):
-        return self.serializer.to_representation(instance)

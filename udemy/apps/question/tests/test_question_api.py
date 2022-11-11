@@ -5,14 +5,16 @@ from rest_framework import status
 from django.shortcuts import reverse
 from rest_framework.test import APIClient
 
+from tests.factories.action import ActionFactory
 from tests.factories.course import CourseFactory
 from tests.factories.lesson import LessonFactory
 from tests.factories.question import QuestionFactory
 from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
+from udemy.apps.action.models import Action
+from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.question.models import Question
-from udemy.apps.question.serializer import QuestionSerializer
 
 QUESTION_LIST_URL = reverse('question:list')
 
@@ -32,16 +34,6 @@ class PublicQuestionAPITest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-
-    def test_question_list(self):
-        categories = create_factory_in_batch(QuestionFactory, 5)
-
-        response = self.client.get(QUESTION_LIST_URL)
-
-        serializer = QuestionSerializer(categories, many=True)
-
-        self.assertEqual(response.data, serializer.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_cant_create_question(self):
         response = self.client.post(QUESTION_LIST_URL)
@@ -155,3 +147,56 @@ class PrivateQuestionApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(question.actions.filter(action=action).count(), 1)
+
+    def test_action_question_list(self):
+        question = QuestionFactory()
+        actions = create_factory_in_batch(ActionFactory, 10, content_object=question)
+
+        response = self.client.get(question_action_url(1))
+
+        actions = ActionSerializer(actions, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, actions.data)
+        self.assertEqual(question.actions.count(), 10)
+
+    def test_question_action_retrieve(self):
+        question = QuestionFactory(creator=self.user)
+        action = ActionFactory(creator=self.user, content_object=question)
+
+        response = self.client.get(question_action_url_detail(question.id, 1))
+
+        serializer = ActionSerializer(action)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_question_action_retrieve_only_own_user_action(self):
+        question = QuestionFactory()
+        ActionFactory(content_object=question)
+
+        response = self.client.get(question_action_url_detail(question.id, 1))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_question_action_delete(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        question = QuestionFactory(course=course, creator=self.user)
+        ActionFactory(creator=self.user, content_object=question, course=course)
+
+        response = self.client.delete(question_action_url_detail(question.id, 1))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Action.objects.filter(id=1).exists())
+
+    def test_user_cant_delete_action_that_is_not_his(self):
+        other_user = UserFactory()
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        question = QuestionFactory(course=course, creator=other_user)
+        ActionFactory(content_object=question, course=course, creator=other_user)
+
+        response = self.client.get(question_action_url_detail(question.id, 1))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

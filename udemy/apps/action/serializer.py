@@ -2,15 +2,21 @@ from rest_framework import serializers
 
 from udemy.apps.action.models import Action
 from udemy.apps.answer.models import Answer
+from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.rating.models import Rating
 from udemy.apps.question.models import Question
-from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.question.serializer import QuestionSerializer
 from udemy.apps.rating.serializer import RatingSerializer
-from udemy.apps.core.fields import GenericRelatedField
+from udemy.apps.core.fields import GenericField
 
 
-class ActionSerializerBase(serializers.ModelSerializer):
+class ActionSerializer(serializers.ModelSerializer):
+    content_object = GenericField({
+        Rating: RatingSerializer(),
+        Answer: AnswerSerializer(),
+        Question: QuestionSerializer()
+    }, required=False)
+
     class Meta:
         model = Action
         fields = [
@@ -24,21 +30,7 @@ class ActionSerializerBase(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        Model = self.context.get('model')
         object_id = self.context.get('object_id')
-        validated_data['content_object'] = self.model.objects.get(id=object_id)
+        validated_data['content_object'] = Model.objects.get(id=object_id)
         return super().create(validated_data)
-
-
-class RatingActionSerializer(ActionSerializerBase):
-    model = Rating
-    content_object = GenericRelatedField(serializer=RatingSerializer())
-
-
-class QuestionActionSerializer(ActionSerializerBase):
-    model = Question
-    content_object = GenericRelatedField(serializer=QuestionSerializer())
-
-
-class AnswerActionSerializer(ActionSerializerBase):
-    model = Answer
-    content_object = GenericRelatedField(serializer=AnswerSerializer())

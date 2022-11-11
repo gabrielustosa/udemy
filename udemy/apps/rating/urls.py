@@ -8,7 +8,7 @@ app_name = 'rating'
 urlpatterns = [
     path('', views.RatingViewSet.as_view({'post': 'create', 'get': 'list'}), name='list'),
     path(
-        '<int:id>/',
+        '<int:pk>/',
         views.RatingViewSet.as_view(
             {'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}
         ),
@@ -16,12 +16,12 @@ urlpatterns = [
     ),
     path(
         '<int:rating_id>/action/',
-        action_views.RatingActionViewSet.as_view({'get': 'list', 'post': 'create', 'delete': 'destroy'}),
+        action_views.RatingActionViewSet.as_view({'post': 'create', 'get': 'list'}),
         name='action-list'
     ),
     path(
         '<int:rating_id>/action/<int:action>/',
-        action_views.RatingActionViewSet.as_view({'get': 'retrieve'}),
+        action_views.RatingActionViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'}),
         name='action-detail'
     ),
 ]
