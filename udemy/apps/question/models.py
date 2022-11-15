@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.validators import MinLengthValidator, MaxLengthValidator
 from django.db import models
 
 from udemy.apps.action.models import Action
@@ -19,12 +20,18 @@ class Question(CreatorBase, TimeStampedBase):
         related_name='questions',
         on_delete=models.CASCADE
     )
-    title = models.CharField(max_length=255)
-    content = models.TextField()
+    title = models.CharField(
+        max_length=255,
+        validators=[
+            MinLengthValidator(3)
+        ])
+    content = models.TextField(
+        validators=[
+            MinLengthValidator(5),
+            MaxLengthValidator(1000)
+        ])
     actions = GenericRelation(Action)
     answers = GenericRelation(Answer)
 
     def __str__(self):
         return self.title
-
-

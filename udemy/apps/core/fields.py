@@ -1,8 +1,10 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.db import IntegrityError
 from django.db.models import QuerySet, ManyToManyField
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as s
+from rest_framework.exceptions import ValidationError
 
 
 class GenericField(s.Field):
@@ -90,3 +92,21 @@ class ModelSerializer(s.ModelSerializer):
                     serializer = serializer(obj, **serializer_options)
                     ret[related_object] = serializer.data
         return ret
+
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
+        if self.instance:
+            if hasattr(self.Meta, 'create_only_fields'):
+                for field in self.Meta.create_only_fields:
+                    ret[field] = None
+        else:
+            if hasattr(self.Meta, 'update_only_fields'):
+                for field in self.Meta.update_only_fields:
+                    ret[field] = None
+        return ret
+
+    def create(self, validated_data):
+        try:
+            return super().create(validated_data)
+        except IntegrityError as error:
+            raise ValidationError from error

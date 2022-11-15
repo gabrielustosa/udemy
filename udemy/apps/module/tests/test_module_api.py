@@ -146,33 +146,6 @@ class PrivateModuleApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_cant_be_send_in_create_module(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-
-        payload = {
-            'title': 'string',
-            'course': 1,
-            'order': 1
-        }
-        response = self.client.post(MODULE_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_cant_send_a_order_greater_than_max_order_module(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-
-        create_factory_in_batch(ModuleFactory, 5, course=course)
-
-        payload = {
-            'order': 6,
-        }
-
-        response = self.client.patch(module_detail_url(pk=1), payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     @parameterized.expand([
         (3, 6),
         (8, 2),

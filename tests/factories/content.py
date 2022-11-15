@@ -13,7 +13,7 @@ class ContentFactory(factory.django.DjangoModelFactory):
     title = factory.Faker('name')
     lesson = factory.SubFactory(LessonFactory)
     course = factory.SubFactory(CourseFactory)
-    order = 1
+    order = None
     item = (Text, {'content': 'Test content'})
 
     @classmethod

@@ -16,4 +16,4 @@ class LessonFactory(factory.django.DjangoModelFactory):
     video_duration = 1
     module = factory.SubFactory(ModuleFactory)
     course = factory.SubFactory(CourseFactory)
-    order = 1
+    order = None

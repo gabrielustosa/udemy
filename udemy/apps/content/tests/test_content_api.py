@@ -171,24 +171,6 @@ class PrivateContentApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_cant_be_send_in_create_content(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-        LessonFactory(course=course)
-
-        payload = {
-            'title': 'teste',
-            'lesson': 1,
-            'course': 1,
-            'item': {
-                'content': 'Teste'
-            },
-            'order': 1
-        }
-        response = self.client.post(CONTENT_LIST_URL, payload, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_cant_send_a_order_greater_than_max_order_content(self):
         course = CourseFactory()
         course.instructors.add(self.user)

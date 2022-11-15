@@ -1,9 +1,5 @@
-from django.http import Http404
-
-from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.action.models import Action
@@ -48,14 +44,6 @@ class ActionViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(**self.get_filter_kwargs())
-
-    def create(self, request, *args, **kwargs):
-        try:
-            self.get_object()
-            return Response({'action': 'This action already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            pass
-        return super().create(request, *args, **kwargs)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 
 class UrlBase(models.Model):
@@ -81,6 +82,7 @@ class OrderedModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('order',)
 
     @classmethod
     def get_queryset(cls, instance):
@@ -109,6 +111,9 @@ class OrderedModel(models.Model):
         else:
             current_order = self.get_queryset(self).filter(id=self.id).first().order
             new_order = self.order
+
+            if new_order > self.get_last_order():
+                raise ValidationError('The order can not be greater than last order of the object.')
 
             number, query = (1, {'order__gte': new_order, 'order__lte': current_order}) if current_order > new_order \
                 else (-1, {'order__lte': new_order, 'order__gte': current_order})

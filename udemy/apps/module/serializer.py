@@ -15,3 +15,4 @@ class ModuleSerializer(ModelSerializer):
         related_objects = {
             'course': CourseSerializer
         }
+        update_only_fields = ('order',)

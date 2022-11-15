@@ -21,3 +21,4 @@ class LessonSerializer(ModelSerializer):
             'module': ModuleSerializer,
             'course': CourseSerializer
         }
+        update_only_fields = ('order',)

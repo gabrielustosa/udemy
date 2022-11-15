@@ -170,24 +170,6 @@ class PrivateLessonApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_cant_be_send_in_create_lesson(self):
-        course = CourseFactory()
-        ModuleFactory(course=course)
-        course.instructors.add(self.user)
-
-        payload = {
-            'title': 'string',
-            'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
-            'video_id': 'E6CdIawPTh0',
-            'video_duration': 1,
-            'module': 1,
-            'course': 1,
-            'order': 1
-        }
-        response = self.client.post(LESSON_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_cant_send_a_order_greater_than_max_order_lesson(self):
         course = CourseFactory()
         module = ModuleFactory(course=course)

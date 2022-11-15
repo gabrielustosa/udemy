@@ -1,3 +1,4 @@
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
@@ -48,9 +49,12 @@ class PrivateActionApiTests(TestCase):
             'action': 1,
         }
 
-        response = self.client.post(question_action_url(1), payload, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                response = self.client.post(question_action_url(1), payload, format='json')
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        except IntegrityError:
+            pass
         self.assertEqual(Question.objects.first().actions.filter(action=1).count(), 1)
 
     def test_user_not_enrolled_can_create_action(self):

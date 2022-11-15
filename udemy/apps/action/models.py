@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import UniqueConstraint
 
 from udemy.apps.core.models import CreatorBase, TimeStampedBase
 from udemy.apps.course.models import Course
@@ -20,3 +21,13 @@ class Action(CreatorBase, TimeStampedBase):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=(
+                'creator',
+                'content_type',
+                'object_id',
+                'action',
+                'course',
+            ), name='unique action')]

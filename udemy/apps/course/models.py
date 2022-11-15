@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
@@ -46,3 +46,8 @@ class Course(TimeStampedBase):
 class CourseRelation(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     current_lesson = models.PositiveSmallIntegerField()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=('creator', 'course'), name='unique course relation')
+        ]

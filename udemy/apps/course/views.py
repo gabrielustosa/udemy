@@ -1,7 +1,6 @@
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework import mixins, status
+from rest_framework import mixins
 
 from udemy.apps.core.decorator import componentize
 from udemy.apps.core.mixins import RetrieveNestedObjectMixin
@@ -37,8 +36,3 @@ class CourseRelationViewSet(
     serializer_class = CourseRelationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def create(self, request, *args, **kwargs):
-        query = CourseRelation.objects.filter(course=request.data['course'], creator=self.request.user)
-        if query.exists():
-            return Response({'course': 'You already enrolled in this course.'}, status=status.HTTP_400_BAD_REQUEST)
-        return super().create(request, *args, **kwargs)

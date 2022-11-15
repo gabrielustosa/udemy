@@ -28,7 +28,3 @@ class RatingSerializer(ModelSerializer):
     def get_dislikes_count(self, instance):
         return instance.actions.filter(action=2).count()
 
-    def validate_rating(self, value):
-        if value < 1 or value > 5:
-            raise serializers.ValidationError('Rating must be between 1 and 5.')
-        return value

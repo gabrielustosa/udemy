@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.validators import MinLengthValidator, MaxLengthValidator
 from django.db import models
 
 from udemy.apps.action.models import Action
@@ -15,5 +16,9 @@ class Answer(CreatorBase, TimeStampedBase):
         Course,
         on_delete=models.CASCADE
     )
-    content = models.TextField()
+    content = models.TextField(
+        validators=[
+            MinLengthValidator(5),
+            MaxLengthValidator(1000)
+        ])
     actions = GenericRelation(Action)

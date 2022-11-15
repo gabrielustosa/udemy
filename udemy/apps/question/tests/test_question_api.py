@@ -119,14 +119,14 @@ class PrivateQuestionApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_create_question_content_greater_than_999(self):
+    def test_create_question_content_greater_than_100(self):
         course = CourseFactory()
         LessonFactory(course=course)
         CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
 
         payload = {
             'title': 'title',
-            'content': ''.join(['a' for _ in range(1000)]),
+            'content': ''.join(['a' for _ in range(1001)]),
             'lesson': 1,
             'course': 1
         }
