@@ -14,6 +14,8 @@ class Course(TimeStampedBase):
     is_paid = models.BooleanField(_('Is paid'))
     price = models.DecimalField(_('Price'), max_digits=10, decimal_places=2)
     language = models.CharField(_('Language'), max_length=155)
+    requirements = models.TextField(_('Requirements'))
+    what_you_will_learn = models.TextField(_('What you will learn'))
     instructors = models.ManyToManyField(
         User,
         related_name='instructors_courses',
@@ -33,6 +35,9 @@ class Course(TimeStampedBase):
 
     class Meta:
         ordering = ['-created']
+
+    min_fields = ()
+    default_fields = ()
 
     def get_last_lesson_order(self):
         return self.lessons.aggregate(last_order=Max('order'))['last_order']

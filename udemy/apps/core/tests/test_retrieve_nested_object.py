@@ -18,7 +18,7 @@ class RetrieveNestedObjectTests(TestCase):
         module = ModuleFactory()
         url = reverse('module-detail', kwargs={'pk': 1})
 
-        response = self.client.get(f'{url}?field[course]=title,is_paid,slug')
+        response = self.client.get(f'{url}?fields[course]=title,is_paid,slug')
 
         expected_response = {
             'id': module.id,

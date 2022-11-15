@@ -25,7 +25,7 @@ class RetrieveNestedObjectMixin:
     def get_nested_fields(self):
         nested_fields = dict()
         for field_name, fields in self.request.query_params.items():
-            match = re.search(r'field\[([A-Za-z0-9_]+)]', field_name)
+            match = re.search(r'fields\[([A-Za-z0-9_]+)]', field_name)
             if match:
                 nested_fields[match.group(1)] = fields.split(',')
         return nested_fields
