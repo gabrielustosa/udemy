@@ -33,7 +33,7 @@ class PublicCourseAPITest(TestCase):
         serializer = CourseSerializer(courses, many=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['results'], list(reversed(serializer.data)))
+        self.assertEqual(response.data, list(reversed(serializer.data)))
 
     def test_course_retrieve(self):
         course = CourseFactory()

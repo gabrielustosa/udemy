@@ -1,4 +1,3 @@
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
@@ -10,15 +9,10 @@ from udemy.apps.course.models import Course, CourseRelation
 from udemy.apps.course.serializer import CourseSerializer, CourseRelationSerializer
 
 
-class CoursePagination(PageNumberPagination):
-    page_size = 25
-
-
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsInstructor]
-    pagination_class = CoursePagination
 
     @componentize(result_name='details')
     def retrieve(self, request, *args, **kwargs):

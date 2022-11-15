@@ -55,3 +55,33 @@ class GenericField(s.Field):
                 pass
         return serializer, model
 
+
+class ModelSerializer(s.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        fields = kwargs.pop('fields', None)
+
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+
+        related_objects_fields = self.context.get('fields')
+        if hasattr(self.Meta, 'related_objects') and related_objects_fields:
+            for related_object, serializer in self.Meta.related_objects.items():
+                fields = related_objects_fields.get(related_object)
+                if fields:
+                    obj = getattr(instance, related_object)
+                    serializer = serializer(obj, fields=fields)
+                    ret[related_object] = serializer.data
+        return ret

@@ -137,9 +137,9 @@ class PrivateRatingApiTests(TestCase):
 
     def test_partial_rating_update(self):
         original_comment = 'original comment'
-        rating = RatingFactory(comment=original_comment, creator=self.user)
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
+        rating = RatingFactory(course=course, comment=original_comment, creator=self.user)
 
         payload = {
             'rating': 3,
@@ -155,7 +155,7 @@ class PrivateRatingApiTests(TestCase):
     def test_rating_full_update(self):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
-        rating = RatingFactory(creator=self.user)
+        rating = RatingFactory(course=course, creator=self.user)
 
         payload = {
             'course': 1,
@@ -173,7 +173,7 @@ class PrivateRatingApiTests(TestCase):
     def test_delete_rating(self):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user, current_lesson=1)
-        rating = RatingFactory(creator=self.user)
+        rating = RatingFactory(course=course, creator=self.user)
 
         response = self.client.delete(rating_detail_url(pk=rating.id))
 
@@ -199,7 +199,7 @@ class PrivateRatingApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(rating.actions.filter(action=action).count(), 1)
 
-    def test_action_question_list(self):
+    def test_action_rating_list(self):
         rating = RatingFactory()
         actions = create_factory_in_batch(ActionFactory, 10, content_object=rating)
 
@@ -211,7 +211,7 @@ class PrivateRatingApiTests(TestCase):
         self.assertEqual(response.data, actions.data)
         self.assertEqual(rating.actions.count(), 10)
 
-    def test_question_action_retrieve(self):
+    def test_rating_action_retrieve(self):
         rating = RatingFactory(creator=self.user)
         action = ActionFactory(creator=self.user, content_object=rating)
 
@@ -222,7 +222,7 @@ class PrivateRatingApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
-    def test_question_action_retrieve_only_own_user_action(self):
+    def test_rating_action_retrieve_only_own_user_action(self):
         rating = RatingFactory()
         ActionFactory(content_object=rating)
 
@@ -230,7 +230,7 @@ class PrivateRatingApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_question_action_delete(self):
+    def test_rating_action_delete(self):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
         rating = RatingFactory(course=course, creator=self.user)

@@ -165,12 +165,6 @@ AUTH_USER_MODEL = 'user.User'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Crispy forms
-
-CRISPY_ALLOWED_TEMPLATE_PACKS = 'tailwind'
-
-CRISPY_TEMPLATE_PACK = 'tailwind'
-
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (

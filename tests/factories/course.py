@@ -1,6 +1,5 @@
 import factory
 
-from tests.factories.user import UserFactory
 from udemy.apps.course.models import Course
 
 

@@ -1,9 +1,15 @@
 from rest_framework import serializers
 
+from udemy.apps.category.serializer import CategorySerializer
+from udemy.apps.core.fields import ModelSerializer
 from udemy.apps.course.models import Course, CourseRelation
+from udemy.apps.user.serializer import UserSerializer
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class CourseSerializer(ModelSerializer):
+    instructors = UserSerializer(many=True, required=False)
+    categories = CategorySerializer(many=True, required=False)
+
     class Meta:
         model = Course
         fields = [
@@ -11,10 +17,6 @@ class CourseSerializer(serializers.ModelSerializer):
             'is_paid', 'price', 'created', 'modified',
             'categories', 'instructors',
         ]
-        extra_kwargs = {
-            'instructors': {'required': False},
-            'categories': {'required': False},
-        }
 
     def create(self, validated_data):
         user = self.context.get('request').user

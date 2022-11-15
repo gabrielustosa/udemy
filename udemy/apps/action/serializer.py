@@ -1,16 +1,16 @@
-from rest_framework import serializers
-
 from udemy.apps.action.models import Action
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
+from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.rating.models import Rating
 from udemy.apps.question.models import Question
 from udemy.apps.question.serializer import QuestionSerializer
 from udemy.apps.rating.serializer import RatingSerializer
-from udemy.apps.core.fields import GenericField
+from udemy.apps.core.fields import GenericField, ModelSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 
-class ActionSerializer(serializers.ModelSerializer):
+class ActionSerializer(ModelSerializer):
     content_object = GenericField({
         Rating: RatingSerializer(),
         Answer: AnswerSerializer(),
@@ -28,6 +28,10 @@ class ActionSerializer(serializers.ModelSerializer):
             'modified',
             'content_object',
         ]
+        related_objects = {
+            'creator': UserSerializer,
+            'course': CourseSerializer
+        }
 
     def create(self, validated_data):
         Model = self.context.get('model')

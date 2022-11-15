@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from udemy.apps.content import models
-from udemy.apps.core.fields import GenericField
+from udemy.apps.core.fields import GenericField, ModelSerializer
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 
 
 class TextSerializer(serializers.ModelSerializer):
@@ -28,7 +30,7 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ('url',)
 
 
-class ContentSerializer(serializers.ModelSerializer):
+class ContentSerializer(ModelSerializer):
     item = GenericField({
         models.Link: LinkSerializer(),
         models.Text: TextSerializer(),
@@ -46,3 +48,7 @@ class ContentSerializer(serializers.ModelSerializer):
             'order',
             'item',
         ]
+        related_objects = {
+            'lesson': LessonSerializer,
+            'course': CourseSerializer
+        }

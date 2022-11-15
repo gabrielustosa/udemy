@@ -52,10 +52,11 @@ class IsEnrolled(permissions.BasePermission):
     """Allow access only for students enrolled in course."""
 
     def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+
         is_enrolled = CourseRelation.objects.filter(course=obj.course, creator=request.user).exists()
-        return bool(
-            is_enrolled or request.method in SAFE_METHODS
-        )
+        return is_enrolled
 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:

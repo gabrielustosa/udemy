@@ -1,9 +1,11 @@
-from rest_framework import serializers
-
+from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 from udemy.apps.note.models import Note
+from udemy.apps.user.serializer import UserSerializer
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(ModelSerializer):
     class Meta:
         model = Note
         fields = [
@@ -16,3 +18,8 @@ class NoteSerializer(serializers.ModelSerializer):
             'modified',
             'created'
         ]
+        related_objects = {
+            'creator': UserSerializer,
+            'course': CourseSerializer,
+            'lesson': LessonSerializer
+        }

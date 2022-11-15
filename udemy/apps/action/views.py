@@ -9,12 +9,13 @@ from rest_framework.viewsets import ModelViewSet
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.answer.models import Answer
+from udemy.apps.core.mixins import RetrieveNestedObjectMixin
 from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.question.models import Question
 from udemy.apps.rating.models import Rating
 
 
-class ActionViewSetBase(ModelViewSet):
+class ActionViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsEnrolled]

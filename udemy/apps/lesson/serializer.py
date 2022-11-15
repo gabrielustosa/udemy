@@ -1,9 +1,10 @@
-from rest_framework import serializers
-
+from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.models import Lesson
+from udemy.apps.module.serializer import ModuleSerializer
 
 
-class LessonSerializer(serializers.ModelSerializer):
+class LessonSerializer(ModelSerializer):
     class Meta:
         model = Lesson
         fields = [
@@ -16,3 +17,7 @@ class LessonSerializer(serializers.ModelSerializer):
             'course',
             'order',
         ]
+        related_objects = {
+            'module': ModuleSerializer,
+            'course': CourseSerializer
+        }
