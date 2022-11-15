@@ -19,3 +19,6 @@ class RatingViewSet(RetrieveNestedObjectMixin, ModelViewSet):
         if user_already_rated:
             return Response({'rating': 'You have already rated this course.'}, status.HTTP_400_BAD_REQUEST)
         return super().create(request, *args, **kwargs)
+
+    class Meta:
+        model = Rating

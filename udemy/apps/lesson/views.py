@@ -11,3 +11,6 @@ class LessonViewSet(RetrieveNestedObjectMixin, ValidateOrderMixin, ModelViewSet)
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsInstructor]
+
+    class Meta:
+        model = Lesson

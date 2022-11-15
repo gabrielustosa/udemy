@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework import serializers
+from udemy.apps.core.fields import ModelSerializer
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['email', 'password', 'name']

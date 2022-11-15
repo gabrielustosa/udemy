@@ -1,5 +1,8 @@
 import re
 
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import ManyToManyField, ForeignKey
+from django.utils.functional import cached_property
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -34,3 +37,18 @@ class RetrieveNestedObjectMixin:
         context = super().get_serializer_context()
         context['fields'] = self.get_nested_fields()
         return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        for field_name in self.get_nested_fields().keys():
+            try:
+                field = self.Meta.model._meta.get_field(field_name)
+                if isinstance(field, ManyToManyField):
+                    queryset = queryset.prefetch_related(field_name)
+                if isinstance(field, ForeignKey):
+                    queryset = queryset.select_related(field_name)
+            except FieldDoesNotExist:
+                pass
+
+        return queryset

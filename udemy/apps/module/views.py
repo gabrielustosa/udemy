@@ -11,3 +11,6 @@ class ModuleViewSet(RetrieveNestedObjectMixin, ValidateOrderMixin, ModelViewSet)
     queryset = Module.objects.all()
     serializer_class = ModuleSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsInstructor]
+
+    class Meta:
+        model = Module

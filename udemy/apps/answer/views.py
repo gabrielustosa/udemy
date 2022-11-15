@@ -17,6 +17,9 @@ class AnswerViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
     model = None
     pk_url_kwarg = None
 
+    class Meta:
+        model = Answer
+
     def get_filter_kwargs(self):
         filter_kwargs = {
             'content_type__model': self.model.__name__.lower(),

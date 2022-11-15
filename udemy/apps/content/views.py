@@ -11,3 +11,6 @@ class ContentViewSet(RetrieveNestedObjectMixin, ValidateOrderMixin, ModelViewSet
     queryset = Content.objects.all()
     serializer_class = ContentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsInstructor]
+
+    class Meta:
+        model = Content

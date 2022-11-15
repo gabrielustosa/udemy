@@ -71,6 +71,8 @@ class PrivateCourseApiTests(TestCase):
             'is_paid': True,
             'price': Decimal(1),
             'language': 'english',
+            'requirements': 'requirements',
+            'what_you_will_learn': 'you learn',
             'categories': [1],
             'instructors': [1]
         }
@@ -110,6 +112,8 @@ class PrivateCourseApiTests(TestCase):
             'is_paid': True,
             'price': Decimal(1),
             'language': 'english',
+            'requirements': 'requirements',
+            'what_you_will_learn': 'you learn',
             'categories': [1],
             'instructors': [1]
         }

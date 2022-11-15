@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import QuerySet, ManyToManyField
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as s
@@ -81,7 +82,11 @@ class ModelSerializer(s.ModelSerializer):
             for related_object, serializer in self.Meta.related_objects.items():
                 fields = related_objects_fields.get(related_object)
                 if fields:
+                    serializer_options = {'fields': fields}
                     obj = getattr(instance, related_object)
-                    serializer = serializer(obj, fields=fields)
+                    if obj.__class__.__name__ == 'ManyRelatedManager':
+                        obj = obj.all()
+                        serializer_options.update({'many': True})
+                    serializer = serializer(obj, **serializer_options)
                     ret[related_object] = serializer.data
         return ret

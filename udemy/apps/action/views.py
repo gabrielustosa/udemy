@@ -20,6 +20,9 @@ class ActionViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
     serializer_class = ActionSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsEnrolled]
 
+    class Meta:
+        model = Action
+
     def get_filter_kwargs(self):
         action = self.kwargs.get('action') or self.request.data.get('action')
 

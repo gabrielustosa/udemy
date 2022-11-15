@@ -8,8 +8,6 @@ from udemy.apps.user.serializer import UserSerializer
 
 
 class CourseSerializer(ModelSerializer):
-    instructors = UserSerializer(many=True, required=False)
-    categories = CategorySerializer(many=True, required=False, fields=('title',))
     num_modules = serializers.SerializerMethodField()
     num_lessons = serializers.SerializerMethodField()
     num_contents = serializers.SerializerMethodField()
@@ -26,6 +24,14 @@ class CourseSerializer(ModelSerializer):
             'num_lessons', 'num_contents', 'estimated_content_length_video'
 
         ]
+        extra_kwargs = {
+            'instructors': {'required': False},
+            'categories': {'required': False},
+        }
+        related_objects = {
+            'instructors': UserSerializer,
+            'categories': CategorySerializer
+        }
 
     def get_num_modules(self, instance):
         return instance.modules.count()

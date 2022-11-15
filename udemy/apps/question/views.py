@@ -11,3 +11,6 @@ class QuestionViewSet(RetrieveNestedObjectMixin, ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [IsEnrolled, IsCreatorObject, IsAuthenticatedOrReadOnly]
+
+    class Meta:
+        model = Question
