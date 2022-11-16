@@ -1,5 +1,6 @@
 from random import randint
 
+from django.db import transaction, IntegrityError
 from django.test import TestCase
 
 from parameterized import parameterized
@@ -70,8 +71,6 @@ class PrivateLessonApiTests(TestCase):
         payload = {
             'title': 'string',
             'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
-            'video_id': 'E6CdIawPTh0',
-            'video_duration': 1,
             'module': 1,
             'course': 1
         }
@@ -108,8 +107,6 @@ class PrivateLessonApiTests(TestCase):
         payload = {
             'title': 'new title',
             'video': 'https://www.youtube.com/watch?v=dawjkb_dwadaws',
-            'video_id': 'E6CzwPTh0',
-            'video_duration': 10,
             'module': 1,
             'course': 1
         }

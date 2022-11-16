@@ -84,13 +84,12 @@ class OrderedModel(models.Model):
         abstract = True
         ordering = ('order',)
 
-    @classmethod
-    def get_queryset(cls, instance):
-        query = {field: getattr(instance, field) for field in instance.order_in_respect}
-        return cls.objects.filter(**query)
+    def get_queryset(self):
+        query = {field: getattr(self, field) for field in self.order_in_respect}
+        return self.__class__.objects.filter(**query)
 
     def get_last_order(self):
-        last_order = self.get_queryset(instance=self).aggregate(ls=Max('order'))['ls']
+        last_order = self.get_queryset().aggregate(ls=Max('order'))['ls']
         return last_order if last_order else 0
 
     def get_next_order(self):
@@ -109,7 +108,7 @@ class OrderedModel(models.Model):
 
             self.do_after_create()
         else:
-            current_order = self.get_queryset(self).filter(id=self.id).first().order
+            current_order = self.get_queryset().filter(id=self.id).first().order
             new_order = self.order
 
             if new_order > self.get_last_order():
@@ -118,7 +117,7 @@ class OrderedModel(models.Model):
             number, query = (1, {'order__gte': new_order, 'order__lte': current_order}) if current_order > new_order \
                 else (-1, {'order__lte': new_order, 'order__gte': current_order})
 
-            self.get_queryset(self).filter(**query).update(
+            self.get_queryset().filter(**query).update(
                 order=ExpressionWrapper(F('order') + number, output_field=PositiveIntegerField()))
 
             self.do_after_update()
@@ -126,6 +125,6 @@ class OrderedModel(models.Model):
         return super().save(force_insert, **kwargs)
 
     def delete(self, using=None, keep_parents=False):
-        self.get_queryset(self).filter(order__gt=self.order).update(
+        self.get_queryset().filter(order__gt=self.order).update(
             order=ExpressionWrapper(F('order') - 1, output_field=models.PositiveIntegerField()))
         return super().delete(using, keep_parents)
