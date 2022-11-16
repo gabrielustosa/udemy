@@ -44,7 +44,7 @@ class PrivateAnswerAPITests(TestCase):
     def test_create_note(self):
         course = CourseFactory()
         LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'lesson': 1,
@@ -64,7 +64,7 @@ class PrivateAnswerAPITests(TestCase):
         course = CourseFactory()
         lesson = LessonFactory(course=course)
         note = NoteFactory(creator=self.user, lesson=lesson, course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'time': '12:30:00'
@@ -80,7 +80,7 @@ class PrivateAnswerAPITests(TestCase):
         course = CourseFactory()
         lesson = LessonFactory(course=course)
         note = NoteFactory(creator=self.user, lesson=lesson, course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         response = self.client.delete(note_detail_url(pk=note.id))
 
@@ -92,7 +92,7 @@ class PrivateAnswerAPITests(TestCase):
         course = CourseFactory()
         lesson = LessonFactory(course=course)
         note = NoteFactory(creator=user, lesson=lesson, course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=user)
+        CourseRelation.objects.create(course=course, creator=user)
 
         payload = {
             'time': '12:30:00'

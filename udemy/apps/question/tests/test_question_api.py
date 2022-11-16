@@ -57,7 +57,7 @@ class PrivateQuestionApiTests(TestCase):
     def test_create_question(self):
         course = CourseFactory()
         LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'title': 'title',
@@ -74,7 +74,7 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_partial_question_update(self):
         question = QuestionFactory(creator=self.user)
-        CourseRelation.objects.create(course=question.course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
 
         payload = {
             'title': 'new title',
@@ -90,7 +90,7 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_delete_question(self):
         question = QuestionFactory(creator=self.user)
-        CourseRelation.objects.create(course=question.course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
 
         response = self.client.delete(question_detail_url(pk=question.id))
 
@@ -107,7 +107,7 @@ class PrivateQuestionApiTests(TestCase):
     def test_create_question_title_less_than_5(self):
         course = CourseFactory()
         LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'title': 't',
@@ -122,7 +122,7 @@ class PrivateQuestionApiTests(TestCase):
     def test_create_question_content_greater_than_100(self):
         course = CourseFactory()
         LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'title': 'title',
@@ -140,7 +140,7 @@ class PrivateQuestionApiTests(TestCase):
     ])
     def test_send_action_to_question(self, action):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         question = QuestionFactory(course=course, creator=self.user)
 
         payload = {
@@ -186,7 +186,7 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_question_action_delete(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         question = QuestionFactory(course=course, creator=self.user)
         ActionFactory(creator=self.user, content_object=question, course=course)
 
@@ -198,7 +198,7 @@ class PrivateQuestionApiTests(TestCase):
     def test_user_cant_delete_action_that_is_not_his(self):
         other_user = UserFactory()
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         question = QuestionFactory(course=course, creator=other_user)
         ActionFactory(content_object=question, course=course, creator=other_user)
 
@@ -208,7 +208,7 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_user_create_question_answer(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         question = QuestionFactory(course=course, creator=self.user)
 
         payload = {
@@ -223,7 +223,7 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_answer_question_list(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         question = QuestionFactory(course=course, creator=self.user)
 
         answers = create_factory_in_batch(AnswerFactory, 10, content_object=question, course=course)

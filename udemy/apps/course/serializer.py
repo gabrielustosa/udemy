@@ -78,8 +78,5 @@ class CourseRelationSerializer(serializers.ModelSerializer):
         model = CourseRelation
         fields = [
             'id', 'creator', 'course',
-            'modified', 'created', 'current_lesson',
+            'modified', 'created',
         ]
-        extra_kwargs = {
-            'current_lesson': {'required': False}
-        }

@@ -41,11 +41,8 @@ class PublicCourseAPITest(TestCase):
         response = self.client.get(course_detail_url(pk=1))
 
         serializer = CourseSerializer(course)
-        data = {
-            'details': serializer.data
-        }
 
-        self.assertEqual(response.data, data)
+        self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_cant_create_course(self):
@@ -73,6 +70,7 @@ class PrivateCourseApiTests(TestCase):
             'language': 'english',
             'requirements': 'requirements',
             'what_you_will_learn': 'you learn',
+            'description': 'description',
             'level': 'beginner',
             'categories': [1],
             'instructors': [1]
@@ -115,6 +113,7 @@ class PrivateCourseApiTests(TestCase):
             'language': 'english',
             'requirements': 'requirements',
             'what_you_will_learn': 'you learn',
+            'description': 'description',
             'level': 'beginner',
             'categories': [1],
             'instructors': [1]

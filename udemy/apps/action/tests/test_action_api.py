@@ -41,7 +41,7 @@ class PrivateActionApiTests(TestCase):
 
     def test_user_cant_create_same_action_twice(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         ActionFactory(creator=self.user, course=course)
 
         payload = {

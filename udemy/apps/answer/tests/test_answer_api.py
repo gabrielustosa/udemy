@@ -54,7 +54,7 @@ class PrivateActionApiTests(TestCase):
 
     def test_answer_delete_if_user_is_not_the_creator(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         AnswerFactory(course=course)
 
         response = self.client.delete(answer_detail_url(1))
@@ -63,7 +63,7 @@ class PrivateActionApiTests(TestCase):
 
     def test_answer_delete(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         AnswerFactory(course=course, creator=self.user)
 
         response = self.client.delete(answer_detail_url(1))
@@ -73,7 +73,7 @@ class PrivateActionApiTests(TestCase):
 
     def test_answer_patch(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, current_lesson=1, creator=self.user)
+        CourseRelation.objects.create(course=course, creator=self.user)
         answer = AnswerFactory(course=course, creator=self.user)
 
         payload = {

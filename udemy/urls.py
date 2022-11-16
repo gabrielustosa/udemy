@@ -17,7 +17,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/user/', include('udemy.apps.user.urls')),
 
-    path('api/', include('udemy.apps.course.urls')),
+    path('api/course/', include('udemy.apps.course.urls')),
     path('api/category/', include('udemy.apps.category.urls')),
     path('api/rating/', include('udemy.apps.rating.urls')),
     path('api/module/', include('udemy.apps.module.urls')),

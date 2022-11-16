@@ -40,7 +40,6 @@ class Course(TimeStampedBase):
 
 class CourseRelation(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    current_lesson = models.PositiveSmallIntegerField()
 
     class Meta:
         constraints = [

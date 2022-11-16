@@ -33,7 +33,7 @@ class Lesson(OrderedModel):
             last_lesson = queryset.aggregate(last_order=Max('order'))['last_order']
             order = last_lesson + 1
         else:
-            last_lesson = self.course.get_last_lesson_order()
+            last_lesson = self.course.lessons.aggregate(last_order=Max('order'))['last_order']
 
             if last_lesson:
                 order = last_lesson + 1
