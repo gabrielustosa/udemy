@@ -1,6 +1,3 @@
-from random import randint
-
-from django.db import transaction, IntegrityError
 from django.test import TestCase
 
 from parameterized import parameterized

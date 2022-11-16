@@ -1,8 +1,9 @@
 from django.test import TestCase
+from django.shortcuts import reverse
+
 from parameterized import parameterized
 
 from rest_framework import status
-from django.shortcuts import reverse
 from rest_framework.test import APIClient
 
 from tests.factories.action import ActionFactory
@@ -18,10 +19,10 @@ from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.question.models import Question
 
-QUESTION_LIST_URL = reverse('question:list')
+QUESTION_LIST_URL = reverse('question:question-list')
 
 
-def question_detail_url(pk): return reverse('question:detail', kwargs={'pk': pk})
+def question_detail_url(pk): return reverse('question:question-detail', kwargs={'pk': pk})
 
 
 def question_action_url(pk): return reverse('question:action-list', kwargs={'question_id': pk})

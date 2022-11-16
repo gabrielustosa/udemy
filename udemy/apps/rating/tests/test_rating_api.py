@@ -19,10 +19,10 @@ from udemy.apps.course.models import CourseRelation
 from udemy.apps.rating.models import Rating
 from udemy.apps.rating.serializer import RatingSerializer
 
-RATING_LIST_URL = reverse('rating:list')
+RATING_LIST_URL = reverse('rating:rating-list')
 
 
-def rating_detail_url(pk): return reverse('rating:detail', kwargs={'pk': pk})
+def rating_detail_url(pk): return reverse('rating:rating-detail', kwargs={'pk': pk})
 
 
 def rating_action_url(pk): return reverse('rating:action-list', kwargs={'rating_id': pk})

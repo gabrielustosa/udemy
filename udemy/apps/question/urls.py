@@ -1,20 +1,18 @@
-from django.urls import path
+from django.urls import path, include
+
+from rest_framework.routers import SimpleRouter
 
 from . import views
 from udemy.apps.action import views as action_views
 from udemy.apps.answer import views as answer_views
 
+router = SimpleRouter()
+router.register('', views.QuestionViewSet, basename='question')
+
 app_name = 'question'
 
 urlpatterns = [
-    path('', views.QuestionViewSet.as_view({'post': 'create'}), name='list'),
-    path(
-        '<int:pk>/',
-        views.QuestionViewSet.as_view(
-            {'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}
-        ),
-        name='detail'
-    ),
+    path('', include(router.urls)),
     path(
         '<int:question_id>/action/',
         action_views.QuestionActionViewSet.as_view({'post': 'create', 'get': 'list'}),
