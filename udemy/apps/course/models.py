@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import Max, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
@@ -11,11 +10,13 @@ class Course(TimeStampedBase):
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(unique=True)
     headline = models.TextField(_('Headline'))
+    description = models.TextField(_('Description'))
     is_paid = models.BooleanField(_('Is paid'))
     price = models.DecimalField(_('Price'), max_digits=10, decimal_places=2)
     language = models.CharField(_('Language'), max_length=155)
     requirements = models.TextField(_('Requirements'))
     what_you_will_learn = models.TextField(_('What you will learn'))
+    level = models.TextField(_('Course Level'))
     instructors = models.ManyToManyField(
         User,
         related_name='instructors_courses',
@@ -36,12 +37,6 @@ class Course(TimeStampedBase):
     class Meta:
         ordering = ['-created']
 
-    min_fields = ()
-    default_fields = ()
-
-    def get_last_lesson_order(self):
-        return self.lessons.aggregate(last_order=Max('order'))['last_order']
-
 
 class CourseRelation(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -49,5 +44,5 @@ class CourseRelation(CreatorBase, TimeStampedBase):
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=('creator', 'course'), name='unique course relation')
-        ]
+            models.UniqueConstraint(fields=('creator', 'course'), name='unique course relation',
+                                    violation_error_message='You already rated this course.')]

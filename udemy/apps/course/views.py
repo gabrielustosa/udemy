@@ -2,7 +2,6 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import mixins
 
-from udemy.apps.core.decorator import componentize
 from udemy.apps.core.mixins import RetrieveNestedObjectMixin
 from udemy.apps.core.permissions import IsInstructor
 from udemy.apps.course.models import Course, CourseRelation
@@ -16,14 +15,6 @@ class CourseViewSet(RetrieveNestedObjectMixin, ModelViewSet):
 
     class Meta:
         model = Course
-
-    @componentize(result_name='details')
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-    @componentize()
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
 
 class CourseRelationViewSet(

@@ -1,7 +1,6 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import UniqueConstraint
 
 from udemy.apps.core.models import CreatorBase, TimeStampedBase
 from udemy.apps.course.models import Course
@@ -24,10 +23,10 @@ class Action(CreatorBase, TimeStampedBase):
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=(
+            models.UniqueConstraint(fields=(
                 'creator',
                 'content_type',
                 'object_id',
                 'action',
                 'course',
-            ), name='unique action')]
+            ), name='unique action', violation_error_message='This action already exists')]

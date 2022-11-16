@@ -53,3 +53,5 @@ class ContentSerializer(ModelSerializer):
             'course': CourseSerializer
         }
         update_only_fields = ('order',)
+        min_fields = ('id', 'title', 'item')
+        default_fields = ('id', 'title', 'lesson', 'item')

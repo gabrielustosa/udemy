@@ -21,6 +21,8 @@ class RatingSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
+        min_fields = ('id', 'creator', 'rating', 'comment')
+        default_fields = ('id', 'creator', 'rating', 'comment', 'created')
 
     def get_likes_count(self, instance):
         return instance.actions.filter(action=1).count()

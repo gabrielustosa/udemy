@@ -73,6 +73,7 @@ class PrivateCourseApiTests(TestCase):
             'language': 'english',
             'requirements': 'requirements',
             'what_you_will_learn': 'you learn',
+            'level': 'beginner',
             'categories': [1],
             'instructors': [1]
         }
@@ -114,6 +115,7 @@ class PrivateCourseApiTests(TestCase):
             'language': 'english',
             'requirements': 'requirements',
             'what_you_will_learn': 'you learn',
+            'level': 'beginner',
             'categories': [1],
             'instructors': [1]
         }

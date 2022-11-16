@@ -1,4 +1,4 @@
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Avg
 from rest_framework import serializers
 
 from udemy.apps.category.serializer import CategorySerializer
@@ -12,17 +12,19 @@ class CourseSerializer(ModelSerializer):
     num_lessons = serializers.SerializerMethodField()
     num_contents = serializers.SerializerMethodField()
     num_contents_info = serializers.SerializerMethodField()
+    num_subscribers = serializers.SerializerMethodField()
     estimated_content_length_video = serializers.SerializerMethodField()
+    avg_rating = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = [
-            'id', 'title', 'slug', 'headline', 'language',
-            'is_paid', 'price', 'created', 'modified',
+            'id', 'title', 'slug', 'headline', 'language', 'description',
+            'is_paid', 'price', 'created', 'modified', 'avg_rating',
             'requirements', 'what_you_will_learn', 'num_contents_info',
-            'categories', 'instructors', 'num_modules',
+            'categories', 'instructors', 'num_modules', 'url', 'num_subscribers',
             'num_lessons', 'num_contents', 'estimated_content_length_video'
-
         ]
         extra_kwargs = {
             'instructors': {'required': False},
@@ -32,6 +34,8 @@ class CourseSerializer(ModelSerializer):
             'instructors': UserSerializer,
             'categories': CategorySerializer
         }
+        min_fields = ('id', 'title', 'url')
+        default_fields = ('id', 'title', 'url', 'price', 'is_paid', 'instructors', 'created', 'modified')
 
     def get_num_modules(self, instance):
         return instance.modules.count()
@@ -41,6 +45,15 @@ class CourseSerializer(ModelSerializer):
 
     def get_num_contents(self, instance):
         return instance.contents.count()
+
+    def get_avg_rating(self, instance: Course):
+        return instance.ratings.aggregate(avg=Avg('rating'))['avg']
+
+    def get_url(self, instance):
+        return f'https://udemy.com/course/{instance.slug}'
+
+    def get_num_subscribers(self, instance):
+        return instance.students.count()
 
     def get_num_contents_info(self, instance):
         return instance.contents.aggregate(

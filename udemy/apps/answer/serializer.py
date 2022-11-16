@@ -30,6 +30,8 @@ class AnswerSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
+        min_fields = ('id', 'creator', 'content')
+        default_fields = ('id', 'creator', 'content', 'created', 'content_object')
 
     def get_likes_count(self, instance):
         return instance.actions.filter(action=1).count()

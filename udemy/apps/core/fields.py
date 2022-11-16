@@ -71,6 +71,17 @@ class ModelSerializer(s.ModelSerializer):
         super().__init__(*args, **kwargs)
 
         if fields is not None:
+
+            if '@all' in fields:
+                return
+
+            field_types = {'@min': 'min_fields', '@default': 'default_fields'}
+            for field in fields:
+                if field in field_types:
+                    field_values = getattr(self.Meta, field_types[field])
+                    if field_values:
+                        fields.extend(field_values)
+
             allowed = set(fields)
             existing = set(self.fields)
             for field_name in existing - allowed:
@@ -108,5 +119,5 @@ class ModelSerializer(s.ModelSerializer):
     def create(self, validated_data):
         try:
             return super().create(validated_data)
-        except IntegrityError as error:
-            raise ValidationError from error
+        except IntegrityError:
+            raise ValidationError('Object already exists.')

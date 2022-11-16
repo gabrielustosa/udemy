@@ -44,18 +44,6 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', ]
 
-    def get_url_profile(self):
-        name_parts = self.name.split(' ')
-        first_name = name_parts[0]
-        last_name = None
-
-        if len(name_parts) > 1:
-            last_name = name_parts[1]
-
-        if last_name:
-            return f'https://ui-avatars.com/api/?name={first_name}+{last_name}&background=27272A&color=fff&format=png&font-size=0.5'
-        return f'https://ui-avatars.com/api/?name={first_name}&background=27272A&color=fff&format=png&font-size=0.5'
-
     def __str__(self):
         return self.email
 

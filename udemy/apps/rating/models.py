@@ -29,7 +29,8 @@ class Rating(CreatorBase, TimeStampedBase):
     class Meta:
         ordering = ['created', ]
         constraints = [
-            UniqueConstraint(fields=('creator', 'course'), name='unique rating')
+            UniqueConstraint(fields=('creator', 'course'), name='unique rating',
+                             violation_error_message='You already rated this course.')
         ]
 
     def __str__(self):
