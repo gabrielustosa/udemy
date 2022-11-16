@@ -1,6 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError
-from django.db.models import QuerySet, ManyToManyField
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as s
@@ -97,7 +97,8 @@ class ModelSerializer(s.ModelSerializer):
                 if fields:
                     serializer_options = {'fields': fields}
                     obj = getattr(instance, related_object)
-                    if obj.__class__.__name__ == 'ManyRelatedManager':
+                    queryset_all = getattr(obj, 'all', None)
+                    if queryset_all and isinstance(queryset_all(), QuerySet):
                         obj = obj.all()
                         serializer_options.update({'many': True})
                     serializer = serializer(obj, **serializer_options)
