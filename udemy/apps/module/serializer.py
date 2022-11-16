@@ -17,4 +17,4 @@ class ModuleSerializer(ModelSerializer):
         }
         update_only_fields = ('order',)
         min_fields = ('id', 'title')
-        default_fields = ('id', 'title', 'course')
+        default_fields = (*min_fields, 'course')

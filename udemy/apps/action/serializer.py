@@ -32,8 +32,8 @@ class ActionSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
-        min_fields = ('id', 'creator', 'action', 'content_object')
-        default_fields = ('id', 'creator', 'action', 'created', 'course', 'content_object')
+        min_fields = ('id', 'action')
+        default_fields = (*min_fields, 'creator', 'course', 'content_object')
 
     def create(self, validated_data):
         Model = self.context.get('model')

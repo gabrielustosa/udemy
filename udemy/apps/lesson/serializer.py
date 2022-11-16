@@ -23,4 +23,4 @@ class LessonSerializer(ModelSerializer):
         }
         update_only_fields = ('order',)
         min_fields = ('id', 'title', 'video')
-        default_fields = ('id', 'title', 'video', 'video_id', 'video_duration')
+        default_fields = (*min_fields, 'video_id', 'video_duration')

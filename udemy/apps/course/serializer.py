@@ -35,7 +35,7 @@ class CourseSerializer(ModelSerializer):
             'categories': CategorySerializer
         }
         min_fields = ('id', 'title', 'url')
-        default_fields = ('id', 'title', 'url', 'price', 'is_paid', 'instructors', 'created', 'modified')
+        default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
 
     def get_num_modules(self, instance):
         return instance.modules.count()

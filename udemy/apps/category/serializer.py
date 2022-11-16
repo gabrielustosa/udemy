@@ -9,4 +9,4 @@ class CategorySerializer(ModelSerializer):
             'id', 'title', 'slug'
         ]
         min_fields = ('id', 'title')
-        default_fields = ('id', 'title', 'slug')
+        default_fields = (*min_fields, 'slug')
