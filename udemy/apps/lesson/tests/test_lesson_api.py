@@ -1,3 +1,5 @@
+from random import randint
+
 from django.test import TestCase
 
 from parameterized import parameterized
@@ -215,7 +217,7 @@ class PrivateLessonApiTests(TestCase):
         modules = create_factory_in_batch(ModuleFactory, 5, course=course)
         course.instructors.add(self.user)
 
-        create_factory_in_batch(LessonFactory, 25, module=modules[0])
+        create_factory_in_batch(LessonFactory, 25, course=course, module=modules[randint(0, 4)])
 
         for index, model in enumerate(Lesson.objects.all(), start=1):
             self.assertEqual(model.order, index)

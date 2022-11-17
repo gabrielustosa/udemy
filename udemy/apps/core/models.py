@@ -104,15 +104,16 @@ class OrderedModel(models.Model):
     def save(self, force_insert=False, **kwargs):
         if force_insert:
             order = self.get_next_order()
-            setattr(self, 'order', order)
+            self.order = order
 
             self.do_after_create()
         else:
-            current_order = self.get_queryset().filter(id=self.id).first().order
             new_order = self.order
 
             if new_order > self.get_last_order():
                 raise ValidationError('The order can not be greater than last order of the object.')
+
+            current_order = self.get_queryset().filter(id=self.id).first().order
 
             number, query = (1, {'order__gte': new_order, 'order__lte': current_order}) if current_order > new_order \
                 else (-1, {'order__lte': new_order, 'order__gte': current_order})

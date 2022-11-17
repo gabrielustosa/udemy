@@ -35,3 +35,9 @@ class RetrieveNestedObjectMixin:
                 pass
 
         return queryset
+
+    def get_serializer(self, *args, **kwargs):
+        fields = self.request.query_params.get('fields')
+        if fields is not None:
+            kwargs['fields'] = fields.split(',')
+        return super().get_serializer(*args, **kwargs)

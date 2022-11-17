@@ -32,9 +32,6 @@ class Content(OrderedModel, TimeStampedBase):
     item = GenericForeignKey('content_type', 'object_id')
     order_in_respect = ('lesson',)
 
-    class Meta:
-        ordering = ['order']
-
     def __str__(self):
         return self.title
 

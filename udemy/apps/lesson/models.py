@@ -21,23 +21,16 @@ class Lesson(OrderedModel):
         related_name='lessons',
         on_delete=models.CASCADE
     )
-    order_in_respect = ('module', 'module')
-
-    class Meta:
-        ordering = ['order']
+    order_in_respect = ('course', 'module')
 
     def get_next_order(self):
         queryset = self.get_queryset()
         if queryset.exists():
-            last_lesson = queryset.aggregate(last_order=models.Max('order'))['last_order']
-            order = last_lesson + 1
+            last_order = queryset.aggregate(ls=models.Max('order'))['ls']
+            order = last_order + 1
         else:
-            last_lesson = self.course.lessons.aggregate(last_order=models.Max('order'))['last_order']
-
-            if last_lesson:
-                order = last_lesson + 1
-            else:
-                order = 1
+            last_order = self.course.lessons.aggregate(ls=models.Max('order'))['ls']
+            order = last_order + 1 if last_order else 1
         return order
 
     def do_after_create(self):

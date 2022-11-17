@@ -14,8 +14,5 @@ class Module(OrderedModel):
     title = models.CharField(_('Title'), max_length=200)
     order_in_respect = ('course',)
 
-    class Meta:
-        ordering = ['order']
-
     def __str__(self):
         return f'{self.order}. {self.title}'
