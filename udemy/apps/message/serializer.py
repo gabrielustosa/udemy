@@ -16,5 +16,6 @@ class MessageSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
+        create_only_fields = ('course',)
         min_fields = ('id', 'title', 'content')
         default_fields = (*min_fields, 'creator', 'course')

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     # 3rd apps
     'rest_framework',
@@ -64,6 +65,7 @@ INSTALLED_APPS = [
     'udemy.apps.note',
     'udemy.apps.answer',
     'udemy.apps.message',
+    'udemy.apps.quiz',
 
 ]
 

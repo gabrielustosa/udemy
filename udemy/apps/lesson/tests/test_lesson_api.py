@@ -13,6 +13,8 @@ from tests.factories.lesson import LessonFactory
 from tests.factories.module import ModuleFactory
 from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
+
+from udemy.apps.course.models import CourseRelation
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.lesson.serializer import LessonSerializer
 
@@ -27,26 +29,6 @@ class PublicLessonAPITest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-
-    def test_lesson_list(self):
-        lessons = create_factory_in_batch(LessonFactory, 5)
-
-        response = self.client.get(LESSON_LIST_URL)
-
-        serializer = LessonSerializer(lessons, many=True)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, serializer.data)
-
-    def test_lesson_retrieve(self):
-        lesson = LessonFactory()
-
-        response = self.client.get(lesson_detail_url(pk=1))
-
-        serializer = LessonSerializer(lesson)
-
-        self.assertEqual(response.data, serializer.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_cant_create_lesson(self):
         response = self.client.post(LESSON_LIST_URL)
@@ -65,13 +47,13 @@ class PrivateLessonApiTests(TestCase):
     def test_create_lesson(self):
         course = CourseFactory()
         course.instructors.add(self.user)
-        ModuleFactory(course=course)
+        module = ModuleFactory(course=course)
 
         payload = {
             'title': 'string',
             'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
-            'module': 1,
-            'course': 1
+            'module': module.id,
+            'course': course.id
         }
         response = self.client.post(LESSON_LIST_URL, payload)
 
@@ -81,11 +63,28 @@ class PrivateLessonApiTests(TestCase):
         self.assertEqual(lesson.title, payload['title'])
         self.assertEqual(lesson.video, payload['video'])
 
+    def test_lesson_retrieve(self):
+        lesson = LessonFactory()
+        CourseRelation.objects.create(course=lesson.course, creator=self.user)
+
+        response = self.client.get(lesson_detail_url(pk=lesson.id))
+
+        serializer = LessonSerializer(lesson)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_user_not_enrolled_can_retrieve_lesson(self):
+        lesson = LessonFactory()
+
+        response = self.client.get(lesson_detail_url(lesson.id))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_partial_lesson_update(self):
         course = CourseFactory()
         course.instructors.add(self.user)
-        module = ModuleFactory(course=course)
-        lesson = LessonFactory(module=module, course=course)
+        lesson = LessonFactory(course=course)
 
         payload = {
             'title': 'new title',
@@ -100,14 +99,11 @@ class PrivateLessonApiTests(TestCase):
     def test_lesson_full_update(self):
         course = CourseFactory()
         course.instructors.add(self.user)
-        module = ModuleFactory(course=course)
-        lesson = LessonFactory(module=module, course=course)
+        lesson = LessonFactory(course=course)
 
         payload = {
             'title': 'new title',
             'video': 'https://www.youtube.com/watch?v=dawjkb_dwadaws',
-            'module': 1,
-            'course': 1
         }
         response = self.client.put(lesson_detail_url(pk=lesson.id), payload)
 
@@ -119,8 +115,7 @@ class PrivateLessonApiTests(TestCase):
     def test_delete_lesson(self):
         course = CourseFactory()
         course.instructors.add(self.user)
-        module = ModuleFactory(course=course)
-        lesson = LessonFactory(course=course, module=module)
+        lesson = LessonFactory(course=course)
 
         response = self.client.delete(lesson_detail_url(pk=lesson.id))
 
@@ -129,15 +124,15 @@ class PrivateLessonApiTests(TestCase):
 
     def test_not_course_instructor_cant_create_a_lesson(self):
         course = CourseFactory()
-        ModuleFactory(course=course)
+        module = ModuleFactory(course=course)
 
         payload = {
             'title': 'string',
             'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
             'video_id': 'E6CdIawPTh0',
             'video_duration': 1,
-            'module': 1,
-            'course': 1
+            'module': module.id,
+            'course': course.id
         }
         response = self.client.post(LESSON_LIST_URL, payload)
 
@@ -145,8 +140,7 @@ class PrivateLessonApiTests(TestCase):
 
     def test_user_not_instructor_cant_update_lesson(self):
         course = CourseFactory()
-        module = ModuleFactory(course=course)
-        lesson = LessonFactory(course=course, module=module)
+        lesson = LessonFactory(course=course)
 
         user = UserFactory()
         self.client.force_authenticate(user)
@@ -159,8 +153,7 @@ class PrivateLessonApiTests(TestCase):
 
     def test_user_not_instructor_cant_delete_lesson(self):
         course = CourseFactory()
-        module = ModuleFactory(course=course)
-        lesson = LessonFactory(course=course, module=module)
+        lesson = LessonFactory(course=course)
 
         response = self.client.delete(lesson_detail_url(pk=lesson.id))
 
@@ -168,16 +161,15 @@ class PrivateLessonApiTests(TestCase):
 
     def test_cant_send_a_order_greater_than_max_order_lesson(self):
         course = CourseFactory()
-        module = ModuleFactory(course=course)
         course.instructors.add(self.user)
 
-        create_factory_in_batch(LessonFactory, 5, course=course, module=module)
+        lessons = create_factory_in_batch(LessonFactory, 5, course=course)
 
         payload = {
             'order': 6,
         }
 
-        response = self.client.patch(lesson_detail_url(pk=1), payload)
+        response = self.client.patch(lesson_detail_url(pk=lessons[0].id), payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -202,7 +194,7 @@ class PrivateLessonApiTests(TestCase):
             'order': new_order
         }
 
-        response = self.client.patch(lesson_detail_url(pk=current_order), payload)
+        response = self.client.patch(lesson_detail_url(pk=lesson.id), payload)
 
         lesson.refresh_from_db()
 

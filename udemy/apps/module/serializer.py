@@ -15,6 +15,7 @@ class ModuleSerializer(ModelSerializer):
         related_objects = {
             'course': CourseSerializer
         }
+        create_only_fields = ('course',)
         update_only_fields = ('order',)
         min_fields = ('id', 'title')
         default_fields = (*min_fields, 'course')

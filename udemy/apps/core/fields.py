@@ -78,9 +78,9 @@ class ModelSerializer(s.ModelSerializer):
             field_types = {'@min': 'min_fields', '@default': 'default_fields'}
             for field in fields:
                 if field in field_types:
-                    field_values = getattr(self.Meta, field_types[field])
+                    field_values = getattr(self.Meta, field_types[field], None)
                     if field_values:
-                        fields.extend(field_values)
+                        fields += field_values
 
             allowed = set(fields)
             existing = set(self.fields)
@@ -110,15 +110,24 @@ class ModelSerializer(s.ModelSerializer):
         if self.instance:
             if hasattr(self.Meta, 'create_only_fields'):
                 for field in self.Meta.create_only_fields:
-                    ret[field] = None
+                    if field in ret:
+                        ret.pop(field)
         else:
             if hasattr(self.Meta, 'update_only_fields'):
                 for field in self.Meta.update_only_fields:
-                    ret[field] = None
+                    if field in ret:
+                        ret.pop(field)
         return ret
+
+    def get_extra_kwargs(self):
+        extra_kwargs = super().get_extra_kwargs()
+        if hasattr(self.Meta, 'create_only_fields') and self.instance:
+            for field in self.Meta.create_only_fields:
+                extra_kwargs.setdefault(field, {}).update({'required': False})
+        return extra_kwargs
 
     def create(self, validated_data):
         try:
             return super().create(validated_data)
         except IntegrityError:
-            raise ValidationError('Object already exists.')
+            raise ValidationError('Integrity database error.')

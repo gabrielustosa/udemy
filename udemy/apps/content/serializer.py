@@ -49,9 +49,10 @@ class ContentSerializer(ModelSerializer):
             'item',
         ]
         related_objects = {
+            'course': CourseSerializer,
             'lesson': LessonSerializer,
-            'course': CourseSerializer
         }
+        create_only_fields = ('course', 'lesson')
         update_only_fields = ('order',)
         min_fields = ('id', 'title', 'item')
         default_fields = (*min_fields, 'lesson')

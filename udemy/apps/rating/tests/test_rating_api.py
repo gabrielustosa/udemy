@@ -54,7 +54,7 @@ class PublicRatingAPITest(TestCase):
     def test_rating_retrieve(self):
         rating = RatingFactory()
 
-        response = self.client.get(rating_detail_url(pk=1))
+        response = self.client.get(rating_detail_url(pk=rating.id))
 
         serializer = RatingSerializer(rating)
 
@@ -89,21 +89,6 @@ class PrivateRatingApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_user_cant_rating_course_twice(self):
-        course = CourseFactory()
-        CourseRelation.objects.create(course=course, creator=self.user)
-        RatingFactory(creator=self.user, course=course)
-
-        payload = {
-            'course': course.id,
-            'rating': 3,
-            'comment': 'test',
-        }
-
-        response = self.client.post(RATING_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_user_cant_rate_a_course_not_enrolled(self):
         course = CourseFactory()
 
@@ -116,24 +101,6 @@ class PrivateRatingApiTests(TestCase):
         response = self.client.post(RATING_LIST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @parameterized.expand([
-        (0,),
-        (6,)
-    ])
-    def test_user_cant_create_a_rating_with_rate_greater_than_5_less_than_1(self, rating):
-        course = CourseFactory()
-        CourseRelation.objects.create(course=course, creator=self.user)
-
-        payload = {
-            'course': course.id,
-            'rating': rating,
-            'comment': 'test',
-        }
-
-        response = self.client.post(RATING_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_partial_rating_update(self):
         original_comment = 'original comment'
@@ -158,7 +125,6 @@ class PrivateRatingApiTests(TestCase):
         rating = RatingFactory(course=course, creator=self.user)
 
         payload = {
-            'course': 1,
             'rating': 3,
             'comment': 'new comment',
         }
@@ -190,11 +156,11 @@ class PrivateRatingApiTests(TestCase):
         rating = RatingFactory(course=course, creator=self.user)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'action': action,
         }
 
-        response = self.client.post(rating_action_url(1), payload)
+        response = self.client.post(rating_action_url(rating.id), payload)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(rating.actions.filter(action=action).count(), 1)
@@ -203,7 +169,7 @@ class PrivateRatingApiTests(TestCase):
         rating = RatingFactory()
         actions = create_factory_in_batch(ActionFactory, 10, content_object=rating)
 
-        response = self.client.get(rating_action_url(1))
+        response = self.client.get(rating_action_url(rating.id))
 
         actions = ActionSerializer(actions, many=True)
 
@@ -258,7 +224,7 @@ class PrivateRatingApiTests(TestCase):
         rating = RatingFactory(course=course, creator=self.user)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'content': 'answer content'
         }
 

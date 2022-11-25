@@ -1,4 +1,4 @@
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 
@@ -6,10 +6,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from tests.factories.action import ActionFactory
-from tests.factories.course import CourseFactory
+from tests.factories.question import QuestionFactory
 from tests.factories.user import UserFactory
+
 from udemy.apps.course.models import CourseRelation
-from udemy.apps.question.models import Question
 
 
 def question_action_url(pk): return reverse('question:action-list', kwargs={'question_id': pk})
@@ -26,7 +26,9 @@ class PublicActionTestAPI(TestCase):
         self.client = APIClient()
 
     def test_unauthenticated_cant_create_action(self):
-        response = self.client.post(question_action_url(1))
+        question = QuestionFactory()
+
+        response = self.client.post(question_action_url(question.id))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -40,32 +42,31 @@ class PrivateActionApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_user_cant_create_same_action_twice(self):
-        course = CourseFactory()
+        question = QuestionFactory()
+        course = question.course
         CourseRelation.objects.create(course=course, creator=self.user)
-        ActionFactory(creator=self.user, course=course)
+        ActionFactory(creator=self.user, course=course, content_object=question)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'action': 1,
         }
 
-        try:
-            with transaction.atomic():
-                response = self.client.post(question_action_url(1), payload, format='json')
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        except IntegrityError:
-            pass
-        self.assertEqual(Question.objects.first().actions.filter(action=1).count(), 1)
+        with transaction.atomic():
+            response = self.client.post(question_action_url(question.id), payload, format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(question.actions.filter(action=1).count(), 1)
 
     def test_user_not_enrolled_can_create_action(self):
-        course = CourseFactory()
-        ActionFactory(creator=self.user, course=course)
+        question = QuestionFactory()
+        course = question.course
+        ActionFactory(creator=self.user, course=course, content_object=question)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'action': 1,
         }
 
-        response = self.client.post(question_action_url(1), payload, format='json')
+        response = self.client.post(question_action_url(question.id), payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

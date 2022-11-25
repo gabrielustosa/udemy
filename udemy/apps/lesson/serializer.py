@@ -21,6 +21,7 @@ class LessonSerializer(ModelSerializer):
             'module': ModuleSerializer,
             'course': CourseSerializer
         }
+        create_only_fields = ('course', 'module')
         read_only_fields = ('video_duration', 'video_id')
         update_only_fields = ('order',)
         min_fields = ('id', 'title', 'video')

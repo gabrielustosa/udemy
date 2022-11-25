@@ -11,7 +11,7 @@ class Message(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(
         Course,
         related_name='warning_messages',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     title = models.CharField(
         max_length=255,

@@ -11,8 +11,10 @@ from tests.factories.course import CourseFactory
 from tests.factories.lesson import LessonFactory
 from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
+
 from udemy.apps.content.models import Content, Text, Link
 from udemy.apps.content.serializer import ContentSerializer
+from udemy.apps.course.models import CourseRelation
 
 CONTENT_LIST_URL = reverse('content-list')
 
@@ -26,27 +28,8 @@ class PublicContentAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_content_list(self):
-        lessons = create_factory_in_batch(ContentFactory, 5)
-
-        response = self.client.get(CONTENT_LIST_URL)
-
-        serializer = ContentSerializer(lessons, many=True)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, serializer.data)
-
-    def test_content_retrieve(self):
-        content = ContentFactory()
-
-        response = self.client.get(content_detail_url(pk=1))
-
-        serializer = ContentSerializer(content)
-
-        self.assertEqual(response.data, serializer.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_unauthenticated_cant_create_content(self):
+    def test_unauthenticated_user_cant_create_content(self):
+        ContentFactory()
         response = self.client.post(CONTENT_LIST_URL)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -63,12 +46,12 @@ class PrivateContentApiTests(TestCase):
     def test_create_content(self):
         course = CourseFactory()
         course.instructors.add(self.user)
-        LessonFactory(course=course)
+        lesson = LessonFactory(course=course)
 
         payload = {
             'title': 'teste',
-            'lesson': 1,
-            'course': 1,
+            'lesson': lesson.id,
+            'course': course.id,
             'item': {
                 'content': 'Teste'
             }
@@ -80,6 +63,25 @@ class PrivateContentApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(content.title, payload['title'])
         self.assertEqual(content.item.content, payload['item']['content'])
+        self.assertTrue(isinstance(content.item, Text))
+
+    def test_content_retrieve(self):
+        content = ContentFactory()
+        CourseRelation.objects.create(creator=self.user, course=content.course)
+
+        response = self.client.get(content_detail_url(content.id))
+
+        serializer = ContentSerializer(content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_user_not_enrolled_can_retrieve_content(self):
+        content = ContentFactory()
+
+        response = self.client.get(content_detail_url(content.id))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_partial_content_update(self):
         course = CourseFactory()
@@ -98,6 +100,7 @@ class PrivateContentApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content.item.url, payload['item']['url'])
+        self.assertTrue(isinstance(content.item, Link))
 
     def test_content_full_update(self):
         course = CourseFactory()
@@ -107,19 +110,18 @@ class PrivateContentApiTests(TestCase):
 
         payload = {
             'title': 'teste',
-            'lesson': 1,
-            'course': 1,
             'item': {
                 'url': 'https://google.com'
             }
         }
-        response = self.client.put(content_detail_url(pk=lesson.id), payload, format='json')
+        response = self.client.put(content_detail_url(pk=content.id), payload, format='json')
 
         content.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(content.title, payload['title'])
         self.assertEqual(content.item.url, payload['item']['url'])
+        self.assertTrue(isinstance(content.item, Link))
 
     def test_delete_content(self):
         course = CourseFactory()
@@ -133,12 +135,12 @@ class PrivateContentApiTests(TestCase):
         self.assertFalse(Content.objects.filter(id=content.id).exists())
 
     def test_not_course_instructor_cant_create_a_content(self):
-        LessonFactory()
+        lesson = LessonFactory()
 
         payload = {
             'title': 'teste',
-            'lesson': 1,
-            'course': 1,
+            'lesson': lesson.id,
+            'course': lesson.course.id,
             'item': {
                 'content': 'Teste'
             }
@@ -176,13 +178,13 @@ class PrivateContentApiTests(TestCase):
         course.instructors.add(self.user)
         lesson = LessonFactory(course=course)
 
-        create_factory_in_batch(ContentFactory, 5, course=course, lesson=lesson)
+        contents = create_factory_in_batch(ContentFactory, 5, course=course, lesson=lesson)
 
         payload = {
             'order': 6,
         }
 
-        response = self.client.patch(content_detail_url(pk=1), payload)
+        response = self.client.patch(content_detail_url(pk=contents[0].id), payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -207,7 +209,7 @@ class PrivateContentApiTests(TestCase):
             'order': new_order
         }
 
-        response = self.client.patch(content_detail_url(pk=current_order), payload)
+        response = self.client.patch(content_detail_url(pk=content.id), payload)
 
         content.refresh_from_db()
 
@@ -221,15 +223,15 @@ class PrivateContentApiTests(TestCase):
         (Text, {'content': 'Random content'}),
         (Link, {'url': 'https://google.com'}),
     ])
-    def test_create_content_link_and_text(self, model, data):
+    def test_create_generic_relation(self, model, data):
         course = CourseFactory()
         course.instructors.add(self.user)
-        LessonFactory(course=course)
+        lesson = LessonFactory(course=course)
 
         payload = {
             'title': 'teste',
-            'lesson': 1,
-            'course': 1,
+            'lesson': lesson.id,
+            'course': course.id,
             'item': {
                 **data
             }

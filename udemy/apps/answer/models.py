@@ -14,7 +14,7 @@ class Answer(CreatorBase, TimeStampedBase):
     content_object = GenericForeignKey('content_type', 'object_id')
     course = models.ForeignKey(
         Course,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     content = models.TextField(
         validators=[

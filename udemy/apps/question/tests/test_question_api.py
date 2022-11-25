@@ -57,14 +57,14 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_create_question(self):
         course = CourseFactory()
-        LessonFactory(course=course)
+        lesson = LessonFactory(course=course)
         CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
             'title': 'title',
             'content': 'content',
-            'lesson': 1,
-            'course': 1
+            'lesson': lesson.id,
+            'course': course.id
         }
         response = self.client.post(QUESTION_LIST_URL, payload)
 
@@ -81,7 +81,7 @@ class PrivateQuestionApiTests(TestCase):
             'title': 'new title',
             'content': 'new content'
         }
-        response = self.client.patch(question_detail_url(pk=1), payload)
+        response = self.client.patch(question_detail_url(question.id), payload)
 
         question.refresh_from_db()
 
@@ -99,41 +99,18 @@ class PrivateQuestionApiTests(TestCase):
         self.assertFalse(Question.objects.filter(id=question.id).exists())
 
     def test_user_not_enrolled_can_ask_a_question(self):
-        question = QuestionFactory()
-
-        response = self.client.delete(question_detail_url(pk=question.id))
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_create_question_title_less_than_5(self):
         course = CourseFactory()
-        LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, creator=self.user)
-
-        payload = {
-            'title': 't',
-            'content': 'content',
-            'lesson': 1,
-            'course': 1
-        }
-        response = self.client.post(QUESTION_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_create_question_content_greater_than_100(self):
-        course = CourseFactory()
-        LessonFactory(course=course)
-        CourseRelation.objects.create(course=course, creator=self.user)
+        lesson = LessonFactory(course=course)
 
         payload = {
             'title': 'title',
-            'content': ''.join(['a' for _ in range(1001)]),
-            'lesson': 1,
-            'course': 1
+            'content': 'content',
+            'lesson': lesson.id,
+            'course': course.id
         }
-        response = self.client.post(QUESTION_LIST_URL, payload)
+        response = self.client.delete(QUESTION_LIST_URL, payload)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @parameterized.expand([
         (1,),
@@ -145,20 +122,21 @@ class PrivateQuestionApiTests(TestCase):
         question = QuestionFactory(course=course, creator=self.user)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'action': action,
         }
 
-        response = self.client.post(question_action_url(1), payload)
+        response = self.client.post(question_action_url(question.id), payload)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(question.actions.filter(action=action).count(), 1)
 
     def test_action_question_list(self):
         question = QuestionFactory()
-        actions = create_factory_in_batch(ActionFactory, 10, content_object=question)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
+        actions = create_factory_in_batch(ActionFactory, 10, content_object=question, course=question.course)
 
-        response = self.client.get(question_action_url(1))
+        response = self.client.get(question_action_url(question.id))
 
         actions = ActionSerializer(actions, many=True)
 
@@ -168,7 +146,8 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_question_action_retrieve(self):
         question = QuestionFactory(creator=self.user)
-        action = ActionFactory(creator=self.user, content_object=question)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
+        action = ActionFactory(creator=self.user, content_object=question, course=question.course)
 
         response = self.client.get(question_action_url_detail(question.id, 1))
 
@@ -179,7 +158,8 @@ class PrivateQuestionApiTests(TestCase):
 
     def test_question_action_retrieve_only_own_user_action(self):
         question = QuestionFactory()
-        ActionFactory(content_object=question)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
+        ActionFactory(content_object=question, course=question.course)
 
         response = self.client.get(question_action_url_detail(question.id, 1))
 
@@ -196,7 +176,7 @@ class PrivateQuestionApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Action.objects.filter(id=1).exists())
 
-    def test_user_cant_delete_action_that_is_not_his(self):
+    def test_user_cant_delete_action_that_is_not_his_own(self):
         other_user = UserFactory()
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user)
@@ -213,7 +193,7 @@ class PrivateQuestionApiTests(TestCase):
         question = QuestionFactory(course=course, creator=self.user)
 
         payload = {
-            'course': 1,
+            'course': course.id,
             'content': 'answer content'
         }
 

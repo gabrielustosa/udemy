@@ -1,6 +1,6 @@
 from django.db import models
 
-from udemy.apps.core.models import OrderedModel
+from udemy.apps.core.models import OrderedModel, CreatorBase, TimeStampedBase
 from udemy.apps.course.models import Course
 from udemy.apps.module.models import Module
 from udemy.apps.user.models import User
@@ -14,12 +14,12 @@ class Lesson(OrderedModel):
     module = models.ForeignKey(
         Module,
         related_name='lessons',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     course = models.ForeignKey(
         Course,
         related_name='lessons',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     order_in_respect = ('course', 'module')
 
@@ -41,14 +41,10 @@ class Lesson(OrderedModel):
         return self.title
 
 
-class LessonRelation(models.Model):
-    lesson = models.ForeignKey(
-        Lesson,
-        on_delete=models.CASCADE
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='lessons'
-    )
+class LessonRelation(CreatorBase, TimeStampedBase):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     done = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('creator', 'lesson'), name='unique lesson relation')]

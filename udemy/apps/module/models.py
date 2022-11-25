@@ -9,7 +9,7 @@ class Module(OrderedModel):
     course = models.ForeignKey(
         Course,
         related_name='modules',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     title = models.CharField(_('Title'), max_length=200)
     order_in_respect = ('course',)

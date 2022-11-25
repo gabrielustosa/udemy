@@ -21,6 +21,7 @@ class RatingSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
+        create_only_fields = ('course',)
         min_fields = ('id', 'rating', 'comment')
         default_fields = (*min_fields, 'creator', 'course')
 

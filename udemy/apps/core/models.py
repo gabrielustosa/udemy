@@ -103,8 +103,7 @@ class OrderedModel(models.Model):
 
     def save(self, force_insert=False, **kwargs):
         if force_insert:
-            order = self.get_next_order()
-            self.order = order
+            self.order = self.get_next_order()
 
             self.do_after_create()
         else:
@@ -122,8 +121,7 @@ class OrderedModel(models.Model):
                 order=ExpressionWrapper(F('order') + number, output_field=PositiveIntegerField()))
 
             self.do_after_update()
-
-        return super().save(force_insert, **kwargs)
+        super().save(force_insert, **kwargs)
 
     def delete(self, using=None, keep_parents=False):
         self.get_queryset().filter(order__gt=self.order).update(

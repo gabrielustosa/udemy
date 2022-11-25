@@ -10,6 +10,7 @@ from tests.utils import create_factory_in_batch
 from tests.factories.course import CourseFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.user import UserFactory
+from udemy.apps.course.models import CourseRelation
 
 from udemy.apps.module.models import Module
 from udemy.apps.module.serializer import ModuleSerializer
@@ -25,26 +26,6 @@ class PublicModuleAPITest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-
-    def test_module_list(self):
-        modules = create_factory_in_batch(ModuleFactory, 5)
-
-        response = self.client.get(MODULE_LIST_URL)
-
-        serializer = ModuleSerializer(modules, many=True)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, serializer.data)
-
-    def test_module_retrieve(self):
-        module = ModuleFactory()
-
-        response = self.client.get(module_detail_url(pk=1))
-
-        serializer = ModuleSerializer(module)
-
-        self.assertEqual(response.data, serializer.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_cant_create_module(self):
         response = self.client.post(MODULE_LIST_URL)
@@ -66,7 +47,7 @@ class PrivateModuleApiTests(TestCase):
 
         payload = {
             'title': 'string',
-            'course': 1
+            'course': course.id
         }
         response = self.client.post(MODULE_LIST_URL, payload)
 
@@ -74,6 +55,24 @@ class PrivateModuleApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(module.title, payload['title'])
+
+    def test_module_retrieve(self):
+        module = ModuleFactory()
+        CourseRelation.objects.create(creator=self.user, course=module.course)
+
+        response = self.client.get(module_detail_url(module.id))
+
+        serializer = ModuleSerializer(module)
+
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_not_enrolled_can_retrieve_module(self):
+        module = ModuleFactory()
+
+        response = self.client.get(module_detail_url(module.id))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_partial_module_update(self):
         course = CourseFactory()
@@ -97,7 +96,6 @@ class PrivateModuleApiTests(TestCase):
 
         payload = {
             'title': 'string',
-            'course': 1,
             'order': 1,
         }
         response = self.client.put(module_detail_url(pk=module.id), payload)
@@ -117,11 +115,11 @@ class PrivateModuleApiTests(TestCase):
         self.assertFalse(Module.objects.filter(id=module.id).exists())
 
     def test_not_course_instructor_cant_create_a_module(self):
-        CourseFactory()
+        course = CourseFactory()
 
         payload = {
             'title': 'string',
-            'course': 1
+            'course': course.id
         }
         response = self.client.post(MODULE_LIST_URL, payload)
 
@@ -166,7 +164,7 @@ class PrivateModuleApiTests(TestCase):
             'order': new_order
         }
 
-        response = self.client.patch(module_detail_url(pk=current_order), payload)
+        response = self.client.patch(module_detail_url(pk=module.id), payload)
 
         module.refresh_from_db()
 

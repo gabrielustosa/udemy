@@ -10,6 +10,7 @@ from tests.utils import create_factory_in_batch
 from tests.factories.category import CategoryFactory
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
+
 from udemy.apps.course.models import Course
 from udemy.apps.course.serializer import CourseSerializer
 
@@ -38,7 +39,7 @@ class PublicCourseAPITest(TestCase):
     def test_course_retrieve(self):
         course = CourseFactory()
 
-        response = self.client.get(course_detail_url(pk=1))
+        response = self.client.get(course_detail_url(pk=course.id))
 
         serializer = CourseSerializer(course)
 
@@ -60,7 +61,7 @@ class PrivateCourseApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_course(self):
-        CategoryFactory()
+        category = CategoryFactory()
         payload = {
             'title': 'string',
             'slug': 'slug',
@@ -72,15 +73,15 @@ class PrivateCourseApiTests(TestCase):
             'what_you_will_learn': 'you learn',
             'description': 'description',
             'level': 'beginner',
-            'categories': [1],
-            'instructors': [1]
+            'categories': [category.id],
+            'instructors': [self.user.id]
         }
         response = self.client.post(COURSE_LIST_URL, payload)
 
         course = Course.objects.first()
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(course.instructors.first(), self.user)
+        self.assertIn(self.user, course.instructors.all())
 
     def test_partial_course_update(self):
         original_slug = 'original_slug'
@@ -100,7 +101,7 @@ class PrivateCourseApiTests(TestCase):
         self.assertEqual(course.instructors.first(), self.user)
 
     def test_course_full_update(self):
-        CategoryFactory()
+        category = CategoryFactory()
         course = CourseFactory()
         course.instructors.add(self.user)
 
@@ -115,8 +116,8 @@ class PrivateCourseApiTests(TestCase):
             'what_you_will_learn': 'you learn',
             'description': 'description',
             'level': 'beginner',
-            'categories': [1],
-            'instructors': [1]
+            'categories': [category.id],
+            'instructors': [self.user.id]
         }
         response = self.client.put(course_detail_url(pk=course.id), payload)
 
@@ -134,18 +135,25 @@ class PrivateCourseApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Course.objects.filter(id=course.id).exists())
 
-    def test_user_not_instructor_cant_update_course(self):
+    def test_user_not_instructor_cant_patch_course(self):
         course = CourseFactory()
-        course.instructors.add(self.user)
 
         user = UserFactory()
         self.client.force_authenticate(user)
 
-        response_patch = self.client.patch(course_detail_url(pk=course.id))
-        response_put = self.client.put(course_detail_url(pk=course.id))
+        response = self.client.patch(course_detail_url(pk=course.id))
 
-        self.assertEqual(response_patch.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response_put.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_not_instructor_cant_put_course(self):
+        course = CourseFactory()
+
+        user = UserFactory()
+        self.client.force_authenticate(user)
+
+        response = self.client.put(course_detail_url(pk=course.id))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_not_instructor_cant_delete_course(self):
         course = CourseFactory()

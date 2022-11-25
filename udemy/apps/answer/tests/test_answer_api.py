@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from tests.factories.answer import AnswerFactory
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
+
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
@@ -22,12 +23,14 @@ class PublicAnswerTestAPI(TestCase):
         self.client = APIClient()
 
     def test_unauthenticated_cant_create_action(self):
-        response = self.client.post(answer_detail_url(1))
+        answer = AnswerFactory()
+
+        response = self.client.post(answer_detail_url(answer.id))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateActionApiTests(TestCase):
+class PrivateAnswerApiTests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
@@ -36,9 +39,11 @@ class PrivateActionApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_answer_retrieve(self):
-        answer = AnswerFactory()
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, creator=self.user)
+        answer = AnswerFactory(course=course)
 
-        response = self.client.get(answer_detail_url(1))
+        response = self.client.get(answer_detail_url(answer.id))
 
         serializer = AnswerSerializer(answer)
 
@@ -46,27 +51,27 @@ class PrivateActionApiTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_answer_delete_if_user_is_not_enrolled(self):
-        AnswerFactory()
+        answer = AnswerFactory()
 
-        response = self.client.delete(answer_detail_url(1))
+        response = self.client.delete(answer_detail_url(answer.id))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_answer_delete_if_user_is_not_the_creator(self):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user)
-        AnswerFactory(course=course)
+        answer = AnswerFactory(course=course)
 
-        response = self.client.delete(answer_detail_url(1))
+        response = self.client.delete(answer_detail_url(answer.id))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_answer_delete(self):
         course = CourseFactory()
         CourseRelation.objects.create(course=course, creator=self.user)
-        AnswerFactory(course=course, creator=self.user)
+        answer = AnswerFactory(course=course, creator=self.user)
 
-        response = self.client.delete(answer_detail_url(1))
+        response = self.client.delete(answer_detail_url(answer.id))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Answer.objects.filter(id=1).exists())
@@ -80,7 +85,7 @@ class PrivateActionApiTests(TestCase):
             'content': 'new content'
         }
 
-        response = self.client.patch(answer_detail_url(1), payload)
+        response = self.client.patch(answer_detail_url(answer.id), payload)
 
         answer.refresh_from_db()
 

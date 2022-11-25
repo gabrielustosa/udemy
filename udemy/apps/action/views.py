@@ -1,20 +1,20 @@
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.answer.models import Answer
-from udemy.apps.core.mixins import RetrieveNestedObjectMixin
+from udemy.apps.core.mixins import RetrieveRelatedObjectMixin, ActionPermissionMixin
 from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.question.models import Question
 from udemy.apps.rating.models import Rating
 
 
-class ActionViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
+class ActionViewSetBase(RetrieveRelatedObjectMixin, ModelViewSet):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsEnrolled]
+    permission_classes = [IsAuthenticated, IsEnrolled]
 
     class Meta:
         model = Action
@@ -52,9 +52,13 @@ class ActionViewSetBase(RetrieveNestedObjectMixin, ModelViewSet):
         return context
 
 
-class RatingActionViewSet(ActionViewSetBase):
+class RatingActionViewSet(ActionPermissionMixin, ActionViewSetBase):
     model = Rating
     pk_url_kwarg = 'rating_id'
+    permission_classes_by_action = {
+        ('default',): [IsAuthenticated, IsEnrolled],
+        ('retrieve', 'list'): [AllowAny],
+    }
 
 
 class QuestionActionViewSet(ActionViewSetBase):

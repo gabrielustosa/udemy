@@ -23,5 +23,6 @@ class NoteSerializer(ModelSerializer):
             'course': CourseSerializer,
             'lesson': LessonSerializer
         }
+        create_only_fields = ('course', 'lesson')
         min_fields = ('id', 'note')
         default_fields = (*min_fields, 'creator', 'lesson', 'time')

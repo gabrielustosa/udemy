@@ -43,5 +43,4 @@ class CourseRelation(CreatorBase, TimeStampedBase):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=('creator', 'course'), name='unique course relation',
-                                    violation_error_message='You already rated this course.')]
+            models.UniqueConstraint(fields=('creator', 'course'), name='unique course relation')]

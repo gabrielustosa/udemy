@@ -15,7 +15,7 @@ class ActionSerializer(ModelSerializer):
         Rating: RatingSerializer(),
         Answer: AnswerSerializer(),
         Question: QuestionSerializer()
-    }, required=False)
+    }, read_only=True)
 
     class Meta:
         model = Action
@@ -32,6 +32,7 @@ class ActionSerializer(ModelSerializer):
             'creator': UserSerializer,
             'course': CourseSerializer
         }
+        create_only_fields = ('course',)
         min_fields = ('id', 'action')
         default_fields = (*min_fields, 'creator', 'course', 'content_object')
 

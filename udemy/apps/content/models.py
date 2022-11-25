@@ -12,12 +12,12 @@ class Content(OrderedModel, TimeStampedBase):
     lesson = models.ForeignKey(
         Lesson,
         related_name='contents',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     course = models.ForeignKey(
         Course,
         related_name='contents',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     content_type = models.ForeignKey(
         ContentType,

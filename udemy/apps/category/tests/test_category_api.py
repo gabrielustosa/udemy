@@ -36,7 +36,7 @@ class PublicCategoryAPITest(TestCase):
     def test_category_retrieve(self):
         category = CategoryFactory()
 
-        response = self.client.get(category_detail_url(pk=1))
+        response = self.client.get(category_detail_url(category.id))
 
         serializer = CategorySerializer(category)
 
@@ -76,6 +76,7 @@ class PrivateCategoryApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['title'], category.title)
+        self.assertEqual(response.data['slug'], category.slug)
 
     def test_partial_category_update(self):
         original_slug = 'original_slug'

@@ -29,4 +29,4 @@ class Action(CreatorBase, TimeStampedBase):
                 'object_id',
                 'action',
                 'course',
-            ), name='unique action', violation_error_message='This action already exists')]
+            ), name='unique action')]

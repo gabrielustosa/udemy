@@ -13,12 +13,12 @@ class Question(CreatorBase, TimeStampedBase):
     lesson = models.ForeignKey(
         Lesson,
         related_name='questions',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     course = models.ForeignKey(
         Course,
         related_name='questions',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     title = models.CharField(
         max_length=255,

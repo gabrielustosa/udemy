@@ -13,7 +13,6 @@ from tests.factories.note import NoteFactory
 from tests.factories.user import UserFactory
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.note.models import Note
-from udemy.apps.question.models import Answer
 
 NOTE_LIST_URL = reverse('note-list')
 
@@ -43,12 +42,12 @@ class PrivateAnswerAPITests(TestCase):
 
     def test_create_note(self):
         course = CourseFactory()
-        LessonFactory(course=course)
+        lesson = LessonFactory(course=course)
         CourseRelation.objects.create(course=course, creator=self.user)
 
         payload = {
-            'lesson': 1,
-            'course': 1,
+            'lesson': lesson.id,
+            'course': course.id,
             'note': 'Note',
             'time': '12:34:56',
         }
@@ -76,7 +75,25 @@ class PrivateAnswerAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(datetime.strptime(payload['time'], '%H:%M:%S').time(), note.time)
 
-    def test_delete_answer(self):
+    def test_partial_note_update(self):
+        course = CourseFactory()
+        lesson = LessonFactory(course=course)
+        note = NoteFactory(creator=self.user, lesson=lesson, course=course)
+        CourseRelation.objects.create(course=course, creator=self.user)
+
+        payload = {
+            'note': 'Note',
+            'time': '12:34:56',
+        }
+        response = self.client.put(note_detail_url(note.id), payload)
+
+        note.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(note.note, payload['note'])
+        self.assertEqual(datetime.strptime(payload['time'], '%H:%M:%S').time(), note.time)
+
+    def test_delete_note(self):
         course = CourseFactory()
         lesson = LessonFactory(course=course)
         note = NoteFactory(creator=self.user, lesson=lesson, course=course)
@@ -85,7 +102,7 @@ class PrivateAnswerAPITests(TestCase):
         response = self.client.delete(note_detail_url(pk=note.id))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Answer.objects.filter(id=note.id).exists())
+        self.assertFalse(Note.objects.filter(id=note.id).exists())
 
     def test_not_creator_note_can_update_note(self):
         user = UserFactory()
@@ -103,11 +120,11 @@ class PrivateAnswerAPITests(TestCase):
 
     def test_user_not_enrolled_can_create_course(self):
         course = CourseFactory()
-        LessonFactory(course=course)
+        lesson = LessonFactory(course=course)
 
         payload = {
-            'lesson': 1,
-            'course': 1,
+            'lesson': lesson.id,
+            'course': course.id,
             'note': 'Note',
             'time': '12:34:56',
         }

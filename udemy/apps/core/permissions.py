@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS
 
@@ -5,25 +7,19 @@ from udemy.apps.course.models import Course, CourseRelation
 
 
 class IsInstructor(permissions.BasePermission):
-    """Object permission to allow only course instructors to modify them courses."""
+    """Object permission to allow only course instructors."""
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-
         course = obj if isinstance(obj, Course) else obj.course
         is_instructor = course.instructors.filter(id=request.user.id).exists()
         return is_instructor
 
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-
-        course_id = request.data.get('course')
-        if not course_id:
-            return True
-
-        course = Course.objects.filter(id=course_id).first()
+        if 'course' in request.data:
+            course = get_object_or_404(Course, id=request.data['course'])
+        else:
+            obj = view.get_queryset().first()
+            course = obj if isinstance(obj, Course) else obj.course
         is_instructor = course.instructors.filter(id=request.user.id).exists()
         return is_instructor
 
@@ -49,22 +45,24 @@ class IsCreatorObject(permissions.BasePermission):
 
 
 class IsEnrolled(permissions.BasePermission):
-    """Allow access only for students enrolled in course."""
+    """Allow access only for enrolled students or course's instructors."""
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-
-        is_enrolled = CourseRelation.objects.filter(course=obj.course, creator=request.user).exists()
-        return is_enrolled
+        course = obj if isinstance(obj, Course) else obj.course
+        is_enrolled = CourseRelation.objects.filter(course=course, creator=request.user).exists()
+        is_instructor = False
+        if not is_enrolled:
+            is_instructor = course.instructors.filter(id=request.user.id).exists()
+        return is_enrolled or is_instructor
 
     def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-
-        course_id = request.data.get('course')
-        if not course_id:
-            return True
-
-        is_enrolled = CourseRelation.objects.filter(course__id=course_id, creator=request.user).exists()
-        return is_enrolled
+        if 'course' in request.data:
+            course = get_object_or_404(Course, id=request.data['course'])
+        else:
+            obj = view.get_queryset().first()
+            course = obj if isinstance(obj, Course) else obj.course
+        is_enrolled = CourseRelation.objects.filter(course=course, creator=request.user).exists()
+        is_instructor = False
+        if not is_enrolled:
+            is_instructor = course.instructors.filter(id=request.user.id).exists()
+        return is_enrolled or is_instructor

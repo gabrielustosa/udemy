@@ -14,7 +14,7 @@ class Rating(CreatorBase, TimeStampedBase):
     course = models.ForeignKey(
         Course,
         related_name='ratings',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     rating = models.FloatField(
         verbose_name=_('Rating'),
