@@ -1,4 +1,5 @@
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -10,8 +11,10 @@ from tests.factories.quiz import QuizFactory
 from tests.factories.user import UserFactory
 
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.module.serializer import ModuleSerializer
 from udemy.apps.quiz.models import Quiz
-from udemy.apps.quiz.serializer import QuizSerializer
+from udemy.apps.quiz.serializer import QuizSerializer, QuestionSerializer
 
 QUIZ_LIST_URL = reverse('quiz:quiz-list')
 
@@ -135,3 +138,48 @@ class PrivateQuizAPITests(TestCase):
         response = self.client.post(QUIZ_LIST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @parameterized.expand([
+        ('course', ('id', 'title'), CourseSerializer),
+        ('module', ('id', 'title'), ModuleSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        quiz = QuizFactory()
+        CourseRelation.objects.create(creator=self.user, course=quiz.course)
+
+        response = self.client.get(
+            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        quiz_serializer = QuizSerializer(quiz, fields=('@min',))
+        object_serializer = Serializer(getattr(quiz, field_name), fields=fields)
+
+        expected_response = {
+            **quiz_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('questions', ('id', 'question'), QuestionSerializer),
+    ])
+    def test_related_objects_m2m(self, field_name, fields, Serializer):
+        quiz = QuizFactory()
+        CourseRelation.objects.create(creator=self.user, course=quiz.course)
+
+        response = self.client.get(
+            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        quiz_serializer = QuizSerializer(quiz, fields=('@min',))
+        object_serializer = Serializer(getattr(quiz, field_name).all(), fields=fields, many=True)
+
+        expected_response = {
+            **quiz_serializer.data,
+            field_name: object_serializer.data
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

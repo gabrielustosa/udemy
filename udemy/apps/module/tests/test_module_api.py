@@ -11,9 +11,12 @@ from tests.factories.course import CourseFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.user import UserFactory
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 
 from udemy.apps.module.models import Module
 from udemy.apps.module.serializer import ModuleSerializer
+from udemy.apps.quiz.serializer import QuizSerializer
 
 MODULE_LIST_URL = reverse('module-list')
 
@@ -182,3 +185,48 @@ class PrivateModuleApiTests(TestCase):
 
         for index, model in enumerate(Module.objects.all(), start=1):
             self.assertEqual(model.order, index)
+
+    @parameterized.expand([
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        module = ModuleFactory()
+        CourseRelation.objects.create(creator=self.user, course=module.course)
+
+        response = self.client.get(
+            f'{module_detail_url(module.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        module_serializer = ModuleSerializer(module, fields=('@min',))
+        object_serializer = Serializer(getattr(module, field_name), fields=fields)
+
+        expected_response = {
+            **module_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('lessons', ('id', 'title'), LessonSerializer),
+        ('quizzes', ('id', 'title'), QuizSerializer),
+    ])
+    def test_related_objects_m2m(self, field_name, fields, Serializer):
+        module = ModuleFactory()
+        CourseRelation.objects.create(creator=self.user, course=module.course)
+
+        response = self.client.get(
+            f'{module_detail_url(module.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        module_serializer = ModuleSerializer(module, fields=('@min',))
+        object_serializer = Serializer(getattr(module, field_name).all(), fields=fields, many=True)
+
+        expected_response = {
+            **module_serializer.data,
+            field_name: object_serializer.data
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

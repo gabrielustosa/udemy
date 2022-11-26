@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from django.shortcuts import reverse
@@ -12,7 +13,11 @@ from tests.factories.lesson import LessonFactory
 from tests.factories.note import NoteFactory
 from tests.factories.user import UserFactory
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 from udemy.apps.note.models import Note
+from udemy.apps.note.serializer import NoteSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 NOTE_LIST_URL = reverse('note-list')
 
@@ -75,7 +80,7 @@ class PrivateAnswerAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(datetime.strptime(payload['time'], '%H:%M:%S').time(), note.time)
 
-    def test_partial_note_update(self):
+    def test_full_note_update(self):
         course = CourseFactory()
         lesson = LessonFactory(course=course)
         note = NoteFactory(creator=self.user, lesson=lesson, course=course)
@@ -131,3 +136,28 @@ class PrivateAnswerAPITests(TestCase):
         response = self.client.post(NOTE_LIST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @parameterized.expand([
+        ('lesson', ('id', 'title'), LessonSerializer),
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        note = NoteFactory(creator=self.user)
+        CourseRelation.objects.create(course=note.course, creator=self.user)
+
+        response = self.client.get(
+            f'{note_detail_url(note.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        note_serializer = NoteSerializer(note, fields=('@min',))
+        object_serializer = Serializer(getattr(note, field_name), fields=fields)
+
+        expected_response = {
+            **note_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

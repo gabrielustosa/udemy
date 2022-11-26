@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -8,8 +9,11 @@ from rest_framework.test import APIClient
 from tests.factories.action import ActionFactory
 from tests.factories.question import QuestionFactory
 from tests.factories.user import UserFactory
+from udemy.apps.action.serializer import ActionSerializer
 
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 
 def question_action_url(pk): return reverse('question:action-list', kwargs={'question_id': pk})
@@ -70,3 +74,29 @@ class PrivateActionApiTests(TestCase):
         response = self.client.post(question_action_url(question.id), payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @parameterized.expand([
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        question = QuestionFactory()
+        course = question.course
+        CourseRelation.objects.create(course=course, creator=self.user)
+        action = ActionFactory(creator=self.user, course=course, content_object=question)
+
+        response = self.client.get(
+            f'{question_action_url_detail(question.id, 1)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        action_serializer = ActionSerializer(action, fields=('@min',))
+        object_serializer = Serializer(getattr(action, field_name), fields=fields)
+
+        expected_response = {
+            **action_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

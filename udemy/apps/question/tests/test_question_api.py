@@ -17,7 +17,11 @@ from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 from udemy.apps.question.models import Question
+from udemy.apps.question.serializer import QuestionSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 QUESTION_LIST_URL = reverse('question:question-list')
 
@@ -215,3 +219,28 @@ class PrivateQuestionApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    @parameterized.expand([
+        ('lesson', ('id', 'title'), LessonSerializer),
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        question = QuestionFactory(creator=self.user)
+        CourseRelation.objects.create(course=question.course, creator=self.user)
+
+        response = self.client.get(
+            f'{question_detail_url(question.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        question_serializer = QuestionSerializer(question, fields=('@min',))
+        object_serializer = Serializer(getattr(question, field_name), fields=fields)
+
+        expected_response = {
+            **question_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

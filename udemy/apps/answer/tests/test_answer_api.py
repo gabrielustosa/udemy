@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.urls import reverse
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -11,6 +12,8 @@ from tests.factories.user import UserFactory
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 
 def answer_detail_url(pk): return reverse('answer:detail', kwargs={'answer_id': pk})
@@ -91,3 +94,28 @@ class PrivateAnswerApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(answer.content, payload['content'])
+
+    @parameterized.expand([
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, creator=self.user)
+        answer = AnswerFactory(course=course, creator=self.user)
+
+        response = self.client.get(
+            f'{answer_detail_url(answer.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        answer_serializer = AnswerSerializer(answer, fields=('@min',))
+        object_serializer = Serializer(getattr(answer, field_name), fields=fields)
+
+        expected_response = {
+            **answer_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

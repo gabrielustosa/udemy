@@ -115,10 +115,16 @@ class RelatedObjectRetrieveTests(TestCase):
 
         response = self.client.get(f'{url}?fields[lessons]=id,title')
 
-        serializer = LessonSerializer(lessons, many=True, fields=('id', 'title'))
+        course_serializer = CourseSerializer(course)
+        lesson_serializer = LessonSerializer(lessons, many=True, fields=('id', 'title'))
+
+        expected_response = {
+            **course_serializer.data,
+            'lessons': lesson_serializer.data
+        }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['lessons'], serializer.data)
+        self.assertEqual(response.data, expected_response)
 
     def test_related_object_permission(self):
         course = CourseFactory()

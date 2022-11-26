@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -10,9 +11,18 @@ from tests.utils import create_factory_in_batch
 from tests.factories.category import CategoryFactory
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
+from udemy.apps.category.serializer import CategorySerializer
+from udemy.apps.content.serializer import ContentSerializer
 
-from udemy.apps.course.models import Course
+from udemy.apps.course.models import Course, CourseRelation
 from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
+from udemy.apps.message.serializer import MessageSerializer
+from udemy.apps.module.serializer import ModuleSerializer
+from udemy.apps.question.serializer import QuestionSerializer
+from udemy.apps.quiz.serializer import QuizSerializer
+from udemy.apps.rating.serializer import RatingSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 COURSE_LIST_URL = reverse('course-list')
 
@@ -161,3 +171,32 @@ class PrivateCourseApiTests(TestCase):
         response = self.client.delete(course_detail_url(pk=course.id))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @parameterized.expand([
+        ('instructors', ('id', 'name'), UserSerializer),
+        ('categories', ('id', 'title'), CategorySerializer),
+        ('quizzes', ('id', 'title'), QuizSerializer),
+        ('lessons', ('id', 'title'), LessonSerializer),
+        ('modules', ('id', 'title'), ModuleSerializer),
+        ('contents', ('id', 'title'), ContentSerializer),
+        ('ratings', ('id', 'comment'), RatingSerializer),
+        ('warning_messages', ('id', 'title'), MessageSerializer),
+        ('questions', ('id', 'title'), QuestionSerializer),
+    ])
+    def test_related_objects_m2m(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        CourseRelation.objects.create(creator=self.user, course=course)
+
+        response = self.client.get(
+            f'{course_detail_url(course.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        course_serializer = CourseSerializer(course, fields=('@min',))
+        object_serializer = Serializer(getattr(course, field_name).all(), fields=fields, many=True)
+
+        expected_response = {
+            **course_serializer.data,
+            field_name: object_serializer.data
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

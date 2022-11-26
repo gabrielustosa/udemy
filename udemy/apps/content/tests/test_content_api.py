@@ -15,6 +15,8 @@ from tests.factories.user import UserFactory
 from udemy.apps.content.models import Content, Text, Link
 from udemy.apps.content.serializer import ContentSerializer
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 
 CONTENT_LIST_URL = reverse('content-list')
 
@@ -242,3 +244,29 @@ class PrivateContentApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(isinstance(content.item, model))
+
+    @parameterized.expand([
+        ('lesson', ('id', 'title'), LessonSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        course.instructors.add(self.user)
+        lesson = LessonFactory(course=course)
+        content = ContentFactory(lesson=lesson, course=course)
+
+        response = self.client.get(
+            f'{content_detail_url(content.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        content_serializer = ContentSerializer(content, fields=('@min',))
+        object_serializer = Serializer(getattr(content, field_name), fields=fields)
+
+        expected_response = {
+            **content_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

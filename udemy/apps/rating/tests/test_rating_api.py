@@ -16,8 +16,10 @@ from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.rating.models import Rating
 from udemy.apps.rating.serializer import RatingSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 RATING_LIST_URL = reverse('rating:rating-list')
 
@@ -246,3 +248,26 @@ class PrivateRatingApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    @parameterized.expand([
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        rating = RatingFactory()
+
+        response = self.client.get(
+            f'{rating_detail_url(rating.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        rating_serializer = RatingSerializer(rating, fields=('@min',))
+        object_serializer = Serializer(getattr(rating, field_name), fields=fields)
+
+        expected_response = {
+            **rating_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

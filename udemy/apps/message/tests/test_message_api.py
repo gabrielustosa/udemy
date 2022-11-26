@@ -1,4 +1,5 @@
 from django.test import TestCase
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -12,8 +13,10 @@ from tests.utils import create_factory_in_batch
 
 from udemy.apps.answer.serializer import AnswerSerializer
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.message.models import Message
 from udemy.apps.message.serializer import MessageSerializer
+from udemy.apps.user.serializer import UserSerializer
 
 MESSAGE_LIST_URL = reverse('message:message-list')
 
@@ -161,3 +164,28 @@ class PrivateMessageAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    @parameterized.expand([
+        ('creator', ('id', 'name'), UserSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, creator=self.user)
+        message = MessageFactory(course=course)
+
+        response = self.client.get(
+            f'{message_detail_url(message.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        message_serializer = MessageSerializer(message, fields=('@min',))
+        object_serializer = Serializer(getattr(message, field_name), fields=fields)
+
+        expected_response = {
+            **message_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

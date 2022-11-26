@@ -13,10 +13,14 @@ from tests.factories.lesson import LessonFactory
 from tests.factories.module import ModuleFactory
 from tests.utils import create_factory_in_batch
 from tests.factories.user import UserFactory
+from udemy.apps.content.serializer import ContentSerializer
 
 from udemy.apps.course.models import CourseRelation
+from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.lesson.serializer import LessonSerializer
+from udemy.apps.module.serializer import ModuleSerializer
+from udemy.apps.quiz.serializer import QuestionSerializer
 
 LESSON_LIST_URL = reverse('lesson-list')
 
@@ -213,3 +217,51 @@ class PrivateLessonApiTests(TestCase):
 
         for index, model in enumerate(Lesson.objects.all(), start=1):
             self.assertEqual(model.order, index)
+
+    @parameterized.expand([
+        ('module', ('id', 'title'), ModuleSerializer),
+        ('course', ('id', 'title'), CourseSerializer),
+    ])
+    def test_related_objects(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        lesson = LessonFactory(course=course)
+        CourseRelation.objects.create(creator=self.user, course=course)
+
+        response = self.client.get(
+            f'{lesson_detail_url(lesson.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        lesson_serializer = LessonSerializer(lesson, fields=('@min',))
+        object_serializer = Serializer(getattr(lesson, field_name), fields=fields)
+
+        expected_response = {
+            **lesson_serializer.data,
+            field_name: {
+                **object_serializer.data
+            }
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('contents', ('id', 'name'), ContentSerializer),
+        ('questions', ('id', 'title'), QuestionSerializer),
+    ])
+    def test_related_objects_m2m(self, field_name, fields, Serializer):
+        course = CourseFactory()
+        lesson = LessonFactory(course=course)
+        CourseRelation.objects.create(creator=self.user, course=course)
+
+        response = self.client.get(
+            f'{lesson_detail_url(lesson.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        lesson_serializer = LessonSerializer(lesson, fields=('@min',))
+        object_serializer = Serializer(getattr(lesson, field_name).all(), fields=fields, many=True)
+
+        expected_response = {
+            **lesson_serializer.data,
+            field_name: object_serializer.data
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_response)

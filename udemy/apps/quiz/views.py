@@ -18,6 +18,9 @@ class QuizViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSe
         ('retrieve', 'list'): [IsAuthenticated, IsEnrolled],
     }
 
+    class Meta:
+        model = Quiz
+
 
 class QuestionViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSet):
     queryset = Question.objects.all()
@@ -26,6 +29,9 @@ class QuestionViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelVi
         ('default',): [IsAuthenticated, IsInstructor],
         ('retrieve', 'list'): [IsAuthenticated, IsEnrolled],
     }
+
+    class Meta:
+        model = Question
 
 
 class CheckQuizView(GenericAPIView):
