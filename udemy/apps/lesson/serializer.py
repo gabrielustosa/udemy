@@ -1,4 +1,7 @@
+from rest_framework.permissions import AllowAny
+
 from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.module.serializer import ModuleSerializer
@@ -19,7 +22,13 @@ class LessonSerializer(ModelSerializer):
         ]
         related_objects = {
             'module': ModuleSerializer,
-            'course': CourseSerializer
+            'course': CourseSerializer,
+            'contents': ('udemy.apps.content.serializer', 'ContentSerializer'),
+            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer')
+        }
+        related_objects_permissions = {
+            ('default',): [AllowAny],
+            ('contents', 'questions'): [IsEnrolled],
         }
         create_only_fields = ('course', 'module')
         read_only_fields = ('video_duration', 'video_id')

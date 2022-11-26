@@ -1,4 +1,7 @@
+from rest_framework.permissions import AllowAny
+
 from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.module.models import Module
 
@@ -13,7 +16,13 @@ class ModuleSerializer(ModelSerializer):
             'course'
         ]
         related_objects = {
-            'course': CourseSerializer
+            'course': CourseSerializer,
+            'lessons': ('udemy.apps.lesson.serializer', 'LessonSerializer'),
+            'quizzes': ('udemy.apps.quiz.serializer', 'QuizSerializer'),
+        }
+        related_objects_permissions = {
+            ('default',): [AllowAny],
+            ('lessons', 'quizzes'): [IsEnrolled],
         }
         create_only_fields = ('course',)
         update_only_fields = ('order',)

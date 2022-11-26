@@ -1,7 +1,7 @@
 import re
 
 from django.core.exceptions import FieldDoesNotExist
-from django.db.models import ManyToManyField, ForeignKey
+from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
@@ -29,7 +29,7 @@ class RetrieveRelatedObjectMixin:
         for field_name in self.related_fields.keys():
             try:
                 field = self.Meta.model._meta.get_field(field_name)
-                if isinstance(field, ManyToManyField):
+                if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
                     queryset = queryset.prefetch_related(field_name)
                 if isinstance(field, ForeignKey):
                     queryset = queryset.select_related(field_name)

@@ -1,8 +1,11 @@
 from django.db.models import Sum, Count, Q, Avg
+
 from rest_framework import serializers
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from udemy.apps.category.serializer import CategorySerializer
 from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.course.models import Course, CourseRelation
 from udemy.apps.user.serializer import UserSerializer
 
@@ -32,7 +35,18 @@ class CourseSerializer(ModelSerializer):
         }
         related_objects = {
             'instructors': UserSerializer,
-            'categories': CategorySerializer
+            'categories': CategorySerializer,
+            'quizzes': ('udemy.apps.quiz.serializer', 'QuizSerializer'),
+            'lessons': ('udemy.apps.lesson.serializer', 'LessonSerializer'),
+            'modules': ('udemy.apps.module.serializer', 'ModuleSerializer'),
+            'contents': ('udemy.apps.content.serializer', 'ContentSerializer'),
+            'ratings': ('udemy.apps.rating.serializer', 'RatingSerializer'),
+            'warning_messages': ('udemy.apps.message.serializer', 'MessageSerializer'),
+            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer')
+        }
+        related_objects_permissions = {
+            ('default',): [AllowAny],
+            ('quizzes', 'lessons', 'modules', 'contents', 'warning_messages', 'questions'): [IsAuthenticated, IsEnrolled]
         }
         min_fields = ('id', 'title', 'url')
         default_fields = (*min_fields, 'price', 'is_paid', 'instructors')

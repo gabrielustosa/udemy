@@ -1,8 +1,9 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as rest_serializer
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny
 
 
 class GenericField(rest_serializer.Field):
@@ -98,18 +99,47 @@ class RelatedObjectMixin:
     that will be returned in response data.
     """
 
+    def get_permissions_for_object(self, related_object):
+        if not hasattr(self.Meta, 'related_objects_permissions'):
+            return [AllowAny()]
+        for related_objects, permissions in self.Meta.related_objects_permissions.items():
+            if related_object in related_objects:
+                return [permission() for permission in permissions]
+        return self.get_permissions_for_object('default')
+
+    def get_related_fields(self):
+        related_objects = getattr(self.Meta, 'related_objects', None)
+        if related_objects is not None:
+            for related_object, serializer in related_objects.items():
+                if isinstance(serializer, tuple):
+                    module_name, klass = serializer
+                    module = __import__(module_name, globals(), locals(), klass)
+                    related_objects[related_object] = vars(module)[klass]
+            return related_objects.items()
+
+    def check_related_object_permission(self, related_object):
+        request = self.context.get('request')
+        view = self.context.get('view')
+        for permission in self.get_permissions_for_object(related_object):
+            if not permission.has_permission(request, view):
+                raise PermissionDenied(
+                    detail=f'You do not have permission to access the related object `{related_object}`'
+                )
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
 
         related_objects_fields = self.context.get('fields')
-        if hasattr(self.Meta, 'related_objects') and related_objects_fields:
-            for related_object, serializer in self.Meta.related_objects.items():
+        related_objects = self.get_related_fields()
+        if related_objects_fields is not None and related_objects is not None:
+            for related_object, serializer in related_objects:
                 fields = related_objects_fields.get(related_object)
                 if fields:
+                    self.check_related_object_permission(related_object)
                     serializer_options = {'fields': fields}
                     obj = getattr(instance, related_object)
                     queryset_all = getattr(obj, 'all', None)
-                    if queryset_all and isinstance(queryset_all(), QuerySet):
+                    if queryset_all and callable(queryset_all):
                         obj = obj.all()
                         serializer_options.update({'many': True})
                     serializer = serializer(obj, **serializer_options)
@@ -120,7 +150,7 @@ class RelatedObjectMixin:
 class CreateAndUpdateOnlyFieldsMixin:
     """
     A mixin for ModelSerializer that allows fields that can be sent only in create methods or
-    fields that only can be sent in update methods.
+    fields that only can be sent only in update methods.
     """
 
     def to_internal_value(self, data):

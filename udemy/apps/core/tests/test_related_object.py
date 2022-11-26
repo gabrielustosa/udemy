@@ -5,12 +5,13 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
 from tests.factories.course import CourseFactory
+from tests.factories.lesson import LessonFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.question import QuestionFactory
 from tests.factories.user import UserFactory
 from tests.utils import create_factory_in_batch
-from udemy.apps.course.models import CourseRelation
 
+from udemy.apps.course.models import CourseRelation
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.serializer import LessonSerializer
 from udemy.apps.module.serializer import ModuleSerializer
@@ -104,3 +105,25 @@ class RelatedObjectRetrieveTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    def test_retrieve_many_to_one_object(self):
+        course = CourseFactory()
+        CourseRelation.objects.create(course=course, creator=self.user)
+        url = reverse('course-detail', kwargs={'pk': course.id})
+
+        lessons = create_factory_in_batch(LessonFactory, 5, course=course, module__course=course)
+
+        response = self.client.get(f'{url}?fields[lessons]=id,title')
+
+        serializer = LessonSerializer(lessons, many=True, fields=('id', 'title'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['lessons'], serializer.data)
+
+    def test_related_object_permission(self):
+        course = CourseFactory()
+        url = reverse('course-detail', kwargs={'pk': course.id})
+
+        response = self.client.get(f'{url}?fields[modules]=id')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
