@@ -53,10 +53,10 @@ class ActionPermissionMixin:
     def get_permissions_by_action(self, action):
         for actions, permissions in self.permission_classes_by_action.items():
             if action in actions:
-                return permissions
+                return [permission() for permission in permissions]
 
     def get_permissions(self):
         permissions = self.get_permissions_by_action(self.action)
         if permissions:
-            return [permission() for permission in permissions]
-        return [permission() for permission in self.get_permissions_by_action('default')]
+            return permissions
+        return self.get_permissions_by_action('default')

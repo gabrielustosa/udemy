@@ -17,7 +17,6 @@ class QuizViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSe
         ('default',): [IsAuthenticated, IsInstructor],
         ('retrieve', 'list'): [IsAuthenticated, IsEnrolled],
     }
-    permission_classes = [IsInstructor, IsAuthenticated]
 
 
 class QuestionViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSet):
