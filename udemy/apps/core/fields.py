@@ -5,6 +5,8 @@ from rest_framework import serializers as rest_serializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
+from utils.module import get_class_from_module
+
 
 class GenericField(rest_serializer.Field):
     default_error_messages = {
@@ -83,9 +85,8 @@ class DynamicModelFieldsMixin:
 
             for field in fields:
                 if field in self.field_types:
-                    field_values = getattr(self.Meta, self.field_types[field], None)
-                    if field_values:
-                        fields += field_values
+                    field_values = getattr(self.Meta, self.field_types[field], tuple())
+                    fields += field_values
 
             allowed = set(fields)
             existing = set(self.fields)
@@ -110,10 +111,12 @@ class RelatedObjectMixin:
         related_objects = getattr(self.Meta, 'related_objects', {})
         for related_object, serializer in related_objects.items():
             if isinstance(serializer, tuple):
-                module_name, klass = serializer
-                module = __import__(module_name, globals(), locals(), klass)
-                related_objects[related_object] = vars(module)[klass]
+                module_name, class_name = serializer
+                related_objects[related_object] = get_class_from_module(module_name, class_name)
         return related_objects.items()
+
+    def get_related_objects_filters(self):
+        return getattr(self.Meta, 'related_objects_filters', {})
 
     def check_related_object_permission(self, related_object):
         request = self.context.get('request')
@@ -124,24 +127,34 @@ class RelatedObjectMixin:
                     detail=f'You do not have permission to access the related object `{related_object}`'
                 )
 
+    def filter_related_object_query(self, obj, related_object_name):
+        obj = obj.all()
+        related_objects_filters = self.get_related_objects_filters()
+        for related_object, filter_kwargs in related_objects_filters.items():
+            if related_object == related_object_name:
+                obj = obj.filter(**filter_kwargs)
+        return obj
+
     def to_representation(self, instance):
         ret = super().to_representation(instance)
 
-        related_objects_fields = self.context.get('fields')
+        related_objects_fields = self.context.get('fields', {})
         related_objects = self.get_related_fields()
-        if related_objects_fields is not None and related_objects is not None:
-            for related_object, serializer in related_objects:
-                fields = related_objects_fields.get(related_object)
-                if fields:
-                    self.check_related_object_permission(related_object)
-                    serializer_options = {'fields': fields}
-                    obj = getattr(instance, related_object)
-                    queryset_all = getattr(obj, 'all', None)
-                    if queryset_all and callable(queryset_all):
-                        obj = obj.all()
-                        serializer_options.update({'many': True})
-                    serializer = serializer(obj, **serializer_options)
-                    ret[related_object] = serializer.data
+        for related_object, serializer in related_objects:
+            fields = related_objects_fields.get(related_object)
+            if fields:
+                self.check_related_object_permission(related_object)
+
+                serializer_options = {'fields': fields}
+                obj = getattr(instance, related_object)
+
+                queryset_all = getattr(obj, 'all', None)
+                if queryset_all and callable(queryset_all):
+                    serializer_options.update({'many': True})
+                    obj = self.filter_related_object_query(obj, related_object)
+
+                serializer = serializer(obj, **serializer_options)
+                ret[related_object] = serializer.data
         return ret
 
 

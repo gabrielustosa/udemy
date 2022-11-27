@@ -12,6 +12,6 @@ class AnswerFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('creator', 'course', 'content')
 
     creator = factory.SubFactory(UserFactory)
-    content_object = factory.SubFactory(QuestionFactory)
     course = factory.SubFactory(CourseFactory)
+    content_object = factory.SubFactory(QuestionFactory, course=factory.SelfAttribute('..course'))
     content = factory.Faker('sentence')

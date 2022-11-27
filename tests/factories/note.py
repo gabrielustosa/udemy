@@ -14,7 +14,7 @@ class NoteFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('creator', 'lesson', 'course', 'note', 'time')
 
     creator = factory.SubFactory(UserFactory)
-    lesson = factory.SubFactory(LessonFactory)
     course = factory.SubFactory(CourseFactory)
+    lesson = factory.SubFactory(LessonFactory, course=factory.SelfAttribute('..course'))
     note = factory.Faker('sentence')
     time = factory.Faker('date_time', tzinfo=timezone.get_current_timezone())

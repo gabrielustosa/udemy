@@ -11,8 +11,8 @@ class ContentFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('title', 'lesson', 'course', 'order')
 
     title = factory.Faker('name')
-    lesson = factory.SubFactory(LessonFactory)
     course = factory.SubFactory(CourseFactory)
+    lesson = factory.SubFactory(LessonFactory, course=factory.SelfAttribute('..course'))
     order = None
     item = (Text, {'content': 'Test content'})
 

@@ -14,6 +14,6 @@ class LessonFactory(factory.django.DjangoModelFactory):
     video = 'https://www.youtube.com/watch?v=Ejkb_YpuHWs&list=PLHz_AreHm4dkZ9-atkcmcBaMZdmLHft8n&ab_channel=CursoemV%C3%ADdeo'
     video_id = 'E6CdIawPTh0'
     video_duration = 1
-    module = factory.SubFactory(ModuleFactory)
     course = factory.SubFactory(CourseFactory)
+    module = factory.SubFactory(ModuleFactory, course=factory.SelfAttribute('..course'))
     order = None

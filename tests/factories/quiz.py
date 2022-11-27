@@ -14,8 +14,9 @@ class QuizFactory(factory.django.DjangoModelFactory):
 
     title = factory.Faker('name')
     course = factory.SubFactory(CourseFactory)
-    module = factory.SubFactory(ModuleFactory)
+    module = factory.SubFactory(ModuleFactory, course=factory.SelfAttribute('..course'))
     description = factory.Faker('sentence')
+    is_published = bool(randint(0, 1))
     pass_percent = 50
     order = None
 
@@ -28,7 +29,7 @@ class QuestionFactory(factory.django.DjangoModelFactory):
     question = factory.Faker('sentence')
     feedback = factory.Faker('sentence')
     answers = factory.List([factory.Faker('sentence') for _ in range(5)])
-    quiz = factory.SubFactory(QuizFactory)
     course = factory.SubFactory(CourseFactory)
+    quiz = factory.SubFactory(QuizFactory, course=factory.SelfAttribute('..course'))
     correct_response = randint(1, 5)
     order = None

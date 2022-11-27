@@ -12,7 +12,7 @@ class QuestionFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('creator', 'lesson', 'title', 'content', 'course')
 
     creator = factory.SubFactory(UserFactory)
-    lesson = factory.SubFactory(LessonFactory)
     course = factory.SubFactory(CourseFactory)
+    lesson = factory.SubFactory(LessonFactory, course=factory.SelfAttribute('..course'))
     title = factory.Faker('name')
     content = factory.Faker('sentence')

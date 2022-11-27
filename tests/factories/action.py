@@ -14,4 +14,4 @@ class ActionFactory(factory.django.DjangoModelFactory):
     action = 1
     creator = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
-    content_object = factory.SubFactory(QuestionFactory)
+    content_object = factory.SubFactory(QuestionFactory, course=factory.SelfAttribute('..course'))

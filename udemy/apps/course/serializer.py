@@ -42,10 +42,16 @@ class CourseSerializer(ModelSerializer):
             'contents': ('udemy.apps.content.serializer', 'ContentSerializer'),
             'ratings': ('udemy.apps.rating.serializer', 'RatingSerializer'),
             'warning_messages': ('udemy.apps.message.serializer', 'MessageSerializer'),
-            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer')
+            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer'),
+            'notes': ('udemy.apps.note.serializer', 'NoteSerializer')
         }
         related_objects_permissions = {
-            ('quizzes', 'lessons', 'modules', 'contents', 'warning_messages', 'questions'): [IsAuthenticated, IsEnrolled]
+            ('quizzes', 'lessons', 'notes',
+             'modules', 'contents', 'questions',
+             'warning_messages',): [IsAuthenticated, IsEnrolled]
+        }
+        related_objects_filters = {
+            'quizzes': {'is_published': True}
         }
         min_fields = ('id', 'title', 'url')
         default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
@@ -76,6 +82,13 @@ class CourseSerializer(ModelSerializer):
 
     def get_estimated_content_length_video(self, instance: Course):
         return instance.lessons.aggregate(length_video=Sum('video_duration'))['length_video']
+
+    def get_related_objects_filters(self):
+        related_objects_filters = super().get_related_objects_filters()
+        related_objects_filters['notes'] = {
+            'creator': self.context.get('request').user
+        }
+        return related_objects_filters
 
     def create(self, validated_data):
         user = self.context.get('request').user

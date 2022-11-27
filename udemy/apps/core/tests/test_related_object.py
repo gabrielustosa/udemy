@@ -111,7 +111,7 @@ class RelatedObjectRetrieveTests(TestCase):
         CourseRelation.objects.create(course=course, creator=self.user)
         url = reverse('course-detail', kwargs={'pk': course.id})
 
-        lessons = create_factory_in_batch(LessonFactory, 5, course=course, module__course=course)
+        lessons = create_factory_in_batch(LessonFactory, 5, course=course)
 
         response = self.client.get(f'{url}?fields[lessons]=id,title')
 
