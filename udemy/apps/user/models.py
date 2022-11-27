@@ -38,12 +38,13 @@ class User(AbstractUser):
         unique=True
     )
     name = models.CharField(_('Name'), max_length=150)
+    username = models.CharField('Username', max_length=150)
     job_title = models.CharField(max_length=255)
     locale = models.CharField(max_length=255)
     bio = models.TextField()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', ]
+    REQUIRED_FIELDS = ['name', 'username']
 
     def __str__(self):
         return self.email

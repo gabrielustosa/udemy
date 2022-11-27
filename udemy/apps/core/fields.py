@@ -100,22 +100,20 @@ class RelatedObjectMixin:
     """
 
     def get_permissions_for_object(self, related_object):
-        if not hasattr(self.Meta, 'related_objects_permissions'):
-            return [AllowAny()]
-        for related_objects, permissions in self.Meta.related_objects_permissions.items():
+        related_objects_permissions = getattr(self.Meta, 'related_objects_permissions', dict())
+        for related_objects, permissions in related_objects_permissions.items():
             if related_object in related_objects:
                 return [permission() for permission in permissions]
-        return self.get_permissions_for_object('default')
+        return [AllowAny()]
 
     def get_related_fields(self):
-        related_objects = getattr(self.Meta, 'related_objects', None)
-        if related_objects is not None:
-            for related_object, serializer in related_objects.items():
-                if isinstance(serializer, tuple):
-                    module_name, klass = serializer
-                    module = __import__(module_name, globals(), locals(), klass)
-                    related_objects[related_object] = vars(module)[klass]
-            return related_objects.items()
+        related_objects = getattr(self.Meta, 'related_objects', {})
+        for related_object, serializer in related_objects.items():
+            if isinstance(serializer, tuple):
+                module_name, klass = serializer
+                module = __import__(module_name, globals(), locals(), klass)
+                related_objects[related_object] = vars(module)[klass]
+        return related_objects.items()
 
     def check_related_object_permission(self, related_object):
         request = self.context.get('request')
@@ -156,15 +154,11 @@ class CreateAndUpdateOnlyFieldsMixin:
     def to_internal_value(self, data):
         ret = super().to_internal_value(data)
         if self.instance:
-            if hasattr(self.Meta, 'create_only_fields'):
-                for field in self.Meta.create_only_fields:
-                    if field in ret:
-                        ret.pop(field)
+            create_only_fields = getattr(self.Meta, 'create_only_fields', tuple())
+            [ret.pop(field) for field in create_only_fields if field in ret]
         else:
-            if hasattr(self.Meta, 'update_only_fields'):
-                for field in self.Meta.update_only_fields:
-                    if field in ret:
-                        ret.pop(field)
+            update_only_fields = getattr(self.Meta, 'update_only_fields', tuple())
+            [ret.pop(field) for field in update_only_fields if field in ret]
         return ret
 
     def get_extra_kwargs(self):
@@ -175,10 +169,40 @@ class CreateAndUpdateOnlyFieldsMixin:
         return extra_kwargs
 
 
+class PermissionForFieldMixin:
+    """
+    A mixin for ModelSerializer that set permissions for performing actions using
+    model's foreign keys fields.
+    """
+
+    def get_permissions_for_field(self, field):
+        permissions_for_field = getattr(self.Meta, 'permissions_for_field', dict())
+        for fields, permissions in permissions_for_field.items():
+            if field in fields:
+                return [permission() for permission in permissions]
+        return [AllowAny()]
+
+    def check_field_permission(self, field_name, obj):
+        request = self.context.get('request')
+        view = self.context.get('view')
+        for permission in self.get_permissions_for_field(field_name):
+            if not permission.has_object_permission(request, view, obj):
+                raise PermissionDenied(
+                    detail=f'You do not have permission to use `{field_name}` with this id'
+                )
+
+    def validate(self, attrs):
+        permissions_for_field = getattr(self.Meta, 'permissions_for_field', dict())
+        for fields in permissions_for_field:
+            [self.check_field_permission(field, attrs[field]) for field in fields if field in attrs]
+        return attrs
+
+
 class ModelSerializer(
     DynamicModelFieldsMixin,
     RelatedObjectMixin,
     CreateAndUpdateOnlyFieldsMixin,
+    PermissionForFieldMixin,
     rest_serializer.ModelSerializer
 ):
     """

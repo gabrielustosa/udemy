@@ -45,7 +45,6 @@ class CourseSerializer(ModelSerializer):
             'questions': ('udemy.apps.question.serializer', 'QuestionSerializer')
         }
         related_objects_permissions = {
-            ('default',): [AllowAny],
             ('quizzes', 'lessons', 'modules', 'contents', 'warning_messages', 'questions'): [IsAuthenticated, IsEnrolled]
         }
         min_fields = ('id', 'title', 'url')

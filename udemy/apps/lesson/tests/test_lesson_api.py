@@ -265,3 +265,31 @@ class PrivateLessonApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('contents', ('id', 'name')),
+        ('questions', ('id', 'title')),
+    ])
+    def test_related_objects_m2m_permissions(self, field_name, fields):
+        course = CourseFactory()
+        lesson = LessonFactory(course=course)
+
+        response = self.client.get(
+            f'{lesson_detail_url(lesson.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_permission_for_field(self):
+        course = CourseFactory()
+        course.instructors.add(self.user)
+        module = ModuleFactory()
+
+        payload = {
+            'title': 'string',
+            'video': 'https://www.youtube.com/watch?v=Ejkb_YpuHWs',
+            'module': module.id,
+            'course': course.id
+        }
+        response = self.client.post(LESSON_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

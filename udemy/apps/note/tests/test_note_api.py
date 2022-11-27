@@ -161,3 +161,18 @@ class PrivateAnswerAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    def test_permission_for_field(self):
+        course = CourseFactory()
+        lesson = LessonFactory()
+        CourseRelation.objects.create(course=course, creator=self.user)
+
+        payload = {
+            'lesson': lesson.id,
+            'course': course.id,
+            'note': 'Note',
+            'time': '12:34:56',
+        }
+        response = self.client.post(NOTE_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

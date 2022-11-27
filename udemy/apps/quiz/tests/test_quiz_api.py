@@ -183,3 +183,30 @@ class PrivateQuizAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('questions', ('id', 'question')),
+    ])
+    def test_related_objects_m2m_permission(self, field_name, fields):
+        quiz = QuizFactory()
+
+        response = self.client.get(
+            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_permission_for_field(self):
+        course = CourseFactory()
+        module = ModuleFactory()
+        course.instructors.add(self.user)
+
+        payload = {
+            'course': course.id,
+            'module': module.id,
+            'title': 'Test title',
+            'description': 'Test content',
+            'pass_percent': 50,
+        }
+        response = self.client.post(QUIZ_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

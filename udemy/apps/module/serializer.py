@@ -21,7 +21,6 @@ class ModuleSerializer(ModelSerializer):
             'quizzes': ('udemy.apps.quiz.serializer', 'QuizSerializer'),
         }
         related_objects_permissions = {
-            ('default',): [AllowAny],
             ('lessons', 'quizzes'): [IsEnrolled],
         }
         create_only_fields = ('course',)

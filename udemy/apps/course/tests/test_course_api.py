@@ -200,3 +200,19 @@ class PrivateCourseApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('quizzes', ('id', 'title')),
+        ('lessons', ('id', 'title')),
+        ('modules', ('id', 'title')),
+        ('contents', ('id', 'title')),
+        ('warning_messages', ('id', 'title')),
+        ('questions', ('id', 'title')),
+    ])
+    def test_related_objects_m2m_permissions(self, field_name, fields):
+        course = CourseFactory()
+
+        response = self.client.get(
+            f'{course_detail_url(course.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

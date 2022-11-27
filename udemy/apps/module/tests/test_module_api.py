@@ -230,3 +230,15 @@ class PrivateModuleApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_response)
+
+    @parameterized.expand([
+        ('lessons', ('id', 'title')),
+        ('quizzes', ('id', 'title')),
+    ])
+    def test_related_objects_m2m_permissions(self, field_name, fields):
+        module = ModuleFactory()
+
+        response = self.client.get(
+            f'{module_detail_url(module.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
