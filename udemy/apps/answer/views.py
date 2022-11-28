@@ -3,14 +3,18 @@ from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
-from udemy.apps.core.mixins import RetrieveRelatedObjectMixin
+from udemy.apps.core import mixins
 from udemy.apps.core.permissions import IsEnrolled, IsCreatorObject
 from udemy.apps.message.models import Message
 from udemy.apps.question.models import Question
 from udemy.apps.rating.models import Rating
 
 
-class AnswerViewSet(RetrieveRelatedObjectMixin, ModelViewSet):
+class AnswerViewSet(
+    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.RetrieveRelatedObjectMixin,
+    ModelViewSet
+):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [IsAuthenticated, IsEnrolled, IsCreatorObject]

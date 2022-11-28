@@ -1,7 +1,7 @@
 import re
 
 from django.core.exceptions import FieldDoesNotExist
-from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel
+from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Subquery, Exists, OuterRef
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
@@ -65,3 +65,27 @@ class ActionPermissionMixin:
         if permissions:
             return permissions
         return self.get_permissions_by_action('default')
+
+
+class AnnotateIsEnrolledPermissionMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(is_enrolled=Exists(
+                self.request.user.enrolled_courses.filter(id=OuterRef('course__id'))
+            ))
+
+        return queryset
+
+
+class AnnotateIsInstructorPermissionMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(is_instructor=Exists(
+                self.request.user.instructors_courses.filter(id=OuterRef('course__id'))
+            ))
+
+        return queryset

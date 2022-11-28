@@ -5,13 +5,18 @@ from rest_framework.viewsets import ModelViewSet
 from udemy.apps.action.models import Action
 from udemy.apps.action.serializer import ActionSerializer
 from udemy.apps.answer.models import Answer
-from udemy.apps.core.mixins import RetrieveRelatedObjectMixin, ActionPermissionMixin
+from udemy.apps.core import mixins
+
 from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.question.models import Question
 from udemy.apps.rating.models import Rating
 
 
-class ActionViewSetBase(RetrieveRelatedObjectMixin, ModelViewSet):
+class ActionViewSetBase(
+    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.RetrieveRelatedObjectMixin,
+    ModelViewSet
+):
     queryset = Action.objects.all()
     serializer_class = ActionSerializer
     permission_classes = [IsAuthenticated, IsEnrolled]
@@ -52,7 +57,7 @@ class ActionViewSetBase(RetrieveRelatedObjectMixin, ModelViewSet):
         return context
 
 
-class RatingActionViewSet(ActionPermissionMixin, ActionViewSetBase):
+class RatingActionViewSet(mixins.ActionPermissionMixin, ActionViewSetBase):
     model = Rating
     pk_url_kwarg = 'rating_id'
     permission_classes_by_action = {

@@ -4,13 +4,19 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from udemy.apps.core.mixins import RetrieveRelatedObjectMixin, ActionPermissionMixin
+from udemy.apps.core import mixins
 from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 from udemy.apps.quiz.models import Quiz, Question, QuizRelation
 from udemy.apps.quiz.serializer import QuizSerializer, QuestionSerializer
 
 
-class QuizViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSet):
+class QuizViewSet(
+    mixins.ActionPermissionMixin,
+    mixins.RetrieveRelatedObjectMixin,
+    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotateIsInstructorPermissionMixin,
+    ModelViewSet
+):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     permission_classes_by_action = {
@@ -22,7 +28,13 @@ class QuizViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSe
         model = Quiz
 
 
-class QuestionViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelViewSet):
+class QuestionViewSet(
+    mixins.ActionPermissionMixin,
+    mixins.RetrieveRelatedObjectMixin,
+    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotateIsInstructorPermissionMixin,
+    ModelViewSet
+):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes_by_action = {
