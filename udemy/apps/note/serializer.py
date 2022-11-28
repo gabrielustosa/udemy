@@ -28,5 +28,5 @@ class NoteSerializer(ModelSerializer):
         min_fields = ('id', 'note')
         default_fields = (*min_fields, 'creator', 'lesson', 'time')
         permissions_for_field = {
-            ('lesson',): [IsEnrolled],
+            ('lesson', 'course'): [IsEnrolled],
         }

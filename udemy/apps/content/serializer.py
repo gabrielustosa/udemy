@@ -59,5 +59,5 @@ class ContentSerializer(ModelSerializer):
         min_fields = ('id', 'title', 'item')
         default_fields = (*min_fields, 'lesson')
         permissions_for_field = {
-            ('lesson',): [IsInstructor]
+            ('lesson', 'course'): [IsInstructor],
         }

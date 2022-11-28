@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from udemy.apps.answer.models import Answer
 from udemy.apps.core.fields import GenericRelatedField
+from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.message.models import Message
@@ -37,6 +38,9 @@ class AnswerSerializer(ModelSerializer):
         create_only_fields = ('course',)
         min_fields = ('id', 'content')
         default_fields = (*min_fields, 'creator', 'content_object')
+        permissions_for_field = {
+            ('course',): [IsEnrolled]
+        }
 
     def get_likes_count(self, instance):
         return instance.actions.filter(action=1).count()

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.rating.models import Rating
@@ -24,6 +25,9 @@ class RatingSerializer(ModelSerializer):
         create_only_fields = ('course',)
         min_fields = ('id', 'rating', 'comment')
         default_fields = (*min_fields, 'creator', 'course')
+        permissions_for_field = {
+            ('course',): [IsEnrolled]
+        }
 
     def get_likes_count(self, instance):
         return instance.actions.filter(action=1).count()

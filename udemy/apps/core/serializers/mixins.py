@@ -17,13 +17,13 @@ class RelatedObjectPermissionMixin:
                 return [permission() for permission in permissions]
         return [AllowAny()]
 
-    def check_related_object_permission(self, related_object):
+    def check_related_object_permission(self, obj, related_object_name):
         request = self.context.get('request')
         view = self.context.get('view')
-        for permission in self.get_permissions_for_object(related_object):
-            if not permission.has_permission(request, view):
+        for permission in self.get_permissions_for_object(related_object_name):
+            if not permission.has_object_permission(request, view, obj):
                 raise PermissionDenied(
-                    detail=f'You do not have permission to access the related object `{related_object}`'
+                    detail=f'You do not have permission to access the related object `{related_object_name}`'
                 )
 
 
@@ -71,7 +71,7 @@ class RelatedObjectMixin(
         for related_object_name, Serializer in related_objects:
             fields = self.get_related_object_fields(related_object_name)
             if fields:
-                self.check_related_object_permission(related_object_name)
+                self.check_related_object_permission(instance, related_object_name)
 
                 related_object = getattr(instance, related_object_name)
 

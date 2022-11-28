@@ -33,5 +33,5 @@ class LessonSerializer(ModelSerializer):
         min_fields = ('id', 'title', 'video')
         default_fields = (*min_fields, 'video_id', 'video_duration')
         permissions_for_field = {
-            ('module',): [IsInstructor],
+            ('module', 'course'): [IsInstructor],
         }

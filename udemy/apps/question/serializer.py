@@ -28,7 +28,7 @@ class QuestionSerializer(ModelSerializer):
         min_fields = ('id', 'title', 'content')
         default_fields = (*min_fields, 'creator', 'course')
         permissions_for_field = {
-            ('lesson',): [IsEnrolled],
+            ('lesson', 'course'): [IsEnrolled],
         }
 
     def get_likes_count(self, instance):

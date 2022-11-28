@@ -25,7 +25,7 @@ class PublicAnswerTestAPI(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_unauthenticated_cant_create_action(self):
+    def test_unauthenticated_cant_create_answer(self):
         answer = AnswerFactory()
 
         response = self.client.post(answer_detail_url(answer.id))

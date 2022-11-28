@@ -1,6 +1,7 @@
 from udemy.apps.action.models import Action
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
+from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.rating.models import Rating
 from udemy.apps.question.models import Question
@@ -36,6 +37,9 @@ class ActionSerializer(ModelSerializer):
         create_only_fields = ('course',)
         min_fields = ('id', 'action')
         default_fields = (*min_fields, 'creator', 'course', 'content_object')
+        permissions_for_field = {
+            ('course',): [IsEnrolled]
+        }
 
     def create(self, validated_data):
         Model = self.context.get('model')

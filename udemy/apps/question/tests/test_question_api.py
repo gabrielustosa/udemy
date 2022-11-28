@@ -112,7 +112,7 @@ class PrivateQuestionApiTests(TestCase):
             'lesson': lesson.id,
             'course': course.id
         }
-        response = self.client.delete(QUESTION_LIST_URL, payload)
+        response = self.client.post(QUESTION_LIST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

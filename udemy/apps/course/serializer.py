@@ -1,7 +1,6 @@
 from django.db.models import Sum, Count, Q, Avg
 
 from rest_framework import serializers
-from rest_framework.permissions import IsAuthenticated
 
 from udemy.apps.category.serializer import CategorySerializer
 from udemy.apps.core.serializers.serializer import ModelSerializer
@@ -48,7 +47,7 @@ class CourseSerializer(ModelSerializer):
         related_objects_permissions = {
             ('quizzes', 'lessons', 'notes',
              'modules', 'contents', 'questions',
-             'warning_messages',): [IsAuthenticated, IsEnrolled]
+             'warning_messages',): [IsEnrolled]
         }
         related_objects_filters = {
             'quizzes': {'is_published': True}

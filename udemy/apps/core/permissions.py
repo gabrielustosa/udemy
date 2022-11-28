@@ -1,5 +1,3 @@
-from django.shortcuts import get_object_or_404
-
 from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS
 
@@ -11,15 +9,6 @@ class IsInstructor(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         course = obj if isinstance(obj, Course) else obj.course
-        is_instructor = course.instructors.filter(id=request.user.id).exists()
-        return is_instructor
-
-    def has_permission(self, request, view):
-        if 'course' in request.data:
-            course = get_object_or_404(Course, id=request.data['course'])
-        else:
-            obj = view.get_queryset().first()
-            course = obj if isinstance(obj, Course) else obj.course
         is_instructor = course.instructors.filter(id=request.user.id).exists()
         return is_instructor
 
@@ -49,18 +38,6 @@ class IsEnrolled(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         course = obj if isinstance(obj, Course) else obj.course
-        is_enrolled = CourseRelation.objects.filter(course=course, creator=request.user).exists()
-        is_instructor = False
-        if not is_enrolled:
-            is_instructor = course.instructors.filter(id=request.user.id).exists()
-        return is_enrolled or is_instructor
-
-    def has_permission(self, request, view):
-        if 'course' in request.data:
-            course = get_object_or_404(Course, id=request.data['course'])
-        else:
-            obj = view.get_queryset().first()
-            course = obj if isinstance(obj, Course) else obj.course
         is_enrolled = CourseRelation.objects.filter(course=course, creator=request.user).exists()
         is_instructor = False
         if not is_enrolled:

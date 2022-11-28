@@ -26,7 +26,7 @@ class QuizSerializer(ModelSerializer):
         min_fields = ('id', 'title')
         default_fields = (*min_fields, 'description', 'module', 'course')
         permissions_for_field = {
-            ('module',): [IsInstructor]
+            ('module', 'course'): [IsInstructor]
         }
 
 
@@ -46,3 +46,6 @@ class QuestionSerializer(ModelSerializer):
         create_only_fields = ('course', 'quiz')
         min_fields = ('id', 'question')
         default_fields = (*min_fields, 'answers', 'correct_response')
+        permissions_for_field = {
+            ('course',): [IsInstructor]
+        }

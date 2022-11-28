@@ -1,3 +1,4 @@
+from udemy.apps.core.permissions import IsInstructor
 from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.message.models import Message
@@ -19,3 +20,6 @@ class MessageSerializer(ModelSerializer):
         create_only_fields = ('course',)
         min_fields = ('id', 'title', 'content')
         default_fields = (*min_fields, 'creator', 'course')
+        permissions_for_field = {
+            ('course',): [IsInstructor]
+        }

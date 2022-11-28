@@ -1,5 +1,5 @@
 from udemy.apps.core.serializers.serializer import ModelSerializer
-from udemy.apps.core.permissions import IsEnrolled
+from udemy.apps.core.permissions import IsEnrolled, IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.module.models import Module
 
@@ -25,3 +25,6 @@ class ModuleSerializer(ModelSerializer):
         update_only_fields = ('order',)
         min_fields = ('id', 'title')
         default_fields = (*min_fields, 'course')
+        permissions_for_field = {
+            ('course',): [IsInstructor]
+        }

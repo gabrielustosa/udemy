@@ -138,7 +138,7 @@ class PrivateMessageAPITests(TestCase):
 
     def test_user_can_answer_message(self):
         course = CourseFactory()
-        CourseRelation.objects.create(course=course, creator=self.user)
+        course.instructors.add(self.user)
         message = MessageFactory(course=course)
 
         payload = {
