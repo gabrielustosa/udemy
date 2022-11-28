@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.serializers.serializer import ModelSerializer
 
 
 class UserSerializer(ModelSerializer):

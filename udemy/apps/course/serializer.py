@@ -1,10 +1,10 @@
 from django.db.models import Sum, Count, Q, Avg
 
 from rest_framework import serializers
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 from udemy.apps.category.serializer import CategorySerializer
-from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsEnrolled
 from udemy.apps.course.models import Course, CourseRelation
 from udemy.apps.user.serializer import UserSerializer

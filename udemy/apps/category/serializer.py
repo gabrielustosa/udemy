@@ -1,5 +1,5 @@
 from udemy.apps.category.models import Category
-from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.serializers.serializer import ModelSerializer
 
 
 class CategorySerializer(ModelSerializer):

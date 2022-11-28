@@ -6,7 +6,7 @@ from rest_framework.reverse import reverse
 
 from tests.factories.course import CourseFactory
 
-from udemy.apps.core.fields import ModelSerializer
+from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.course.models import Course
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.module.models import Module

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from udemy.apps.answer.models import Answer
-from udemy.apps.core.fields import GenericField, ModelSerializer
+from udemy.apps.core.fields import GenericRelatedField
+from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.message.models import Message
 from udemy.apps.message.serializer import MessageSerializer
@@ -15,7 +16,7 @@ from udemy.apps.user.serializer import UserSerializer
 class AnswerSerializer(ModelSerializer):
     likes_count = serializers.SerializerMethodField()
     dislikes_count = serializers.SerializerMethodField()
-    content_object = GenericField({
+    content_object = GenericRelatedField({
         Rating: RatingSerializer(),
         Question: QuestionSerializer(),
         Message: MessageSerializer(),

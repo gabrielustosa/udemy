@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from udemy.apps.content import models
-from udemy.apps.core.fields import GenericField, ModelSerializer
+from udemy.apps.core.fields import GenericRelatedField
+from udemy.apps.core.serializers.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.serializer import LessonSerializer
@@ -32,7 +33,7 @@ class LinkSerializer(serializers.ModelSerializer):
 
 
 class ContentSerializer(ModelSerializer):
-    item = GenericField({
+    item = GenericRelatedField({
         models.Link: LinkSerializer(),
         models.Text: TextSerializer(),
         models.File: FileSerializer(),

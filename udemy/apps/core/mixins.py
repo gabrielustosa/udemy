@@ -26,15 +26,20 @@ class RetrieveRelatedObjectMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        prefetch_fields = set()
+        related_fields = set()
+
         for field_name in self.related_fields.keys():
             try:
                 field = self.Meta.model._meta.get_field(field_name)
                 if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
-                    queryset = queryset.prefetch_related(field_name)
+                    prefetch_fields.add(field_name)
                 if isinstance(field, ForeignKey):
-                    queryset = queryset.select_related(field_name)
+                    related_fields.add(field_name)
             except FieldDoesNotExist:
                 pass
+
+        queryset = queryset.select_related(*related_fields).prefetch_related(*prefetch_fields)
 
         return queryset
 

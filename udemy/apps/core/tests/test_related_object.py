@@ -93,9 +93,9 @@ class RelatedObjectRetrieveTests(TestCase):
         course.instructors.add(*instructors)
         url = reverse('course-detail', kwargs={'pk': course.id})
 
-        response = self.client.get(f'{url}?fields[instructors]=id,name')
+        response = self.client.get(f'{url}?fields[instructors]=id,name&fields=@min')
 
-        course_serializer = CourseSerializer(course)
+        course_serializer = CourseSerializer(course, fields=('@min',))
         user_serializer = UserSerializer(instructors, many=True, fields=('id', 'name'))
 
         expected_response = {

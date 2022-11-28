@@ -4,7 +4,7 @@ from rest_framework.serializers import ListSerializer
 
 from udemy.apps.content.models import Text, Link
 from udemy.apps.content.serializer import TextSerializer, LinkSerializer
-from udemy.apps.core.fields import GenericField
+from udemy.apps.core.fields import GenericRelatedField
 
 
 class GenericFieldTests(TestCase):
@@ -13,7 +13,7 @@ class GenericFieldTests(TestCase):
         self.link = Link.objects.create(url='https://google.com')
         self.link2 = Link.objects.create(url='https://youtube.com')
 
-        self.serializer = GenericField({
+        self.serializer = GenericRelatedField({
             Text: TextSerializer(),
             Link: LinkSerializer()
         })
