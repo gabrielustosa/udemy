@@ -10,7 +10,7 @@ from udemy.apps.rating.serializer import RatingSerializer
 class RatingViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Rating.objects.all()

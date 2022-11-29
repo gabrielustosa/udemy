@@ -1,3 +1,5 @@
+from django.db.models import Manager
+
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
@@ -75,8 +77,7 @@ class RelatedObjectMixin(
 
                 related_object = getattr(instance, related_object_name)
 
-                queryset_all = getattr(related_object, 'all', None)
-                if queryset_all and callable(queryset_all):
+                if isinstance(related_object, Manager):
                     queryset = self.filter_related_object_query(related_object, related_object_name)
 
                     paginator = PaginatorRelatedObject(

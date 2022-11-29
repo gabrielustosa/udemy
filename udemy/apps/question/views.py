@@ -8,7 +8,7 @@ from udemy.apps.question.serializer import QuestionSerializer
 
 
 class QuestionViewSet(
-    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
     ModelViewSet
 ):

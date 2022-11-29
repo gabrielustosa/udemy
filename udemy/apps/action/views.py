@@ -13,7 +13,7 @@ from udemy.apps.rating.models import Rating
 
 
 class ActionViewSetBase(
-    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
     ModelViewSet
 ):

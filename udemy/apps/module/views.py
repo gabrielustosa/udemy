@@ -10,8 +10,7 @@ from udemy.apps.module.serializer import ModuleSerializer
 class ModuleViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Module.objects.all()

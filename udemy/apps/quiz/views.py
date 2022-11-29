@@ -13,8 +13,7 @@ from udemy.apps.quiz.serializer import QuizSerializer, QuestionSerializer
 class QuizViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Quiz.objects.all()
@@ -31,8 +30,7 @@ class QuizViewSet(
 class QuestionViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Question.objects.all()

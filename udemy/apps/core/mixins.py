@@ -67,25 +67,17 @@ class ActionPermissionMixin:
         return self.get_permissions_by_action('default')
 
 
-class AnnotateIsEnrolledPermissionMixin:
+class AnnotatePermissionMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
         if self.request.user.is_authenticated:
             queryset = queryset.annotate(is_enrolled=Exists(
                 self.request.user.enrolled_courses.filter(id=OuterRef('course__id'))
-            ))
-
-        return queryset
-
-
-class AnnotateIsInstructorPermissionMixin:
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        if self.request.user.is_authenticated:
-            queryset = queryset.annotate(is_instructor=Exists(
+            )).annotate(is_instructor=Exists(
                 self.request.user.instructors_courses.filter(id=OuterRef('course__id'))
             ))
 
         return queryset
+
+

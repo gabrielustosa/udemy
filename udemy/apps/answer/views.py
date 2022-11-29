@@ -11,7 +11,7 @@ from udemy.apps.rating.models import Rating
 
 
 class AnswerViewSet(
-    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
     ModelViewSet
 ):

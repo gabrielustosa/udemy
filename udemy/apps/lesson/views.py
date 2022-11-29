@@ -10,8 +10,7 @@ from udemy.apps.lesson.serializer import LessonSerializer
 class LessonViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Lesson.objects.all()

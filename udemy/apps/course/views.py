@@ -1,3 +1,5 @@
+from django.db.models import Exists, OuterRef
+
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.viewsets import ModelViewSet
 
@@ -15,6 +17,18 @@ class CourseViewSet(ActionPermissionMixin, RetrieveRelatedObjectMixin, ModelView
         ('create',): [IsAuthenticated],
         ('retrieve', 'list'): [AllowAny],
     }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(is_enrolled=Exists(
+                self.request.user.enrolled_courses.filter(id=OuterRef('id'))
+            )).annotate(is_instructor=Exists(
+                self.request.user.instructors_courses.filter(id=OuterRef('id'))
+            ))
+
+        return queryset
 
     class Meta:
         model = Course

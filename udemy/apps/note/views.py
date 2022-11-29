@@ -9,7 +9,7 @@ from udemy.apps.note.serializer import NoteSerializer
 
 class NoteViewSet(
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Note.objects.all()

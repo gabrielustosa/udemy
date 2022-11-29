@@ -10,8 +10,7 @@ from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 class ContentViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Content.objects.all()

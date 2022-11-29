@@ -10,8 +10,7 @@ from udemy.apps.message.serializer import MessageSerializer
 class MessageViewSet(
     mixins.ActionPermissionMixin,
     mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotateIsEnrolledPermissionMixin,
-    mixins.AnnotateIsInstructorPermissionMixin,
+    mixins.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Message.objects.all()
