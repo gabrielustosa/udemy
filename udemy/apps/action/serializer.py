@@ -31,8 +31,12 @@ class ActionSerializer(ModelSerializer):
             'content_object',
         ]
         related_objects = {
-            'creator': UserSerializer,
-            'course': CourseSerializer
+            'creator': {
+                'serializer': UserSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            }
         }
         create_only_fields = ('course',)
         min_fields = ('id', 'action')

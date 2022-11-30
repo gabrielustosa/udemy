@@ -19,13 +19,19 @@ class LessonSerializer(ModelSerializer):
             'order',
         ]
         related_objects = {
-            'module': ModuleSerializer,
-            'course': CourseSerializer,
-            'contents': 'udemy.apps.content.serializer.ContentSerializer',
-            'questions': 'udemy.apps.question.serializer.QuestionSerializer'
-        }
-        related_objects_permissions = {
-            ('contents', 'questions'): [IsEnrolled],
+            'course': {
+                'serializer': CourseSerializer
+            },
+            'module': {
+                'serializer': ModuleSerializer,
+            },
+            'contents': {
+                'serializer': 'udemy.apps.content.serializer.ContentSerializer',
+            },
+            'questions': {
+                'serializer': 'udemy.apps.question.serializer.QuestionSerializer',
+            }
+
         }
         create_only_fields = ('course', 'module')
         read_only_fields = ('video_duration', 'video_id')

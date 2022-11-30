@@ -13,11 +13,8 @@ class RelatedObjectPermissionMixin:
     """
 
     def get_permissions_for_object(self, related_object):
-        related_objects_permissions = getattr(self.Meta, 'related_objects_permissions', dict())
-        for related_objects, permissions in related_objects_permissions.items():
-            if related_object in related_objects:
-                return [permission() for permission in permissions]
-        return [AllowAny()]
+        permissions = self.get_related_object_option(related_object, 'permissions', [AllowAny])
+        return [permission() for permission in permissions]
 
     def check_related_object_permission(self, obj, related_object_name):
         request = self.context.get('request')
@@ -31,18 +28,15 @@ class RelatedObjectPermissionMixin:
 
 class RelatedObjectFilterMixin:
     """
-    A mixin for RelatedObjectMixin that filter the related object (if its object is a queryset)
+    A mixin for RelatedObjectMixin that filter the related object queryset
     """
 
-    def get_related_objects_filters(self):
-        return getattr(self.Meta, 'related_objects_filters', dict())
-
     def filter_related_object_query(self, obj, related_object_name):
-        related_objects_filters = self.get_related_objects_filters()
+        related_objects_filters = self.get_related_object_option(related_object_name, 'filter', dict())
         for related_object, filter_kwargs in related_objects_filters.items():
             if related_object == related_object_name:
                 obj = obj.filter(**filter_kwargs)
-        return obj.order_by('id').all()
+        return obj.order_by('id')
 
 
 class RelatedObjectMixin(
@@ -54,27 +48,33 @@ class RelatedObjectMixin(
     returned in response data.
     """
 
-    def get_related_object_fields(self, related_object_name):
-        related_objects_fields = self.context.get('fields', dict())
-        return related_objects_fields.get(related_object_name)
-
     def get_related_objects(self):
         related_objects = getattr(self.Meta, 'related_objects', dict())
-        for related_object, serializer in related_objects.items():
-            if isinstance(serializer, str):
-                related_objects[related_object] = import_string(serializer)
-        return related_objects.items()
+        return related_objects
+
+    def get_related_object_option(self, related_object, option_name, default=None):
+        related_objects = self.get_related_objects()
+        options = related_objects.get(related_object)
+        return options.get(option_name, default)
+
+    def get_related_object_serializer(self, related_object):
+        serializer = self.get_related_object_option(related_object, 'serializer')
+        if isinstance(serializer, str):
+            serializer = import_string(serializer)
+        return serializer
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
 
+        related_objects_fields = self.context.get('fields', dict())
         related_objects = self.get_related_objects()
-        for related_object_name, Serializer in related_objects:
-            fields = self.get_related_object_fields(related_object_name)
+        for related_object_name in related_objects.keys():
+            fields = related_objects_fields.get(related_object_name)
             if fields:
                 self.check_related_object_permission(instance, related_object_name)
 
                 related_object = getattr(instance, related_object_name)
+                Serializer = self.get_related_object_serializer(related_object_name)
 
                 if isinstance(related_object, Manager):
                     queryset = self.filter_related_object_query(related_object, related_object_name)

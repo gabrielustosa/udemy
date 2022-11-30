@@ -14,8 +14,12 @@ class MessageSerializer(ModelSerializer):
             'course'
         ]
         related_objects = {
-            'creator': UserSerializer,
-            'course': CourseSerializer
+            'creator': {
+                'serializer': UserSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            }
         }
         create_only_fields = ('course',)
         min_fields = ('id', 'title', 'content')

@@ -14,12 +14,16 @@ class ModuleSerializer(ModelSerializer):
             'course'
         ]
         related_objects = {
-            'course': CourseSerializer,
-            'lessons': 'udemy.apps.lesson.serializer.LessonSerializer',
-            'quizzes': 'udemy.apps.quiz.serializer.QuizSerializer',
-        }
-        related_objects_permissions = {
-            ('lessons', 'quizzes'): [IsEnrolled],
+            'course': {
+                'serializer': CourseSerializer
+            },
+            'lessons': {
+                'serializer': 'udemy.apps.lesson.serializer.LessonSerializer',
+            },
+            'quizzes': {
+                'serializer': 'udemy.apps.quiz.serializer.QuizSerializer',
+                'filter': {'is_published': True}
+            }
         }
         create_only_fields = ('course',)
         update_only_fields = ('order',)

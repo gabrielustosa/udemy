@@ -33,24 +33,45 @@ class CourseSerializer(ModelSerializer):
             'categories': {'required': False},
         }
         related_objects = {
-            'instructors': UserSerializer,
-            'categories': CategorySerializer,
-            'quizzes': 'udemy.apps.quiz.serializer.QuizSerializer',
-            'lessons': 'udemy.apps.lesson.serializer.LessonSerializer',
-            'modules': 'udemy.apps.module.serializer.ModuleSerializer',
-            'contents': 'udemy.apps.content.serializer.ContentSerializer',
-            'ratings': 'udemy.apps.rating.serializer.RatingSerializer',
-            'warning_messages': 'udemy.apps.message.serializer.MessageSerializer',
-            'questions': 'udemy.apps.question.serializer.QuestionSerializer',
-            'notes': 'udemy.apps.note.serializer.NoteSerializer'
-        }
-        related_objects_permissions = {
-            ('quizzes', 'lessons', 'notes',
-             'modules', 'contents', 'questions',
-             'warning_messages',): [IsEnrolled]
-        }
-        related_objects_filters = {
-            'quizzes': {'is_published': True}
+            'instructors': {
+                'serializer': UserSerializer
+            },
+            'categories': {
+                'serializer': CategorySerializer,
+            },
+            'quizzes': {
+                'serializer': 'udemy.apps.quiz.serializer.QuizSerializer',
+                'permissions': [IsEnrolled],
+                'filter': {'is_published': True},
+            },
+            'lessons': {
+                'serializer': 'udemy.apps.lesson.serializer.LessonSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'modules': {
+                'serializer': 'udemy.apps.module.serializer.ModuleSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'content': {
+                'serializer': 'udemy.apps.content.serializer.ContentSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'rating': {
+                'serializer': 'udemy.apps.rating.serializer.RatingSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'warning_messages': {
+                'serializer': 'udemy.apps.message.serializer.MessageSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'questions': {
+                'serializer': 'udemy.apps.question.serializer.QuestionSerializer',
+                'permissions': [IsEnrolled]
+            },
+            'notes': {
+                'serializer': 'udemy.apps.note.serializer.NoteSerializer',
+                'permissions': [IsEnrolled]
+            }
         }
         min_fields = ('id', 'title', 'url')
         default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
@@ -82,12 +103,13 @@ class CourseSerializer(ModelSerializer):
     def get_estimated_content_length_video(self, instance: Course):
         return instance.lessons.aggregate(length_video=Sum('video_duration'))['length_video']
 
-    def get_related_objects_filters(self):
-        related_objects_filters = super().get_related_objects_filters()
-        related_objects_filters['notes'] = {
-            'creator': self.context.get('request').user
-        }
-        return related_objects_filters
+    def get_related_objects(self):
+        related_objects = super().get_related_objects()
+        if self.context.get('requests'):
+            related_objects['notes']['filter'] = {
+                'creator': self.context.get('request').user
+            }
+        return related_objects
 
     def create(self, validated_data):
         user = self.context.get('request').user
@@ -96,5 +118,3 @@ class CourseSerializer(ModelSerializer):
         course.instructors.add(user)
 
         return course
-
-

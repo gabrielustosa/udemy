@@ -15,12 +15,15 @@ class QuizSerializer(ModelSerializer):
             'course', 'created', 'modified'
         ]
         related_objects = {
-            'module': ModuleSerializer,
-            'course': CourseSerializer,
-            'questions': 'udemy.apps.quiz.serializer.QuestionSerializer',
-        }
-        related_objects_permissions = {
-            ('questions',): [IsEnrolled],
+            'module': {
+                'serializer': ModuleSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            },
+            'questions': {
+                'serializer': 'udemy.apps.quiz.serializer.QuestionSerializer'
+            },
         }
         create_only_fields = ('course', 'module')
         min_fields = ('id', 'title')
@@ -40,8 +43,12 @@ class QuestionSerializer(ModelSerializer):
             'created', 'modified', 'course'
         ]
         related_objects = {
-            'quiz': QuizSerializer,
-            'course': CourseSerializer,
+            'quiz': {
+                'serializer': QuizSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            },
         }
         create_only_fields = ('course', 'quiz')
         min_fields = ('id', 'question')

@@ -20,9 +20,15 @@ class QuestionSerializer(ModelSerializer):
             'course', 'likes_count', 'dislikes_count'
         ]
         related_objects = {
-            'creator': UserSerializer,
-            'lesson': LessonSerializer,
-            'course': CourseSerializer
+            'creator': {
+                'serializer': UserSerializer
+            },
+            'lesson': {
+                'serializer': LessonSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            }
         }
         create_only_fields = ('course', 'lesson')
         min_fields = ('id', 'title', 'content')

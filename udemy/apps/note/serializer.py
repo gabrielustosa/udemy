@@ -20,9 +20,15 @@ class NoteSerializer(ModelSerializer):
             'created'
         ]
         related_objects = {
-            'creator': UserSerializer,
-            'course': CourseSerializer,
-            'lesson': LessonSerializer
+            'creator': {
+                'serializer': UserSerializer
+            },
+            'course': {
+                'serializer': CourseSerializer
+            },
+            'lesson': {
+                'serializer': LessonSerializer
+            }
         }
         create_only_fields = ('course', 'lesson')
         min_fields = ('id', 'note')
