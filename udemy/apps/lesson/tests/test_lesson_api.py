@@ -23,18 +23,6 @@ LESSON_LIST_URL = reverse('lesson-list')
 def lesson_detail_url(pk): return reverse('lesson-detail', kwargs={'pk': pk})
 
 
-class TestLessonUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_lesson(self):
-        response = self.client.post(LESSON_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

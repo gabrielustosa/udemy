@@ -18,18 +18,6 @@ MESSAGE_LIST_URL = reverse('message:message-list')
 def message_detail_url(pk): return reverse('message:message-detail', kwargs={'pk': pk})
 
 
-class TestMessageUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_message(self):
-        response = self.client.post(MESSAGE_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestMessageAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

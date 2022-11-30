@@ -20,18 +20,6 @@ NOTE_LIST_URL = reverse('note-list')
 def note_detail_url(pk): return reverse('note-detail', kwargs={'pk': pk})
 
 
-class TestNoteUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_note(self):
-        response = self.client.post(NOTE_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestNoteAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

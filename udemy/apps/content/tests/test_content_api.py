@@ -18,18 +18,6 @@ CONTENT_LIST_URL = reverse('content-list')
 def content_detail_url(pk): return reverse('content-detail', kwargs={'pk': pk})
 
 
-class TestContentUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_user_cant_create_content(self):
-        response = self.client.post(CONTENT_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestContentAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

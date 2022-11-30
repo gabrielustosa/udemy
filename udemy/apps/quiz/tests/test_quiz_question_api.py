@@ -18,18 +18,6 @@ QUIZ_QUESTION_LIST_URL = reverse('quiz:quiz-question-list', kwargs={'quiz_id': 0
 def quiz_question_detail_url(pk): return reverse('quiz:quiz-question-detail', kwargs={'pk': pk, 'quiz_id': 0})
 
 
-class TestQuizQuestionUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_quiz(self):
-        response = self.client.post(QUIZ_QUESTION_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestQuizQuestionAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

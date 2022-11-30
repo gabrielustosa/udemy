@@ -18,18 +18,6 @@ MODULE_LIST_URL = reverse('module-list')
 def module_detail_url(pk): return reverse('module-detail', kwargs={'pk': pk})
 
 
-class TestModuleUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_module(self):
-        response = self.client.post(MODULE_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestModuleAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

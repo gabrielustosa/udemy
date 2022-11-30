@@ -45,11 +45,6 @@ class TestCourseUnauthenticatedRequests(TestCase):
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_unauthenticated_cant_create_course(self):
-        response = self.client.post(COURSE_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
 class TestAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""

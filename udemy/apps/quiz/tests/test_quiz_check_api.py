@@ -13,18 +13,6 @@ from udemy.apps.quiz.models import QuizRelation
 def check_quiz_url(pk): return reverse('quiz:check', kwargs={'quiz_id': pk})
 
 
-class TestQuizUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_check_quiz(self):
-        response = self.client.post(check_quiz_url(1))
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestQuizAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 

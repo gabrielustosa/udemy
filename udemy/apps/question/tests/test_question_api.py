@@ -19,18 +19,6 @@ QUESTION_LIST_URL = reverse('question:question-list')
 def question_detail_url(pk): return reverse('question:question-detail', kwargs={'pk': pk})
 
 
-class TestQuestionUnauthenticatedRequests(TestCase):
-    """Test unauthenticated API requests."""
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_unauthenticated_cant_create_question(self):
-        response = self.client.post(QUESTION_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class TestQuestionAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 
