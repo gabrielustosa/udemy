@@ -8,7 +8,7 @@ from udemy.apps.question.models import Question
 from udemy.apps.question.serializer import QuestionSerializer
 from udemy.apps.rating.serializer import RatingSerializer
 from udemy.apps.core.fields import GenericRelatedField
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.user.serializer import UserSerializer
 
 

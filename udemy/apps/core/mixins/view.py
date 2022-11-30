@@ -1,10 +1,12 @@
 import re
 
 from django.core.exceptions import FieldDoesNotExist
-from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Subquery, Exists, OuterRef
+from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
+
+from udemy.apps.course.models import Course
 
 
 class RetrieveRelatedObjectMixin:
@@ -26,20 +28,15 @@ class RetrieveRelatedObjectMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        prefetch_fields = set()
-        related_fields = set()
-
         for field_name in self.related_fields.keys():
             try:
                 field = self.Meta.model._meta.get_field(field_name)
                 if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
-                    prefetch_fields.add(field_name)
+                    queryset = queryset.prefetch_related(field_name)
                 if isinstance(field, ForeignKey):
-                    related_fields.add(field_name)
+                    queryset = queryset.select_related(field_name)
             except FieldDoesNotExist:
                 pass
-
-        queryset = queryset.select_related(*related_fields).prefetch_related(*prefetch_fields)
 
         return queryset
 
@@ -72,12 +69,12 @@ class AnnotatePermissionMixin:
         queryset = super().get_queryset()
 
         if self.request.user.is_authenticated:
+            ref_name = 'id' if self.Meta.model == Course else 'course__id'
+
             queryset = queryset.annotate(is_enrolled=Exists(
-                self.request.user.enrolled_courses.filter(id=OuterRef('course__id'))
+                self.request.user.enrolled_courses.filter(id=OuterRef(ref_name))
             )).annotate(is_instructor=Exists(
-                self.request.user.instructors_courses.filter(id=OuterRef('course__id'))
+                self.request.user.instructors_courses.filter(id=OuterRef(ref_name))
             ))
 
         return queryset
-
-

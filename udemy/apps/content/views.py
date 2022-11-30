@@ -3,14 +3,14 @@ from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.content.models import Content
 from udemy.apps.content.serializer import ContentSerializer
-from udemy.apps.core import mixins
+from udemy.apps.core.mixins import view
 from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 
 
 class ContentViewSet(
-    mixins.ActionPermissionMixin,
-    mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotatePermissionMixin,
+    view.ActionPermissionMixin,
+    view.RetrieveRelatedObjectMixin,
+    view.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Content.objects.all()

@@ -30,12 +30,13 @@ class PaginatorRelatedObject:
         paginator = Paginator(self.queryset, page_size)
         page_number = self.get_page_number or 1
 
-        self.num_pages = paginator.num_pages
-
         try:
             self.page = paginator.page(page_number)
         except InvalidPage:
             raise NotFound(f'Invalid page for `{self.related_object_name}`.')
+
+        if paginator.num_pages == 1:
+            return None
 
         return list(self.page)
 

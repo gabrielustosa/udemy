@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from udemy.apps.core.permissions import IsEnrolled
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.rating.models import Rating
 from udemy.apps.user.serializer import UserSerializer

@@ -1,4 +1,4 @@
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsEnrolled, IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.module.models import Module
@@ -15,8 +15,8 @@ class ModuleSerializer(ModelSerializer):
         ]
         related_objects = {
             'course': CourseSerializer,
-            'lessons': ('udemy.apps.lesson.serializer', 'LessonSerializer'),
-            'quizzes': ('udemy.apps.quiz.serializer', 'QuizSerializer'),
+            'lessons': 'udemy.apps.lesson.serializer.LessonSerializer',
+            'quizzes': 'udemy.apps.quiz.serializer.QuizSerializer',
         }
         related_objects_permissions = {
             ('lessons', 'quizzes'): [IsEnrolled],

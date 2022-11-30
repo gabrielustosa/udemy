@@ -1,4 +1,4 @@
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsEnrolled, IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.models import Lesson
@@ -21,8 +21,8 @@ class LessonSerializer(ModelSerializer):
         related_objects = {
             'module': ModuleSerializer,
             'course': CourseSerializer,
-            'contents': ('udemy.apps.content.serializer', 'ContentSerializer'),
-            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer')
+            'contents': 'udemy.apps.content.serializer.ContentSerializer',
+            'questions': 'udemy.apps.question.serializer.QuestionSerializer'
         }
         related_objects_permissions = {
             ('contents', 'questions'): [IsEnrolled],

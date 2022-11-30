@@ -5,7 +5,6 @@ from django.shortcuts import reverse
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from tests.utils import create_factory_in_batch
 from tests.factories.category import CategoryFactory
 from tests.factories.user import UserFactory
 from udemy.apps.category.models import Category
@@ -17,14 +16,14 @@ CATEGORY_LIST_URL = reverse('category-list')
 def category_detail_url(pk): return reverse('category-detail', kwargs={'pk': pk})
 
 
-class PublicCategoryAPITest(TestCase):
+class TestCategoryUnauthenticatedRequests(TestCase):
     """Test unauthenticated API requests."""
 
     def setUp(self):
         self.client = APIClient()
 
     def test_category_list(self):
-        categories = create_factory_in_batch(CategoryFactory, 5)
+        categories = CategoryFactory.create_batch(5)
 
         response = self.client.get(CATEGORY_LIST_URL)
 
@@ -48,16 +47,8 @@ class PublicCategoryAPITest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_non_admin_cant_create_category(self):
-        user = UserFactory()
-        self.client.force_authenticate(user)
 
-        response = self.client.post(CATEGORY_LIST_URL)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-
-class PrivateCategoryApiTests(TestCase):
+class TestCategoryAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
@@ -72,11 +63,12 @@ class PrivateCategoryApiTests(TestCase):
         }
         response = self.client.post(CATEGORY_LIST_URL, payload)
 
-        category = Category.objects.first()
+        category = Category.objects.get(id=response.data['id'])
+
+        serializer = CategorySerializer(category)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['title'], category.title)
-        self.assertEqual(response.data['slug'], category.slug)
+        self.assertEqual(response.data, serializer.data)
 
     def test_partial_category_update(self):
         original_slug = 'original_slug'
@@ -93,7 +85,7 @@ class PrivateCategoryApiTests(TestCase):
         self.assertEqual(category.title, payload['title'])
         self.assertEqual(category.slug, original_slug)
 
-    def test_category_full_update(self):
+    def test_full_category_update(self):
         category = CategoryFactory()
 
         payload = {
@@ -105,8 +97,8 @@ class PrivateCategoryApiTests(TestCase):
         category.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for k, v in payload.items():
-            self.assertEqual(getattr(category, k), v)
+        self.assertEqual(category.title, payload['title'])
+        self.assertEqual(category.slug, payload['slug'])
 
     def test_delete_category(self):
         category = CategoryFactory()

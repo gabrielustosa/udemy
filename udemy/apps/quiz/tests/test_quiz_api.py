@@ -1,5 +1,4 @@
 from django.test import TestCase
-from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -10,11 +9,8 @@ from tests.factories.module import ModuleFactory
 from tests.factories.quiz import QuizFactory
 from tests.factories.user import UserFactory
 
-from udemy.apps.course.models import CourseRelation
-from udemy.apps.course.serializer import CourseSerializer
-from udemy.apps.module.serializer import ModuleSerializer
 from udemy.apps.quiz.models import Quiz
-from udemy.apps.quiz.serializer import QuizSerializer, QuestionSerializer
+from udemy.apps.quiz.serializer import QuizSerializer
 
 QUIZ_LIST_URL = reverse('quiz:quiz-list')
 
@@ -22,7 +18,7 @@ QUIZ_LIST_URL = reverse('quiz:quiz-list')
 def quiz_detail_url(pk): return reverse('quiz:quiz-detail', kwargs={'pk': pk})
 
 
-class PublicQuizAPITest(TestCase):
+class TestQuizUnauthenticatedRequests(TestCase):
     """Test unauthenticated API requests."""
 
     def setUp(self):
@@ -34,7 +30,7 @@ class PublicQuizAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateQuizAPITests(TestCase):
+class TestQuizAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
@@ -56,16 +52,16 @@ class PrivateQuizAPITests(TestCase):
         }
         response = self.client.post(QUIZ_LIST_URL, payload)
 
-        quiz = Quiz.objects.first()
+        quiz = Quiz.objects.get(id=response.data['id'])
+
+        serializer = QuizSerializer(quiz)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(payload['title'], quiz.title)
-        self.assertEqual(payload['description'], quiz.description)
-        self.assertEqual(payload['pass_percent'], quiz.pass_percent)
+        self.assertEqual(response.data, serializer.data)
 
-    def test_retrieve_quiz(self):
+    def test_quiz_retrieve(self):
         quiz = QuizFactory()
-        CourseRelation.objects.create(creator=self.user, course=quiz.course)
+        quiz.course.instructors.add(self.user)
 
         response = self.client.get(quiz_detail_url(quiz.id))
 
@@ -74,17 +70,9 @@ class PrivateQuizAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
 
-    def test_user_not_enrolled_can_retrieve_quiz(self):
-        quiz = QuizFactory()
-
-        response = self.client.get(quiz_detail_url(quiz.id))
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_full_quiz_update(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-        quiz = QuizFactory(course=course)
+        quiz = QuizFactory()
+        quiz.course.instructors.add(self.user)
 
         payload = {
             'title': 'new title',
@@ -100,9 +88,8 @@ class PrivateQuizAPITests(TestCase):
         self.assertEqual(quiz.description, payload['description'])
 
     def test_partial_quiz_update(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-        quiz = QuizFactory(course=course)
+        quiz = QuizFactory()
+        quiz.course.instructors.add(self.user)
 
         payload = {
             'title': 'new title',
@@ -115,98 +102,10 @@ class PrivateQuizAPITests(TestCase):
         self.assertEqual(quiz.title, payload['title'])
 
     def test_delete_quiz(self):
-        course = CourseFactory()
-        course.instructors.add(self.user)
-        quiz = QuizFactory(course=course)
+        quiz = QuizFactory()
+        quiz.course.instructors.add(self.user)
 
         response = self.client.delete(quiz_detail_url(pk=quiz.id))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Quiz.objects.filter(id=quiz.id).exists())
-
-    def test_user_not_instructor_cant_create_quiz(self):
-        course = CourseFactory()
-        module = ModuleFactory(course=course)
-
-        payload = {
-            'course': course.id,
-            'module': module.id,
-            'title': 'Test title',
-            'description': 'Test content',
-            'pass_percent': 50,
-        }
-        response = self.client.post(QUIZ_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @parameterized.expand([
-        ('course', ('id', 'title'), CourseSerializer),
-        ('module', ('id', 'title'), ModuleSerializer),
-    ])
-    def test_related_objects(self, field_name, fields, Serializer):
-        quiz = QuizFactory()
-        CourseRelation.objects.create(creator=self.user, course=quiz.course)
-
-        response = self.client.get(
-            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
-
-        quiz_serializer = QuizSerializer(quiz, fields=('@min',))
-        object_serializer = Serializer(getattr(quiz, field_name), fields=fields)
-
-        expected_response = {
-            **quiz_serializer.data,
-            field_name: {
-                **object_serializer.data
-            }
-        }
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_response)
-
-    @parameterized.expand([
-        ('questions', ('id', 'question'), QuestionSerializer),
-    ])
-    def test_related_objects_m2m(self, field_name, fields, Serializer):
-        quiz = QuizFactory()
-        CourseRelation.objects.create(creator=self.user, course=quiz.course)
-
-        response = self.client.get(
-            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
-
-        quiz_serializer = QuizSerializer(quiz, fields=('@min',))
-        object_serializer = Serializer(getattr(quiz, field_name).all(), fields=fields, many=True)
-
-        expected_response = {
-            **quiz_serializer.data,
-            field_name: object_serializer.data
-        }
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_response)
-
-    @parameterized.expand([
-        ('questions', ('id', 'question')),
-    ])
-    def test_related_objects_m2m_permission(self, field_name, fields):
-        quiz = QuizFactory()
-
-        response = self.client.get(
-            f'{quiz_detail_url(quiz.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_permission_for_field(self):
-        course = CourseFactory()
-        module = ModuleFactory()
-        course.instructors.add(self.user)
-
-        payload = {
-            'course': course.id,
-            'module': module.id,
-            'title': 'Test title',
-            'description': 'Test content',
-            'pass_percent': 50,
-        }
-        response = self.client.post(QUIZ_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

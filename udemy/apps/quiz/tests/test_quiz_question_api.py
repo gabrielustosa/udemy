@@ -1,5 +1,4 @@
 from django.test import TestCase
-from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -10,9 +9,8 @@ from tests.factories.quiz import QuizFactory, QuestionFactory
 from tests.factories.user import UserFactory
 
 from udemy.apps.course.models import CourseRelation
-from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.quiz.models import Question
-from udemy.apps.quiz.serializer import QuestionSerializer, QuizSerializer
+from udemy.apps.quiz.serializer import QuestionSerializer
 
 QUIZ_QUESTION_LIST_URL = reverse('quiz:quiz-question-list', kwargs={'quiz_id': 0})
 
@@ -20,7 +18,7 @@ QUIZ_QUESTION_LIST_URL = reverse('quiz:quiz-question-list', kwargs={'quiz_id': 0
 def quiz_question_detail_url(pk): return reverse('quiz:quiz-question-detail', kwargs={'pk': pk, 'quiz_id': 0})
 
 
-class PublicQuizQuestionAPITest(TestCase):
+class TestQuizQuestionUnauthenticatedRequests(TestCase):
     """Test unauthenticated API requests."""
 
     def setUp(self):
@@ -32,7 +30,7 @@ class PublicQuizQuestionAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateQuizQuestionAPITests(TestCase):
+class TestQuizQuestionAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
@@ -59,12 +57,12 @@ class PrivateQuizQuestionAPITests(TestCase):
         }
         response = self.client.post(QUIZ_QUESTION_LIST_URL, payload, format='json')
 
-        question = Question.objects.first()
+        question = Question.objects.get(id=response.data['id'])
+
+        serializer = QuestionSerializer(question)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(payload['question'], question.question)
-        self.assertEqual(payload['feedback'], question.feedback)
-        self.assertEqual(payload['answers'], question.answers)
+        self.assertEqual(response.data, serializer.data)
 
     def test_retrieve_quiz_question(self):
         question = QuestionFactory()
@@ -76,13 +74,6 @@ class PrivateQuizQuestionAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
-
-    def test_user_not_enrolled_can_retrieve_quiz_question(self):
-        question = QuestionFactory()
-
-        response = self.client.get(quiz_question_detail_url(question.id))
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_full_quiz_question_update(self):
         question = QuestionFactory()
@@ -129,47 +120,3 @@ class PrivateQuizQuestionAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Question.objects.filter(id=question.id).exists())
-
-    def test_user_not_instructor_cant_create_quiz_question(self):
-        course = CourseFactory()
-        quiz = QuizFactory(course=course)
-
-        payload = {
-            'course': course.id,
-            'quiz': quiz.id,
-            'question': 'Test question',
-            'feedback': 'Test feedback',
-            'answers': [
-                'answer 1',
-                'answer 2',
-                'answer 3',
-            ],
-            'correct_response': 1
-        }
-        response = self.client.post(QUIZ_QUESTION_LIST_URL, payload)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @parameterized.expand([
-        ('quiz', ('id', 'title'), QuizSerializer),
-        ('course', ('id', 'title'), CourseSerializer),
-    ])
-    def test_related_objects(self, field_name, fields, Serializer):
-        question = QuestionFactory()
-        CourseRelation.objects.create(creator=self.user, course=question.course)
-
-        response = self.client.get(
-            f'{quiz_question_detail_url(question.id)}?fields[{field_name}]={",".join(fields)}&fields=@min')
-
-        action_serializer = QuestionSerializer(question, fields=('@min',))
-        object_serializer = Serializer(getattr(question, field_name), fields=fields)
-
-        expected_response = {
-            **action_serializer.data,
-            field_name: {
-                **object_serializer.data
-            }
-        }
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_response)

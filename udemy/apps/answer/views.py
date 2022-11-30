@@ -1,9 +1,9 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.viewsets import ModelViewSet
 
 from udemy.apps.answer.models import Answer
 from udemy.apps.answer.serializer import AnswerSerializer
-from udemy.apps.core import mixins
+from udemy.apps.core.mixins import view
 from udemy.apps.core.permissions import IsEnrolled, IsCreatorObject
 from udemy.apps.message.models import Message
 from udemy.apps.question.models import Question
@@ -11,19 +11,20 @@ from udemy.apps.rating.models import Rating
 
 
 class AnswerViewSet(
-    mixins.AnnotatePermissionMixin,
-    mixins.RetrieveRelatedObjectMixin,
+    view.AnnotatePermissionMixin,
+    view.RetrieveRelatedObjectMixin,
     ModelViewSet
 ):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = [IsAuthenticated, IsEnrolled, IsCreatorObject]
     lookup_url_kwarg = 'answer_id'
-    model = None
-    pk_url_kwarg = None
 
     class Meta:
         model = Answer
+
+
+class AnswerViewSetBase(AnswerViewSet):
 
     def get_filter_kwargs(self):
         filter_kwargs = {
@@ -38,15 +39,17 @@ class AnswerViewSet(
         context['model'] = self.model
         return context
 
-
-class AnswerViewSetBase(AnswerViewSet):
     def get_queryset(self):
         return self.queryset.filter(**self.get_filter_kwargs())
 
 
-class RatingAnswerViewSet(AnswerViewSetBase):
+class RatingAnswerViewSet(view.ActionPermissionMixin, AnswerViewSetBase):
     model = Rating
     pk_url_kwarg = 'rating_id'
+    permission_classes_by_action = {
+        ('default',): [IsAuthenticated, IsEnrolled],
+        ('retrieve', 'list'): [AllowAny],
+    }
 
 
 class QuestionAnswerViewSet(AnswerViewSetBase):

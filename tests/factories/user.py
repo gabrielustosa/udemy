@@ -1,19 +1,19 @@
 import factory
 
-from faker import Faker
+from factory import fuzzy
 
 from udemy.apps.user.models import User
-
-faker = Faker()
 
 
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
-        django_get_or_create = ('email', 'name', 'password', 'username', 'is_staff')
 
     email = factory.Faker('email')
-    username = factory.Faker('name')
-    name = factory.Faker('name')
-    password = 'admin123'
+    username = factory.Faker('name', locale='pt_br')
+    name = factory.Faker('name', locale='pt_br')
+    password = fuzzy.FuzzyText(length=24)
+    job_title = fuzzy.FuzzyChoice(['Developer', 'Professor'])
+    locale = fuzzy.FuzzyChoice(['Brazil', 'Korea'])
+    bio = factory.Faker('sentence')
     is_staff = False

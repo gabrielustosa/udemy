@@ -6,7 +6,6 @@ from rest_framework.test import APIClient
 
 from tests.factories.quiz import QuestionFactory, QuizFactory
 from tests.factories.user import UserFactory
-from tests.utils import create_factory_in_batch
 
 from udemy.apps.quiz.models import QuizRelation
 
@@ -14,7 +13,7 @@ from udemy.apps.quiz.models import QuizRelation
 def check_quiz_url(pk): return reverse('quiz:check', kwargs={'quiz_id': pk})
 
 
-class PublicQuizCheckAPITest(TestCase):
+class TestQuizUnauthenticatedRequests(TestCase):
     """Test unauthenticated API requests."""
 
     def setUp(self):
@@ -26,7 +25,7 @@ class PublicQuizCheckAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateQuizCheckApiTests(TestCase):
+class TestQuizAuthenticatedRequests(TestCase):
     """Test authenticated API requests."""
 
     def setUp(self):
@@ -53,7 +52,7 @@ class PrivateQuizCheckApiTests(TestCase):
         quiz = QuizFactory()
         QuizRelation.objects.create(quiz=quiz, creator=self.user)
 
-        create_factory_in_batch(QuestionFactory, 5, quiz=quiz)
+        QuestionFactory.create_batch(5, quiz=quiz)
 
         payload = {
             'responses': [n for n in range(10)]
@@ -82,7 +81,7 @@ class PrivateQuizCheckApiTests(TestCase):
         self.assertEqual(response.data['wrong_questions'], {})
 
     def test_check_quiz_with_wrong_responses(self):
-        quiz = QuizFactory()
+        quiz = QuizFactory(pass_percent=50)
         QuizRelation.objects.create(quiz=quiz, creator=self.user)
 
         correct_responses = [3, 4, 5, 1, 2]

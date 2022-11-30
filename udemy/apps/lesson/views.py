@@ -1,16 +1,16 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from udemy.apps.core import mixins
+from udemy.apps.core.mixins import view
 from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 from udemy.apps.lesson.models import Lesson
 from udemy.apps.lesson.serializer import LessonSerializer
 
 
 class LessonViewSet(
-    mixins.ActionPermissionMixin,
-    mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotatePermissionMixin,
+    view.ActionPermissionMixin,
+    view.RetrieveRelatedObjectMixin,
+    view.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Lesson.objects.all()

@@ -9,7 +9,6 @@ from tests.factories.lesson import LessonFactory
 from tests.factories.module import ModuleFactory
 from tests.factories.question import QuestionFactory
 from tests.factories.user import UserFactory
-from tests.utils import create_factory_in_batch
 
 from udemy.apps.course.models import CourseRelation
 from udemy.apps.course.serializer import CourseSerializer
@@ -88,7 +87,7 @@ class RelatedObjectRetrieveTests(TestCase):
 
     def test_related_object_retrieve_m2m(self):
         course = CourseFactory()
-        instructors = create_factory_in_batch(UserFactory, 5)
+        instructors = UserFactory.create_batch(5)
         instructors.insert(0, self.user)
         course.instructors.add(*instructors)
         url = reverse('course-detail', kwargs={'pk': course.id})
@@ -111,7 +110,7 @@ class RelatedObjectRetrieveTests(TestCase):
         CourseRelation.objects.create(course=course, creator=self.user)
         url = reverse('course-detail', kwargs={'pk': course.id})
 
-        lessons = create_factory_in_batch(LessonFactory, 5, course=course)
+        lessons = LessonFactory.create_batch(5, course=course)
 
         response = self.client.get(f'{url}?fields[lessons]=id,title')
 

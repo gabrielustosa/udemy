@@ -9,9 +9,6 @@ from udemy.apps.course.models import Course
 
 
 class Answer(CreatorBase, TimeStampedBase):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,
@@ -21,4 +18,7 @@ class Answer(CreatorBase, TimeStampedBase):
             MinLengthValidator(5),
             MaxLengthValidator(1000)
         ])
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
     actions = GenericRelation(Action)

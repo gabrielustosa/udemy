@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from udemy.apps.content import models
 from udemy.apps.core.fields import GenericRelatedField
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.lesson.serializer import LessonSerializer

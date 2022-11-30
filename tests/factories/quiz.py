@@ -1,35 +1,32 @@
 import factory
 
-from random import randint
+from factory import fuzzy
 
 from tests.factories.course import CourseFactory
 from tests.factories.module import ModuleFactory
+
 from udemy.apps.quiz.models import Quiz, Question
 
 
 class QuizFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Quiz
-        django_get_or_create = ('title', 'description', 'pass_percent', 'module', 'course', 'order')
 
     title = factory.Faker('name')
     course = factory.SubFactory(CourseFactory)
     module = factory.SubFactory(ModuleFactory, course=factory.SelfAttribute('..course'))
     description = factory.Faker('sentence')
-    is_published = bool(randint(0, 1))
-    pass_percent = 50
-    order = None
+    is_published = factory.Faker('boolean')
+    pass_percent = fuzzy.FuzzyInteger(1, 100)
 
 
 class QuestionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Question
-        django_get_or_create = ('question', 'feedback', 'answers', 'quiz', 'order', 'correct_response', 'course')
 
     question = factory.Faker('sentence')
     feedback = factory.Faker('sentence')
     answers = factory.List([factory.Faker('sentence') for _ in range(5)])
     course = factory.SubFactory(CourseFactory)
     quiz = factory.SubFactory(QuizFactory, course=factory.SelfAttribute('..course'))
-    correct_response = randint(1, 5)
-    order = None
+    correct_response = fuzzy.FuzzyInteger(1, 5)

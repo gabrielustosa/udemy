@@ -1,16 +1,16 @@
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from udemy.apps.core import mixins
+from udemy.apps.core.mixins import view
 from udemy.apps.core.permissions import IsCreatorObject, IsEnrolled
 from udemy.apps.rating.models import Rating
 from udemy.apps.rating.serializer import RatingSerializer
 
 
 class RatingViewSet(
-    mixins.ActionPermissionMixin,
-    mixins.RetrieveRelatedObjectMixin,
-    mixins.AnnotatePermissionMixin,
+    view.ActionPermissionMixin,
+    view.RetrieveRelatedObjectMixin,
+    view.AnnotatePermissionMixin,
     ModelViewSet
 ):
     queryset = Rating.objects.all()

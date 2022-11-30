@@ -1,10 +1,10 @@
 from django.db.models import Manager
+from django.utils.module_loading import import_string
 
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
 from udemy.apps.core.paginator import PaginatorRelatedObject
-from utils.module import get_class_from_module
 
 
 class RelatedObjectPermissionMixin:
@@ -35,7 +35,7 @@ class RelatedObjectFilterMixin:
     """
 
     def get_related_objects_filters(self):
-        return getattr(self.Meta, 'related_objects_filters', {})
+        return getattr(self.Meta, 'related_objects_filters', dict())
 
     def filter_related_object_query(self, obj, related_object_name):
         related_objects_filters = self.get_related_objects_filters()
@@ -55,15 +55,14 @@ class RelatedObjectMixin(
     """
 
     def get_related_object_fields(self, related_object_name):
-        related_objects_fields = self.context.get('fields', {})
+        related_objects_fields = self.context.get('fields', dict())
         return related_objects_fields.get(related_object_name)
 
     def get_related_objects(self):
-        related_objects = getattr(self.Meta, 'related_objects', {})
+        related_objects = getattr(self.Meta, 'related_objects', dict())
         for related_object, serializer in related_objects.items():
-            if isinstance(serializer, tuple):
-                module_name, class_name = serializer
-                related_objects[related_object] = get_class_from_module(module_name, class_name)
+            if isinstance(serializer, str):
+                related_objects[related_object] = import_string(serializer)
         return related_objects.items()
 
     def to_representation(self, instance):
@@ -88,7 +87,7 @@ class RelatedObjectMixin(
                     )
 
                     page = paginator.paginate_queryset()
-                    if paginator.num_pages > 1:
+                    if page:
                         serializer = Serializer(page, fields=fields, many=True)
                         ret[related_object_name] = paginator.get_paginated_data(serializer.data)
                         continue

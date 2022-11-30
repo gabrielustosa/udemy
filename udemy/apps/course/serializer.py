@@ -3,9 +3,9 @@ from django.db.models import Sum, Count, Q, Avg
 from rest_framework import serializers
 
 from udemy.apps.category.serializer import CategorySerializer
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.core.permissions import IsEnrolled
-from udemy.apps.course.models import Course, CourseRelation
+from udemy.apps.course.models import Course
 from udemy.apps.user.serializer import UserSerializer
 
 
@@ -35,14 +35,14 @@ class CourseSerializer(ModelSerializer):
         related_objects = {
             'instructors': UserSerializer,
             'categories': CategorySerializer,
-            'quizzes': ('udemy.apps.quiz.serializer', 'QuizSerializer'),
-            'lessons': ('udemy.apps.lesson.serializer', 'LessonSerializer'),
-            'modules': ('udemy.apps.module.serializer', 'ModuleSerializer'),
-            'contents': ('udemy.apps.content.serializer', 'ContentSerializer'),
-            'ratings': ('udemy.apps.rating.serializer', 'RatingSerializer'),
-            'warning_messages': ('udemy.apps.message.serializer', 'MessageSerializer'),
-            'questions': ('udemy.apps.question.serializer', 'QuestionSerializer'),
-            'notes': ('udemy.apps.note.serializer', 'NoteSerializer')
+            'quizzes': 'udemy.apps.quiz.serializer.QuizSerializer',
+            'lessons': 'udemy.apps.lesson.serializer.LessonSerializer',
+            'modules': 'udemy.apps.module.serializer.ModuleSerializer',
+            'contents': 'udemy.apps.content.serializer.ContentSerializer',
+            'ratings': 'udemy.apps.rating.serializer.RatingSerializer',
+            'warning_messages': 'udemy.apps.message.serializer.MessageSerializer',
+            'questions': 'udemy.apps.question.serializer.QuestionSerializer',
+            'notes': 'udemy.apps.note.serializer.NoteSerializer'
         }
         related_objects_permissions = {
             ('quizzes', 'lessons', 'notes',
@@ -98,10 +98,3 @@ class CourseSerializer(ModelSerializer):
         return course
 
 
-class CourseRelationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CourseRelation
-        fields = [
-            'id', 'creator', 'course',
-            'modified', 'created',
-        ]

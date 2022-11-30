@@ -2,23 +2,43 @@ import factory
 
 from tests.factories.course import CourseFactory
 from tests.factories.lesson import LessonFactory
-from udemy.apps.content.models import Content, Text
+
+from udemy.apps.content import models
+
+
+class TextFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Text
+
+    content = factory.Faker('sentence')
+
+
+class LinkFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Link
+
+    url = 'https://google.com'
+
+
+class ImageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Image
+
+    image = factory.django.ImageField()
+
+
+class FileFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.File
+
+    file = factory.django.FileField()
 
 
 class ContentFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = Content
-        django_get_or_create = ('title', 'lesson', 'course', 'order')
+        model = models.Content
 
     title = factory.Faker('name')
     course = factory.SubFactory(CourseFactory)
     lesson = factory.SubFactory(LessonFactory, course=factory.SelfAttribute('..course'))
-    order = None
-    item = (Text, {'content': 'Test content'})
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        Model, value = kwargs.pop('item')
-        item = Model.objects.create(**value)
-        kwargs['item'] = item
-        return super()._create(model_class, *args, **kwargs)
+    item = factory.SubFactory(TextFactory)

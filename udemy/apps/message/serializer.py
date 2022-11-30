@@ -1,5 +1,5 @@
 from udemy.apps.core.permissions import IsInstructor
-from udemy.apps.core.serializers.serializer import ModelSerializer
+from udemy.apps.core.serializer import ModelSerializer
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.message.models import Message
 from udemy.apps.user.serializer import UserSerializer
