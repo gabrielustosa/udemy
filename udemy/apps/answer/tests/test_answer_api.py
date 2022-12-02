@@ -60,6 +60,7 @@ class TestAnswerAPIRequests(TestCase):
         answer.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(answer.content, payload['content'])
 
     def test_answer_delete(self):
         answer = RatingAnswerFactory(creator=self.user)

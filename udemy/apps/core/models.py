@@ -1,41 +1,8 @@
-from urllib.parse import urlparse, urlunparse
-
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError
-
-
-class UrlBase(models.Model):
-    def get_url(self):
-        if hasattr(self.get_url_path, "dont_recurse"):
-            raise NotImplementedError
-        try:
-            path = self.get_url_path()
-        except NotImplementedError:
-            raise
-        return settings.WEBSITE_URL + path
-
-    get_url.dont_recurse = True
-
-    def get_url_path(self):
-        if hasattr(self.get_url, "dont_recurse"):
-            raise NotImplementedError
-        try:
-            url = self.get_url()
-        except NotImplementedError:
-            raise
-        bits = urlparse(url)
-        return urlunparse(("", "") + bits[2:])
-
-    get_url_path.dont_recurse = True
-
-    def get_absolute_url(self):
-        return self.get_url()
-
-    class Meta:
-        abstract = True
 
 
 class TimeStampedBase(models.Model):
@@ -67,7 +34,7 @@ class CreatorBase(models.Model):
         abstract = True
 
     def save(self, *args, **kwargs):
-        from .middleware import get_current_user
+        from udemy.apps.core.middleware import get_current_user
 
         if not self.creator:
             self.creator = get_current_user()
@@ -127,3 +94,17 @@ class OrderedModel(models.Model):
         self.get_queryset().filter(order__gt=self.order).update(
             order=ExpressionWrapper(F('order') - 1, output_field=models.PositiveIntegerField()))
         return super().delete(using, keep_parents)
+
+
+class ModelTest(models.Model):
+    title = models.CharField(max_length=100)
+    num = models.PositiveIntegerField(default=0)
+
+
+class ModelRelatedObject(models.Model):
+    title = models.CharField(max_length=100)
+    model_test = models.ForeignKey(
+        ModelTest,
+        on_delete=models.CASCADE,
+        related_name='model_related'
+    )

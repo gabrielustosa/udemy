@@ -32,10 +32,9 @@ class RelatedObjectFilterMixin:
     """
 
     def filter_related_object_query(self, obj, related_object_name):
-        related_objects_filters = self.get_related_object_option(related_object_name, 'filter', dict())
-        for related_object, filter_kwargs in related_objects_filters.items():
-            if related_object == related_object_name:
-                obj = obj.filter(**filter_kwargs)
+        related_objects_filter = self.get_related_object_option(related_object_name, 'filter')
+        if related_objects_filter:
+            obj = obj.filter(**related_objects_filter)
         return obj.order_by('id')
 
 

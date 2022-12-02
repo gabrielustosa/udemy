@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     # my apps
-    'udemy.apps.core',
     'udemy.apps.user',
     'udemy.apps.course',
     'udemy.apps.category',

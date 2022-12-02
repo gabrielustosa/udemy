@@ -27,8 +27,11 @@ class PaginatorRelatedObject:
         if not page_size:
             page_size = RELATED_OBJECT_PAGINATED_BY
 
+        if int(page_size) <= 0:
+            raise NotFound(f'Invalid page size for `{self.related_object_name}`.')
+
         paginator = Paginator(self.queryset, page_size)
-        page_number = self.get_page_number or 1
+        page_number = self.get_page_number
 
         try:
             self.page = paginator.page(page_number)
@@ -46,6 +49,7 @@ class PaginatorRelatedObject:
             match = re.search(r'page\(([0-9_]+)\)', field)
             if match:
                 return match.group(1)
+        return 1
 
     @cached_property
     def get_page_size(self):
@@ -74,8 +78,11 @@ class PaginatorRelatedObject:
         return replace_query_param(url, self.get_query_param(), self.replace_page(page_number))
 
     def replace_page(self, page):
+        page_query_param = f'page({self.get_page_number})'
+        if page_query_param not in self.related_object_fields:
+            self.related_object_fields.append(page_query_param)
         query_fields = ','.join(self.related_object_fields)
-        return query_fields.replace(f'page({self.get_page_number})', f'page({page})')
+        return query_fields.replace(page_query_param, f'page({page})')
 
     def remove_page(self):
         query_fields = [field for field in self.related_object_fields if field != f'page({self.get_page_number})']

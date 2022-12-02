@@ -1,71 +1,51 @@
-from parameterized import parameterized
-
 from django.test import TestCase
+from rest_framework import serializers
 
-from rest_framework.reverse import reverse
-
-from tests.factories.course import CourseFactory
-
+from udemy.apps.core.models import ModelTest
 from udemy.apps.core.serializer import ModelSerializer
-from udemy.apps.course.models import Course
-from udemy.apps.course.serializer import CourseSerializer
-from udemy.apps.module.models import Module
 
+
+class ModelTestSerializer(ModelSerializer):
+    custom_field = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ModelTest
+        fields = ('id', 'title', 'custom_field')
+        min_fields = ('custom_field',)
+        default_fields = ('id', 'title')
+
+    def get_custom_field(self, instance):
+        return f'custom field {instance.id}'
 
 class SerializerDynamicFieldsTests(TestCase):
     def test_dynamic_fields(self):
-        course = CourseFactory()
-        url = reverse('course-detail', kwargs={'pk': course.id})
+        model_test = ModelTest.objects.create(title='test')
 
-        response = self.client.get(f'{url}?fields=title,slug,headline')
+        serializer = ModelTestSerializer(fields=('id', 'custom_field'))
+        data = serializer.to_representation(model_test)
 
-        serializer = CourseSerializer(course, fields=('title', 'slug', 'headline'))
+        assert data == {'id': model_test.id, 'custom_field': f'custom field {model_test.id}'}
 
-        self.assertEqual(response.data, serializer.data)
+    def test_min_fields(self):
+        model_test = ModelTest.objects.create(title='test')
 
-    @parameterized.expand([
-        ('@min',),
-        ('@default',)
-    ])
-    def test_object_fields_types(self, field_type):
-        course = CourseFactory()
-        url = reverse('course-detail', kwargs={'pk': course.id})
+        serializer = ModelTestSerializer(fields=('@min',))
+        data = serializer.to_representation(model_test)
 
-        response = self.client.get(f'{url}?fields={field_type}')
+        assert data == {'custom_field': f'custom field {model_test.id}'}
 
-        serializer = CourseSerializer(course, fields=(field_type,))
+    def test_default_fields(self):
+        model_test = ModelTest.objects.create(title='test')
 
-        self.assertEqual(response.data, serializer.data)
+        serializer = ModelTestSerializer(fields=('@default',))
+        data = serializer.to_representation(model_test)
 
-    def test_create_only_fields(self):
-        class CreateOnlySerializer(ModelSerializer):
-            class Meta:
-                model = Course
-                fields = ('title', 'headline')
-                create_only_fields = ('headline',)
+        assert data == {'id': model_test.id, 'title': model_test.title}
 
-        data = {'title': 'new title', 'headline': 'new headline'}
-        serializer = CreateOnlySerializer(instance=CourseFactory(), data=data)
-        serializer.is_valid()
-        course = serializer.save()
+    def test_all_fields(self):
+        model_test = ModelTest.objects.create(title='test')
 
-        self.assertIsNotNone(course)
-        self.assertEqual(course.title, data['title'])
-        self.assertNotEqual(course.headline, data['headline'])
+        serializer = ModelTestSerializer(fields=('@all',))
+        data = serializer.to_representation(model_test)
 
-    def test_update_only_fields(self):
-        class UpdateOnlySerializer(ModelSerializer):
-            class Meta:
-                model = Module
-                fields = ('title', 'order', 'course')
-                update_only_fields = ('order',)
-
-        course = CourseFactory()
-        data = {'title': 'title', 'order': '5', 'course': course.id}
-        serializer = UpdateOnlySerializer(data=data)
-        serializer.is_valid()
-        module = serializer.save()
-
-        self.assertIsNotNone(module)
-        self.assertEqual(module.title, data['title'])
-        self.assertNotEqual(module.order, data['order'])
+        assert data == {'id': model_test.id, 'title': model_test.title, 'custom_field': f'custom field {model_test.id}'}

@@ -52,11 +52,11 @@ class CourseSerializer(ModelSerializer):
                 'serializer': 'udemy.apps.module.serializer.ModuleSerializer',
                 'permissions': [IsEnrolled]
             },
-            'content': {
+            'contents': {
                 'serializer': 'udemy.apps.content.serializer.ContentSerializer',
                 'permissions': [IsEnrolled]
             },
-            'rating': {
+            'ratings': {
                 'serializer': 'udemy.apps.rating.serializer.RatingSerializer',
                 'permissions': [IsEnrolled]
             },
@@ -105,7 +105,7 @@ class CourseSerializer(ModelSerializer):
 
     def get_related_objects(self):
         related_objects = super().get_related_objects()
-        if self.context.get('requests'):
+        if self.context.get('request'):
             related_objects['notes']['filter'] = {
                 'creator': self.context.get('request').user
             }

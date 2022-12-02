@@ -59,9 +59,7 @@ class ActionPermissionMixin:
 
     def get_permissions(self):
         permissions = self.get_permissions_by_action(self.action)
-        if permissions:
-            return permissions
-        return self.get_permissions_by_action('default')
+        return permissions if permissions else self.get_permissions_by_action('default')
 
 
 class AnnotatePermissionMixin:
