@@ -11,6 +11,7 @@ class RatingViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.AnnotatePermissionMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Rating.objects.all()

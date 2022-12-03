@@ -63,10 +63,10 @@ class OrderedModel(models.Model):
         return self.get_last_order() + 1
 
     def do_after_update(self):
-        return None
+        pass
 
     def do_after_create(self):
-        return None
+        pass
 
     def save(self, force_insert=False, **kwargs):
         if force_insert:
@@ -101,10 +101,17 @@ class ModelTest(models.Model):
     num = models.PositiveIntegerField(default=0)
 
 
-class ModelRelatedObject(models.Model):
+class ModelRelatedObject(OrderedModel):
     title = models.CharField(max_length=100)
     model_test = models.ForeignKey(
         ModelTest,
         on_delete=models.CASCADE,
         related_name='model_related'
     )
+    order_in_respect = ('model_test',)
+
+    def do_after_create(self):
+        ModelTest.objects.create(title='create', num=99)
+
+    def do_after_update(self):
+        ModelTest.objects.create(title='update', num=100)

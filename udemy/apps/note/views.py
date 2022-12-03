@@ -10,6 +10,7 @@ from udemy.apps.note.serializer import NoteSerializer
 class NoteViewSet(
     view.RetrieveRelatedObjectMixin,
     view.AnnotatePermissionMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Note.objects.all()

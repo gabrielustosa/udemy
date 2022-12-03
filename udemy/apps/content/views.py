@@ -11,6 +11,7 @@ class ContentViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.AnnotatePermissionMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Content.objects.all()

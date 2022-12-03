@@ -13,7 +13,7 @@ class ModelTestSerializer(ModelSerializer):
 class RelatedObjectSerializer(ModelSerializer):
     class Meta:
         model = ModelRelatedObject
-        fields = '__all__'
+        fields = ('id', 'title', 'model_test')
         related_objects = {
             'model_test': {
                 'serializer': ModelTestSerializer
@@ -24,7 +24,7 @@ class RelatedObjectSerializer(ModelSerializer):
 class RelatedObjectSerializerString(ModelSerializer):
     class Meta:
         model = ModelRelatedObject
-        fields = '__all__'
+        fields = ('id', 'title', 'model_test')
         related_objects = {
             'model_test': {
                 'serializer': f'{__name__}.RelatedObjectSerializerString'

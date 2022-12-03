@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
-from django.test import TestCase, RequestFactory, override_settings
+from django.test import TestCase, override_settings
 from django.urls import path
-from rest_framework import status
 
+from rest_framework import status
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.reverse import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -30,17 +30,13 @@ class ModelTestSerializer(ModelSerializer):
 class RelatedObjectSerializer(ModelSerializer):
     class Meta:
         model = ModelRelatedObject
-        fields = '__all__'
+        fields = ('id', 'title', 'model_test')
         related_objects = {
             'model_test': {
                 'serializer': ModelTestSerializer,
                 'permissions': [FakePermission]
             }
         }
-
-
-factory = RequestFactory()
-request = factory.get('/')
 
 
 class RelatedObjectViewSet(RetrieveRelatedObjectMixin, ModelViewSet):

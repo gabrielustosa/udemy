@@ -14,6 +14,7 @@ class QuizViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.AnnotatePermissionMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Quiz.objects.all()

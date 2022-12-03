@@ -1,7 +1,7 @@
-from django.test import TestCase, RequestFactory, override_settings
+from django.test import TestCase, override_settings
 from django.urls import path
-from rest_framework import status
 
+from rest_framework import status
 from rest_framework.permissions import BasePermission
 from rest_framework.reverse import reverse
 from rest_framework.viewsets import ModelViewSet
@@ -31,10 +31,6 @@ class RelatedObjectSerializer(ModelSerializer):
         permissions_for_field = {
             ('model_test',): [FakePermission]
         }
-
-
-factory = RequestFactory()
-request = factory.get('/')
 
 
 class RelatedObjectViewSet(RetrieveRelatedObjectMixin, ModelViewSet):

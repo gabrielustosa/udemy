@@ -9,7 +9,29 @@ from rest_framework.permissions import AllowAny
 from udemy.apps.course.models import Course
 
 
+class DynamicFieldViewMixin:
+    """
+    Mixin that takes additional fields in query_params that controls which fields should be displayed
+
+    Example:
+        https://example.com/resource/?fields=name,@default
+    """
+
+    def get_serializer(self, *args, **kwargs):
+        fields = self.request.query_params.get('fields')
+        if fields is not None:
+            kwargs['fields'] = fields.split(',')
+        return super().get_serializer(*args, **kwargs)
+
+
 class RetrieveRelatedObjectMixin:
+    """
+    Mixin for API View that optimize queryset with related objects and update the serializer context with related
+    objects fields get by query_params.
+
+    Example:
+          https://example.com/resource/?fields[related_object_name]=@min,image
+    """
 
     @cached_property
     def related_fields(self):
@@ -39,12 +61,6 @@ class RetrieveRelatedObjectMixin:
                 pass
 
         return queryset
-
-    def get_serializer(self, *args, **kwargs):
-        fields = self.request.query_params.get('fields')
-        if fields is not None:
-            kwargs['fields'] = fields.split(',')
-        return super().get_serializer(*args, **kwargs)
 
 
 class ActionPermissionMixin:

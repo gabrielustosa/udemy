@@ -31,11 +31,11 @@ class RelatedObjectFilterMixin:
     A mixin for RelatedObjectMixin that filter the related object queryset
     """
 
-    def filter_related_object_query(self, obj, related_object_name):
+    def filter_related_object_query(self, queryset, related_object_name):
         related_objects_filter = self.get_related_object_option(related_object_name, 'filter')
         if related_objects_filter:
-            obj = obj.filter(**related_objects_filter)
-        return obj.order_by('id')
+            queryset = queryset.filter(**related_objects_filter)
+        return queryset.order_by('id')
 
 
 class RelatedObjectMixin(

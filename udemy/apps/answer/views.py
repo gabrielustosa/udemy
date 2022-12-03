@@ -13,6 +13,7 @@ from udemy.apps.rating.models import Rating
 class AnswerViewSet(
     view.AnnotatePermissionMixin,
     view.RetrieveRelatedObjectMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Answer.objects.all()

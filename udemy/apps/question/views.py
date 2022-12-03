@@ -10,6 +10,7 @@ from udemy.apps.question.serializer import QuestionSerializer
 class QuestionViewSet(
     view.AnnotatePermissionMixin,
     view.RetrieveRelatedObjectMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Question.objects.all()

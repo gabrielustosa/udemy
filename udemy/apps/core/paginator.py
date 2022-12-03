@@ -24,8 +24,6 @@ class PaginatorRelatedObject:
 
     def paginate_queryset(self):
         page_size = self.get_page_size
-        if not page_size:
-            page_size = RELATED_OBJECT_PAGINATED_BY
 
         if int(page_size) <= 0:
             raise NotFound(f'Invalid page size for `{self.related_object_name}`.')
@@ -57,6 +55,7 @@ class PaginatorRelatedObject:
             match = re.search(r'page_size\(([0-9_]+)\)', field)
             if match:
                 return match.group(1)
+        return RELATED_OBJECT_PAGINATED_BY
 
     def get_query_param(self):
         return f'fields[{self.related_object_name}]'

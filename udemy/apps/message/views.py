@@ -11,6 +11,7 @@ class MessageViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.AnnotatePermissionMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Message.objects.all()

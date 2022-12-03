@@ -8,7 +8,7 @@ class IsInstructor(permissions.BasePermission):
     """Object permission to allow only course instructors."""
 
     def has_object_permission(self, request, view, obj):
-        if hasattr(obj, 'is_enrolled') and hasattr(obj, 'is_instructor'):
+        if hasattr(obj, 'is_instructor'):
             return obj.is_instructor
 
         course = obj if isinstance(obj, Course) else obj.course
@@ -40,7 +40,7 @@ class IsEnrolled(permissions.BasePermission):
     """Allow access only for enrolled students or course's instructors."""
 
     def has_object_permission(self, request, view, obj):
-        if hasattr(obj, 'is_enrolled') and hasattr(obj, 'is_instructor'):
+        if hasattr(obj, 'is_enrolled') or hasattr(obj, 'is_instructor'):
             return obj.is_enrolled or obj.is_instructor
 
         course = obj if isinstance(obj, Course) else obj.course

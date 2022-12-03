@@ -7,7 +7,7 @@ from udemy.apps.core.serializer import ModelSerializer
 class RelatedObjectSerializer(ModelSerializer):
     class Meta:
         model = ModelRelatedObject
-        fields = '__all__'
+        fields = ('id', 'title', 'model_test')
 
 
 class ModelTestSerializer(ModelSerializer):

@@ -226,7 +226,7 @@ class TestAnswerView(TestViewBase):
 
         self.assertEqual(list(view.get_queryset()), list(expected_result))
 
-    def test_get_object_return_only_action_of_request_user_x(self):
+    def test_get_object_return_only_action_of_request_user(self):
         answer = MessageAnswerFactory(creator=self.user)
 
         view = self.get_instance(

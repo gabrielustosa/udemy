@@ -2,9 +2,9 @@ from unittest.mock import patch
 
 from django.test import TestCase, RequestFactory, override_settings
 from django.urls import path
+
 from rest_framework import status
 from rest_framework.reverse import reverse
-
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.test import APIClient
 
@@ -16,7 +16,7 @@ from udemy.apps.core.serializer import ModelSerializer
 class RelatedObjectSerializer(ModelSerializer):
     class Meta:
         model = ModelRelatedObject
-        fields = '__all__'
+        fields = ('id', 'title', 'model_test')
 
 
 class ModelTestSerializer(ModelSerializer):
@@ -110,8 +110,6 @@ class TestRelatedObjectPaginator(TestCase):
 
     def test_404_for_invalid_page_size(self):
         response = self.client.get(f'{self.url}?fields[model_related]=@all,page_size(0)')
-
-        print(response.data)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response.data == {'detail': 'Invalid page size for `model_related`.'}

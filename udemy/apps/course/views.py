@@ -11,6 +11,7 @@ class CourseViewSet(
     view.AnnotatePermissionMixin,
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
+    view.DynamicFieldViewMixin,
     ModelViewSet
 ):
     queryset = Course.objects.all()
