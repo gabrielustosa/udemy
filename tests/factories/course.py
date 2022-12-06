@@ -14,8 +14,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     title = factory.Faker('name')
     headline = factory.Faker('sentence')
     description = factory.Faker('sentence')
-    is_paid = factory.Faker('boolean')
-    price = fuzzy.FuzzyInteger(0, 150)
+    price = fuzzy.FuzzyFloat(0, 1)
     language = fuzzy.FuzzyChoice(['pt-br', 'en', 'es'])
     requirements = factory.Faker('sentence')
     what_you_will_learn = factory.Faker('sentence')
@@ -24,3 +23,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     @factory.lazy_attribute
     def slug(self):
         return slugify(self.title)
+
+    @factory.lazy_attribute
+    def is_paid(self):
+        return self.price == 0

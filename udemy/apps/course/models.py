@@ -32,6 +32,13 @@ class Course(TimeStampedBase):
         related_name='categories_courses',
     )
 
+    @staticmethod
+    def get_annotations(*fields):
+        annotations = {}
+        for field in fields:
+            annotations.update(getattr(Course, f'get_{field}')())
+        return annotations
+
     def __str__(self):
         return self.title
 

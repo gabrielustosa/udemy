@@ -41,7 +41,8 @@ class AnswerViewSetBase(AnswerViewSet):
         return context
 
     def get_queryset(self):
-        return self.queryset.filter(**self.get_filter_kwargs())
+        queryset = super().get_queryset()
+        return queryset.filter(**self.get_filter_kwargs())
 
 
 class RatingAnswerViewSet(view.ActionPermissionMixin, AnswerViewSetBase):

@@ -48,7 +48,8 @@ class ActionViewSetBase(
         return obj
 
     def get_queryset(self):
-        return self.queryset.filter(**self.get_filter_kwargs())
+        queryset = super().get_queryset()
+        return queryset.filter(**self.get_filter_kwargs())
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

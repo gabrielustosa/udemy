@@ -82,7 +82,7 @@ class CourseSerializer(ModelSerializer):
     def get_num_contents(self, instance):
         return instance.num_contents
 
-    def get_avg_rating(self, instance: Course):
+    def get_avg_rating(self, instance):
         return instance.avg_rating
 
     def get_url(self, instance):

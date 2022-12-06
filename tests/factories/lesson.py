@@ -14,7 +14,7 @@ class LessonFactory(factory.django.DjangoModelFactory):
 
     title = factory.Faker('name')
     video_id = fuzzy.FuzzyText()
-    video = factory.LazyAttributeSequence(lambda l, n: 'https://www.youtube.com/watch?v=%s' % l.video_id)
+    video = factory.LazyAttribute(lambda l: 'https://www.youtube.com/watch?v=%s' % l.video_id)
     video_duration = fuzzy.FuzzyInteger(60)
     course = factory.SubFactory(CourseFactory)
     module = factory.SubFactory(ModuleFactory, course=factory.SelfAttribute('..course'))
