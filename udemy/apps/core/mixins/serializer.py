@@ -1,7 +1,9 @@
 from django.db.models import Manager
+from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.fields import SerializerMethodField
 from rest_framework.permissions import AllowAny
 
 from udemy.apps.core.paginator import PaginatorRelatedObject
@@ -108,10 +110,12 @@ class CreateAndUpdateOnlyFieldsMixin:
         ret = super().to_internal_value(data)
         if self.instance:
             create_only_fields = getattr(self.Meta, 'create_only_fields', tuple())
-            [ret.pop(field) for field in create_only_fields if field in ret]
+            for field in create_only_fields:
+                ret.pop(field, None)
         else:
             update_only_fields = getattr(self.Meta, 'update_only_fields', tuple())
-            [ret.pop(field) for field in update_only_fields if field in ret]
+            for field in update_only_fields:
+                ret.pop(field, None)
         return ret
 
     def get_extra_kwargs(self):
@@ -163,6 +167,14 @@ class DynamicModelFieldsMixin:
     You can modify this fields as you want.
     """
     field_types = {'@min': 'min_fields', '@default': 'default_fields'}
+
+    @cached_property
+    def method_fields(self):
+        method_fields = list()
+        for field, serializer in self.fields.items():
+            if isinstance(serializer, SerializerMethodField):
+                method_fields.append(field)
+        return method_fields
 
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop('fields', None)

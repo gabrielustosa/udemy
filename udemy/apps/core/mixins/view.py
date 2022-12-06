@@ -92,3 +92,39 @@ class AnnotatePermissionMixin:
             ))
 
         return queryset
+
+
+class AnnotateMethodsMixin:
+    def get_serializer_method_fields(self):
+        method_fields = super().get_serializer_class()().method_fields
+        serializer_fields = self.request.query_params.get('fields')
+
+        if serializer_fields is None:
+            return method_fields
+
+        allowed = set(serializer_fields.split(','))
+        existing = set(method_fields)
+        for field_name in existing - allowed:
+            try:
+                method_fields.remove(field_name)
+            except ValueError:
+                pass
+
+        return method_fields
+
+    def get_model_annotation(self, name):
+        annotation = getattr(self.Meta.model, f'get_{name}', None)
+        if annotation is None:
+            return None
+        return annotation()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        method_fields = self.get_serializer_method_fields()
+        for field in method_fields:
+            annotation = self.get_model_annotation(field)
+            if annotation is not None:
+                queryset = queryset.annotate(**annotation)
+
+        return queryset

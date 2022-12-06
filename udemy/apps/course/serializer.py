@@ -1,5 +1,3 @@
-from django.db.models import Sum, Count, Q, Avg
-
 from rest_framework import serializers
 
 from udemy.apps.category.serializer import CategorySerializer
@@ -29,8 +27,7 @@ class CourseSerializer(ModelSerializer):
             'num_lessons', 'num_contents', 'estimated_content_length_video'
         ]
         extra_kwargs = {
-            'instructors': {'required': False},
-            'categories': {'required': False},
+            'instructors': {'allow_empty': True},
         }
         related_objects = {
             'instructors': {
@@ -77,31 +74,33 @@ class CourseSerializer(ModelSerializer):
         default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
 
     def get_num_modules(self, instance):
-        return instance.modules.count()
+        return instance.num_modules
 
     def get_num_lessons(self, instance):
-        return instance.lessons.count()
+        return instance.num_lessons
 
     def get_num_contents(self, instance):
-        return instance.contents.count()
+        return instance.num_contents
 
     def get_avg_rating(self, instance: Course):
-        return instance.ratings.aggregate(avg=Avg('rating'))['avg']
+        return instance.avg_rating
 
     def get_url(self, instance):
         return f'https://udemy.com/course/{instance.slug}'
 
     def get_num_subscribers(self, instance):
-        return instance.students.count()
+        return instance.num_subscribers
 
     def get_num_contents_info(self, instance):
-        return instance.contents.aggregate(
-            **{option: Count('id', filter=Q(content_type__model=option))
-               for option in ['text', 'link', 'file', 'image']},
-        )
+        return {
+            'text': instance.content_num_text,
+            'link': instance.content_num_link,
+            'file': instance.content_num_file,
+            'image': instance.content_num_image,
+        }
 
     def get_estimated_content_length_video(self, instance: Course):
-        return instance.lessons.aggregate(length_video=Sum('video_duration'))['length_video']
+        return instance.estimated_content_length_video
 
     def get_related_objects(self):
         related_objects = super().get_related_objects()

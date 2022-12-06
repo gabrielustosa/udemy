@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField
+from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value
 from django.utils.translation import gettext_lazy as _
 
 
@@ -99,6 +99,10 @@ class OrderedModel(models.Model):
 class ModelTest(models.Model):
     title = models.CharField(max_length=100)
     num = models.PositiveIntegerField(default=0)
+
+    @staticmethod
+    def get_test_field():
+        return {'test_field': Value('Test Value')}
 
 
 class ModelRelatedObject(OrderedModel):

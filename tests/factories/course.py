@@ -15,7 +15,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     headline = factory.Faker('sentence')
     description = factory.Faker('sentence')
     is_paid = factory.Faker('boolean')
-    price = fuzzy.FuzzyInteger(150)
+    price = fuzzy.FuzzyInteger(0, 150)
     language = fuzzy.FuzzyChoice(['pt-br', 'en', 'es'])
     requirements = factory.Faker('sentence')
     what_you_will_learn = factory.Faker('sentence')

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Count, Avg, Q, Sum
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
@@ -34,8 +35,34 @@ class Course(TimeStampedBase):
     def __str__(self):
         return self.title
 
-    class Meta:
-        ordering = ['-created']
+    @staticmethod
+    def get_num_modules():
+        return {'num_modules': Count('modules')}
+
+    @staticmethod
+    def get_num_lessons():
+        return {'num_lessons': Count('lessons')}
+
+    @staticmethod
+    def get_num_contents():
+        return {'num_contents': Count('contents')}
+
+    @staticmethod
+    def get_avg_rating():
+        return {'avg_rating': Avg('ratings__rating')}
+
+    @staticmethod
+    def get_num_subscribers():
+        return {'num_subscribers': Count('students')}
+
+    @staticmethod
+    def get_num_contents_info():
+        return {f'content_num_{option}': Count('contents__id', filter=Q(contents__content_type__model=option))
+                for option in ['text', 'link', 'file', 'image']}
+
+    @staticmethod
+    def get_estimated_content_length_video():
+        return {'estimated_content_length_video': Sum('lessons__video_duration')}
 
 
 class CourseRelation(CreatorBase, TimeStampedBase):

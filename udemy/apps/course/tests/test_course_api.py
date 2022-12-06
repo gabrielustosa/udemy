@@ -28,19 +28,19 @@ class TestCourseUnauthenticatedRequests(TestCase):
     def test_course_list(self):
         courses = CourseFactory.create_batch(5)
 
-        response = self.client.get(COURSE_LIST_URL)
+        response = self.client.get(f'{COURSE_LIST_URL}?fields=@default')
 
-        serializer = CourseSerializer(courses, many=True)
+        serializer = CourseSerializer(courses, many=True, fields=('@default',))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, list(reversed(serializer.data)))
+        self.assertEqual(response.data, serializer.data)
 
     def test_course_retrieve(self):
         course = CourseFactory()
 
-        response = self.client.get(course_detail_url(pk=course.id))
+        response = self.client.get(f'{course_detail_url(pk=course.id)}?fields=@default')
 
-        serializer = CourseSerializer(course)
+        serializer = CourseSerializer(course, fields=('@default',))
 
         self.assertEqual(response.data, serializer.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -68,13 +68,12 @@ class TestAuthenticatedRequests(TestCase):
             'description': 'description',
             'level': 'beginner',
             'categories': [category.id],
-            'instructors': [self.user.id]
         }
-        response = self.client.post(COURSE_LIST_URL, payload)
+        response = self.client.post(f'{COURSE_LIST_URL}?fields=@default', payload)
 
         course = Course.objects.get(id=response.data['id'])
 
-        serializer = CourseSerializer(course)
+        serializer = CourseSerializer(course, fields=('@default',))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data, serializer.data)
@@ -113,13 +112,12 @@ class TestAuthenticatedRequests(TestCase):
             'description': 'description',
             'level': 'beginner',
             'categories': [category.id],
-            'instructors': [self.user.id]
         }
-        response = self.client.put(course_detail_url(pk=course.id), payload)
+        response = self.client.put(f'{course_detail_url(pk=course.id)}?fields=@default', payload)
 
         course.refresh_from_db()
 
-        serializer = CourseSerializer(course)
+        serializer = CourseSerializer(course, fields=('@default',))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
