@@ -3,6 +3,7 @@ from django.db.models import Avg, Sum, Count, Q
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
+from udemy.apps.core.decorator import annotation_field
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.course.annotations import CourseAnnotations
 from udemy.apps.user.models import User
@@ -39,62 +40,43 @@ class Course(TimeStampedBase):
         'num_contents_info',
     )
 
-    @staticmethod
-    def get_annotations(*fields):
+    @classmethod
+    def get_annotations(cls, *fields):
         annotations = {}
         for field in fields:
-            annotations.update(getattr(Course.annotation_class, f'get_{field}')())
+            annotations.update(getattr(cls.annotation_class, f'get_{field}')())
         return annotations
 
-    @property
+    @annotation_field()
     def num_modules(self):
-        if not hasattr(self, '_num_modules'):
-            return self.modules.count()
-        return self._num_modules
+        return self.modules.count()
 
-    @property
+    @annotation_field()
     def num_lessons(self):
-        if not hasattr(self, '_num_lessons'):
-            return self.lessons.count()
-        return self._num_lessons
+        return self.lessons.count()
 
-    @property
+    @annotation_field()
     def num_contents(self):
-        if not hasattr(self, '_num_contents'):
-            return self.contents.count()
-        return self._num_contents
+        return self.contents.count()
 
-    @property
+    @annotation_field()
     def avg_rating(self):
-        if not hasattr(self, '_avg_rating'):
-            return self.ratings.aggregate(avg=Avg('rating'))['avg']
-        return self._avg_rating
+        return self.ratings.aggregate(avg=Avg('rating'))['avg']
 
-    @property
+    @annotation_field()
     def num_subscribers(self):
-        if not hasattr(self, '_num_subscribers'):
-            return self.students.count()
-        return self._num_subscribers
+        return self.students.count()
 
-    @property
+    @annotation_field()
     def estimated_content_length_video(self):
-        if not hasattr(self, '_estimated_content_length_video'):
-            return self.lessons.aggregate(length=Sum('video_duration'))['length']
-        return self._estimated_content_length_video
+        return self.lessons.aggregate(length=Sum('video_duration'))['length']
 
-    @property
+    @annotation_field(field_group=['num_text', 'num_link', 'num_file', 'num_image'])
     def num_contents_info(self):
-        if not hasattr(self, '_content_num_text'):
-            return self.contents.aggregate(
-                **{option: Count('id', filter=Q(content_type__model=option))
-                   for option in ['text', 'link', 'file', 'image']},
-            )
-        return {
-            'text': self._content_num_text,
-            'link': self._content_num_link,
-            'file': self._content_num_file,
-            'image': self._content_num_image,
-        }
+        return self.contents.aggregate(
+            **{f'num_{option}': Count('id', filter=Q(content_type__model=option))
+               for option in ['text', 'link', 'file', 'image']},
+        )
 
     def __str__(self):
         return self.title

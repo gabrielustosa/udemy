@@ -26,6 +26,10 @@ class RelatedObjectPermissionMixin:
                 raise PermissionDenied(
                     detail=f'You do not have permission to access the related object `{related_object_name}`'
                 )
+            if not permission.has_permission(request, view):
+                raise PermissionDenied(
+                    detail=f'You do not have permission to access the related object `{related_object_name}`'
+                )
 
 
 class RelatedObjectFilterMixin:

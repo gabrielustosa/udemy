@@ -12,7 +12,7 @@ class CourseViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.DynamicFieldViewMixin,
-    view.AnnotateMethodsMixin,
+    view.AnnotateModelMixin,
     ModelViewSet
 ):
     queryset = Course.objects.all()

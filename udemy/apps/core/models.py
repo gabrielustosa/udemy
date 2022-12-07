@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value
 from django.utils.translation import gettext_lazy as _
 
+from udemy.apps.core.decorator import annotation_field
+
 
 class TimeStampedBase(models.Model):
     created = models.DateTimeField(
@@ -112,17 +114,20 @@ class ModelTest(models.Model):
     annotation_class = ModelTestAnnotations
     annotations_fields = ('test_field', 'custom_field')
 
-    @property
-    def test_field(self):
-        if not hasattr(self, '_test_field'):
-            return 'test field'
-        return self._test_field
+    @classmethod
+    def get_annotations(cls, *fields):
+        annotations = {}
+        for field in fields:
+            annotations.update(getattr(cls.annotation_class, f'get_{field}')())
+        return annotations
 
-    @property
+    @annotation_field()
+    def test_field(self):
+        return 'test field'
+
+    @annotation_field()
     def custom_field(self):
-        if not hasattr(self, '_custom_field'):
-            return 'custom field'
-        return self._custom_field
+        return 'custom field'
 
 class ModelRelatedObject(OrderedModel):
     title = models.CharField(max_length=100)

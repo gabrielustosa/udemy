@@ -24,7 +24,7 @@ class CourseAnnotations:
 
     @staticmethod
     def get_num_contents_info():
-        return {f'_content_num_{option}': Count('contents__id', filter=Q(contents__content_type__model=option))
+        return {f'_num_{option}': Count('contents__id', filter=Q(contents__content_type__model=option))
                 for option in ['text', 'link', 'file', 'image']}
 
     @staticmethod

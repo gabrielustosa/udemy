@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
 
 from udemy.apps.category.serializer import CategorySerializer
 from udemy.apps.core.serializer import ModelSerializer
@@ -31,36 +32,36 @@ class CourseSerializer(ModelSerializer):
             },
             'quizzes': {
                 'serializer': 'udemy.apps.quiz.serializer.QuizSerializer',
-                'permissions': [IsEnrolled],
+                'permissions': [IsAuthenticated, IsEnrolled],
                 'filter': {'is_published': True},
             },
             'lessons': {
                 'serializer': 'udemy.apps.lesson.serializer.LessonSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'modules': {
                 'serializer': 'udemy.apps.module.serializer.ModuleSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'contents': {
                 'serializer': 'udemy.apps.content.serializer.ContentSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'ratings': {
                 'serializer': 'udemy.apps.rating.serializer.RatingSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'warning_messages': {
                 'serializer': 'udemy.apps.message.serializer.MessageSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'questions': {
                 'serializer': 'udemy.apps.question.serializer.QuestionSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             },
             'notes': {
                 'serializer': 'udemy.apps.note.serializer.NoteSerializer',
-                'permissions': [IsEnrolled]
+                'permissions': [IsAuthenticated, IsEnrolled]
             }
         }
         min_fields = ('id', 'title', 'url')
