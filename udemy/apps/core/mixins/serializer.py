@@ -168,14 +168,6 @@ class DynamicModelFieldsMixin:
     """
     field_types = {'@min': 'min_fields', '@default': 'default_fields'}
 
-    @cached_property
-    def method_fields(self):
-        method_fields = list()
-        for field, serializer in self.fields.items():
-            if isinstance(serializer, SerializerMethodField):
-                method_fields.append(field)
-        return method_fields
-
     def __init__(self, *args, **kwargs):
         fields = kwargs.pop('fields', None)
 

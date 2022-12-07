@@ -96,14 +96,33 @@ class OrderedModel(models.Model):
         return super().delete(using, keep_parents)
 
 
+class ModelTestAnnotations:
+    @staticmethod
+    def get_test_field():
+        return {'_test_field': Value('test field')}
+
+    @staticmethod
+    def get_custom_field():
+        return {'_custom_field': Value('custom field')}
+
+
 class ModelTest(models.Model):
     title = models.CharField(max_length=100)
     num = models.PositiveIntegerField(default=0)
+    annotation_class = ModelTestAnnotations
+    annotations_fields = ('test_field', 'custom_field')
 
-    @staticmethod
-    def get_test_field():
-        return {'test_field': Value('Test Value')}
+    @property
+    def test_field(self):
+        if not hasattr(self, '_test_field'):
+            return 'test field'
+        return self._test_field
 
+    @property
+    def custom_field(self):
+        if not hasattr(self, '_custom_field'):
+            return 'custom field'
+        return self._custom_field
 
 class ModelRelatedObject(OrderedModel):
     title = models.CharField(max_length=100)

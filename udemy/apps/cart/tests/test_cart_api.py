@@ -44,10 +44,6 @@ class TestCartAPI(TestCase):
 
         response = self.client.get(CART_LIST)
 
-        course = Course.objects.filter(id=course.id).annotate(
-            **Course.get_annotations('avg_rating', 'num_subscribers')
-        ).first()
-
         expected_data = [
             CourseSerializer(course, fields=(
             'id', 'title', 'url', 'is_paid', 'price', 'instructors', 'num_subscribers', 'avg_rating', 'created')).data

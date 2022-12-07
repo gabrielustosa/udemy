@@ -8,13 +8,6 @@ from udemy.apps.user.serializer import UserSerializer
 
 
 class CourseSerializer(ModelSerializer):
-    num_modules = serializers.SerializerMethodField()
-    num_lessons = serializers.SerializerMethodField()
-    num_contents = serializers.SerializerMethodField()
-    num_contents_info = serializers.SerializerMethodField()
-    num_subscribers = serializers.SerializerMethodField()
-    estimated_content_length_video = serializers.SerializerMethodField()
-    avg_rating = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
 
     class Meta:
@@ -73,34 +66,8 @@ class CourseSerializer(ModelSerializer):
         min_fields = ('id', 'title', 'url')
         default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
 
-    def get_num_modules(self, instance):
-        return instance.num_modules
-
-    def get_num_lessons(self, instance):
-        return instance.num_lessons
-
-    def get_num_contents(self, instance):
-        return instance.num_contents
-
-    def get_avg_rating(self, instance):
-        return instance.avg_rating
-
     def get_url(self, instance):
         return f'https://udemy.com/course/{instance.slug}'
-
-    def get_num_subscribers(self, instance):
-        return instance.num_subscribers
-
-    def get_num_contents_info(self, instance):
-        return {
-            'text': instance.content_num_text,
-            'link': instance.content_num_link,
-            'file': instance.content_num_file,
-            'image': instance.content_num_image,
-        }
-
-    def get_estimated_content_length_video(self, instance: Course):
-        return instance.estimated_content_length_video
 
     def get_related_objects(self):
         related_objects = super().get_related_objects()

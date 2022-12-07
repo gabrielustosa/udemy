@@ -1,9 +1,10 @@
 from django.db import models
-from django.db.models import Count, Avg, Q, Sum
+from django.db.models import Avg, Sum, Count, Q
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
+from udemy.apps.course.annotations import CourseAnnotations
 from udemy.apps.user.models import User
 
 
@@ -31,45 +32,72 @@ class Course(TimeStampedBase):
         Category,
         related_name='categories_courses',
     )
+    annotation_class = CourseAnnotations
+    annotations_fields = (
+        'num_modules', 'num_lessons', 'num_contents',
+        'avg_rating', 'estimated_content_length_video',
+        'num_contents_info',
+    )
 
     @staticmethod
     def get_annotations(*fields):
         annotations = {}
         for field in fields:
-            annotations.update(getattr(Course, f'get_{field}')())
+            annotations.update(getattr(Course.annotation_class, f'get_{field}')())
         return annotations
+
+    @property
+    def num_modules(self):
+        if not hasattr(self, '_num_modules'):
+            return self.modules.count()
+        return self._num_modules
+
+    @property
+    def num_lessons(self):
+        if not hasattr(self, '_num_lessons'):
+            return self.lessons.count()
+        return self._num_lessons
+
+    @property
+    def num_contents(self):
+        if not hasattr(self, '_num_contents'):
+            return self.contents.count()
+        return self._num_contents
+
+    @property
+    def avg_rating(self):
+        if not hasattr(self, '_avg_rating'):
+            return self.ratings.aggregate(avg=Avg('rating'))['avg']
+        return self._avg_rating
+
+    @property
+    def num_subscribers(self):
+        if not hasattr(self, '_num_subscribers'):
+            return self.students.count()
+        return self._num_subscribers
+
+    @property
+    def estimated_content_length_video(self):
+        if not hasattr(self, '_estimated_content_length_video'):
+            return self.lessons.aggregate(length=Sum('video_duration'))['length']
+        return self._estimated_content_length_video
+
+    @property
+    def num_contents_info(self):
+        if not hasattr(self, '_content_num_text'):
+            return self.contents.aggregate(
+                **{option: Count('id', filter=Q(content_type__model=option))
+                   for option in ['text', 'link', 'file', 'image']},
+            )
+        return {
+            'text': self._content_num_text,
+            'link': self._content_num_link,
+            'file': self._content_num_file,
+            'image': self._content_num_image,
+        }
 
     def __str__(self):
         return self.title
-
-    @staticmethod
-    def get_num_modules():
-        return {'num_modules': Count('modules')}
-
-    @staticmethod
-    def get_num_lessons():
-        return {'num_lessons': Count('lessons')}
-
-    @staticmethod
-    def get_num_contents():
-        return {'num_contents': Count('contents')}
-
-    @staticmethod
-    def get_avg_rating():
-        return {'avg_rating': Avg('ratings__rating')}
-
-    @staticmethod
-    def get_num_subscribers():
-        return {'num_subscribers': Count('students')}
-
-    @staticmethod
-    def get_num_contents_info():
-        return {f'content_num_{option}': Count('contents__id', filter=Q(contents__content_type__model=option))
-                for option in ['text', 'link', 'file', 'image']}
-
-    @staticmethod
-    def get_estimated_content_length_video():
-        return {'estimated_content_length_video': Sum('lessons__video_duration')}
 
 
 class CourseRelation(CreatorBase, TimeStampedBase):

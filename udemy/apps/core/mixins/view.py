@@ -96,7 +96,7 @@ class AnnotatePermissionMixin:
 
 class AnnotateMethodsMixin:
     def get_serializer_method_fields(self):
-        method_fields = super().get_serializer_class()().method_fields
+        method_fields = list(self.Meta.model.annotations_fields)
         serializer_fields = self.request.query_params.get('fields')
 
         if serializer_fields is None:
@@ -113,7 +113,7 @@ class AnnotateMethodsMixin:
         return method_fields
 
     def get_model_annotation(self, name):
-        annotation = getattr(self.Meta.model, f'get_{name}', None)
+        annotation = getattr(self.Meta.model.annotation_class, f'get_{name}', None)
         if annotation is None:
             return None
         return annotation()
