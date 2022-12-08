@@ -8,6 +8,7 @@ class ModelSerializer(
     serializer.RelatedObjectMixin,
     serializer.CreateAndUpdateOnlyFieldsMixin,
     serializer.PermissionForFieldMixin,
+    serializer.ExpandedFieldMixin,
     serializers.ModelSerializer
 ):
     """

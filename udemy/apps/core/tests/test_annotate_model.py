@@ -6,9 +6,11 @@ from rest_framework.reverse import reverse
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.test import APIClient
 
+from tests.factories.lesson import LessonFactory
 from udemy.apps.core.mixins.view import AnnotateModelMixin, DynamicFieldViewMixin
 from udemy.apps.core.models import ModelTest
 from udemy.apps.core.serializer import ModelSerializer
+from udemy.apps.lesson.serializer import LessonSerializer
 
 
 class ModelTestSerializer(ModelSerializer):
@@ -43,13 +45,13 @@ class TestAnnotateView(TestCase):
         view = AnnotateModelViewSet(request=request)
         request.query_params = {'fields': 'test_field,id,title'}
 
-        assert view.get_serializer_method_fields() == ['test_field']
+        assert view.get_annotation_fields() == {'test_field'}
 
     def test_get_serializer_method_fields_without_fields_param(self):
         view = AnnotateModelViewSet(request=request)
         request.query_params = {}
 
-        assert view.get_serializer_method_fields() == ['test_field', 'custom_field']
+        assert view.get_annotation_fields() == {'test_field', 'custom_field'}
 
     def test_retrieve_annotation_method(self):
         model_test = ModelTest.objects.create(title='test')

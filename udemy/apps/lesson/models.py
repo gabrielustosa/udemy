@@ -43,6 +43,11 @@ class Lesson(OrderedModel):
 
 class LessonRelation(CreatorBase, TimeStampedBase):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='lesson_relations'
+    )
     done = models.BooleanField(default=False)
 
     class Meta:

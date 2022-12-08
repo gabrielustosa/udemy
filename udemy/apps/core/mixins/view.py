@@ -1,7 +1,7 @@
 import re
 
-from django.core.exceptions import FieldDoesNotExist
-from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef
+from django.core.exceptions import FieldDoesNotExist, FieldError
+from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef, F
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
@@ -32,6 +32,8 @@ class RetrieveRelatedObjectMixin:
     Example:
           https://example.com/resource/?fields[related_object_name]=@min,image
     """
+    expanded_foreign_fields = dict()
+    expanded_m2m_fields = dict()
 
     @cached_property
     def related_fields(self):
@@ -42,9 +44,20 @@ class RetrieveRelatedObjectMixin:
                 nested_fields[match.group(1)] = fields.split(',')
         return nested_fields
 
+    @cached_property
+    def expanded_fields(self):
+        expanded_fields = dict()
+        for related_object, fields in self.related_fields.items():
+            for field in fields:
+                if '__' in field:
+                    expanded_fields.setdefault(related_object, []).append(field)
+        return expanded_fields
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['fields'] = self.related_fields
+        context['expanded_foreign_fields'] = self.expanded_foreign_fields
+        context['expanded_m2m_fields'] = self.expanded_m2m_fields
         return context
 
     def get_queryset(self):
@@ -55,8 +68,26 @@ class RetrieveRelatedObjectMixin:
                 field = self.Meta.model._meta.get_field(field_name)
                 if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
                     queryset = queryset.prefetch_related(field_name)
+
+                    expanded_fields = self.expanded_fields.get(field_name)
+                    if expanded_fields:
+                        self.expanded_m2m_fields[field_name] = expanded_fields
+
                 if isinstance(field, ForeignKey):
                     queryset = queryset.select_related(field_name)
+
+                    expanded_fields = self.expanded_fields.get(field_name, [])
+                    for expanded_field in expanded_fields:
+                        try:
+                            kwargs = {f'{field_name}_{expanded_field}': F(f'{field_name}__{expanded_field}')}
+                            queryset = queryset.annotate(**kwargs)
+
+                            fields = self.expanded_foreign_fields.setdefault(field_name, [])
+                            if expanded_field not in fields:
+                                fields.append(expanded_field)
+                        except FieldError:
+                            pass
+
             except FieldDoesNotExist:
                 pass
 
@@ -95,28 +126,22 @@ class AnnotatePermissionMixin:
 
 
 class AnnotateModelMixin:
-    def get_serializer_method_fields(self):
-        method_fields = list(self.Meta.model.annotations_fields)
+    def get_annotation_fields(self):
+        method_fields = set(self.Meta.model.annotations_fields)
         serializer_fields = self.request.query_params.get('fields')
 
         if serializer_fields is None:
             return method_fields
 
-        allowed = set(serializer_fields.split(','))
-        existing = set(method_fields)
-        for field_name in existing - allowed:
-            try:
-                method_fields.remove(field_name)
-            except ValueError:
-                pass
+        serializer_fields = set(serializer_fields.split(','))
 
-        return method_fields
+        return method_fields.intersection(serializer_fields)
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        method_fields = self.get_serializer_method_fields()
-        annotations = self.Meta.model.get_annotations(*method_fields)
+        annotation_fields = self.get_annotation_fields()
+        annotations = self.Meta.model.get_annotations(*annotation_fields)
         queryset = queryset.annotate(**annotations)
 
         return queryset

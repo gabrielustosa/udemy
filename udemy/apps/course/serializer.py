@@ -62,6 +62,10 @@ class CourseSerializer(ModelSerializer):
             'notes': {
                 'serializer': 'udemy.apps.note.serializer.NoteSerializer',
                 'permissions': [IsAuthenticated, IsEnrolled]
+            },
+            'lesson_relations': {
+                'serializer': 'udemy.apps.lesson.serializer.LessonRelationSerializer',
+                'permissions': [IsAuthenticated, IsEnrolled]
             }
         }
         min_fields = ('id', 'title', 'url')
@@ -74,6 +78,9 @@ class CourseSerializer(ModelSerializer):
         related_objects = super().get_related_objects()
         if self.context.get('request'):
             related_objects['notes']['filter'] = {
+                'creator': self.context.get('request').user
+            }
+            related_objects['lesson_relations']['filter'] = {
                 'creator': self.context.get('request').user
             }
         return related_objects
