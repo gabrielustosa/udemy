@@ -1,7 +1,7 @@
 import re
 
-from django.core.exceptions import FieldDoesNotExist, FieldError
-from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef, F
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
@@ -32,8 +32,6 @@ class RetrieveRelatedObjectMixin:
     Example:
           https://example.com/resource/?fields[related_object_name]=@min,image
     """
-    expanded_foreign_fields = dict()
-    expanded_m2m_fields = dict()
 
     @cached_property
     def related_fields(self):
@@ -44,21 +42,27 @@ class RetrieveRelatedObjectMixin:
                 nested_fields[match.group(1)] = fields.split(',')
         return nested_fields
 
-    @cached_property
-    def expanded_fields(self):
-        expanded_fields = dict()
-        for related_object, fields in self.related_fields.items():
-            for field in fields:
-                if '__' in field:
-                    expanded_fields.setdefault(related_object, []).append(field)
-        return expanded_fields
-
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['fields'] = self.related_fields
-        context['expanded_foreign_fields'] = self.expanded_foreign_fields
-        context['expanded_m2m_fields'] = self.expanded_m2m_fields
         return context
+
+    def optimize_foreign_field(self, queryset, field):
+        queryset = self._optimize_foreign_annotations(queryset, field)
+        queryset = self._optimize_foreign_prefetch_related(queryset, field)
+        return queryset
+
+    def _optimize_foreign_annotations(self, queryset, field):
+        if hasattr(field.related_model, 'annotation_class'):
+            annotations = field.related_model.get_annotations('*', related_field=f'{field.name}__')
+            queryset = queryset.annotate(**annotations)
+        return queryset
+
+    def _optimize_foreign_prefetch_related(self, queryset, field):
+        for field_type in field.related_model._meta.get_fields():
+            if isinstance(field_type, ManyToManyField):
+                queryset = queryset.prefetch_related(f'{field.name}__{field_type.name}')
+        return queryset
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -68,26 +72,9 @@ class RetrieveRelatedObjectMixin:
                 field = self.Meta.model._meta.get_field(field_name)
                 if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
                     queryset = queryset.prefetch_related(field_name)
-
-                    expanded_fields = self.expanded_fields.get(field_name)
-                    if expanded_fields:
-                        self.expanded_m2m_fields[field_name] = expanded_fields
-
                 if isinstance(field, ForeignKey):
                     queryset = queryset.select_related(field_name)
-
-                    expanded_fields = self.expanded_fields.get(field_name, [])
-                    for expanded_field in expanded_fields:
-                        try:
-                            kwargs = {f'{field_name}_{expanded_field}': F(f'{field_name}__{expanded_field}')}
-                            queryset = queryset.annotate(**kwargs)
-
-                            fields = self.expanded_foreign_fields.setdefault(field_name, [])
-                            if expanded_field not in fields:
-                                fields.append(expanded_field)
-                        except FieldError:
-                            pass
-
+                    queryset = self.optimize_foreign_field(queryset, field)
             except FieldDoesNotExist:
                 pass
 

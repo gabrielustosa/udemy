@@ -3,13 +3,14 @@ from django.db.models import Avg, Sum, Count, Q
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
+from udemy.apps.core.annotations import AnnotationBase
 from udemy.apps.core.decorator import annotation_field
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.course.annotations import CourseAnnotations
 from udemy.apps.user.models import User
 
 
-class Course(TimeStampedBase):
+class Course(TimeStampedBase, AnnotationBase):
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(unique=True)
     headline = models.TextField(_('Headline'))
@@ -40,12 +41,6 @@ class Course(TimeStampedBase):
         'num_contents_info',
     )
 
-    @classmethod
-    def get_annotations(cls, *fields):
-        annotations = {}
-        for field in fields:
-            annotations.update(getattr(cls.annotation_class, f'get_{field}')())
-        return annotations
 
     @annotation_field()
     def num_modules(self):

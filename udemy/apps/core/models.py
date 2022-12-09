@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value
 from django.utils.translation import gettext_lazy as _
 
+from udemy.apps.core.annotations import AnnotationBase
 from udemy.apps.core.decorator import annotation_field
 
 
@@ -100,26 +101,19 @@ class OrderedModel(models.Model):
 
 class ModelTestAnnotations:
     @staticmethod
-    def get_test_field():
-        return {'_test_field': Value('test field')}
+    def get_test_field(related_field=''):
+        return {f'{related_field}_test_field': Value('test field')}
 
     @staticmethod
-    def get_custom_field():
-        return {'_custom_field': Value('custom field')}
+    def get_custom_field(related_field=''):
+        return {f'{related_field}_custom_field': Value('custom field')}
 
 
-class ModelTest(models.Model):
+class ModelTest(models.Model, AnnotationBase):
     title = models.CharField(max_length=100)
     num = models.PositiveIntegerField(default=0)
     annotation_class = ModelTestAnnotations
     annotations_fields = ('test_field', 'custom_field')
-
-    @classmethod
-    def get_annotations(cls, *fields):
-        annotations = {}
-        for field in fields:
-            annotations.update(getattr(cls.annotation_class, f'get_{field}')())
-        return annotations
 
     @annotation_field()
     def test_field(self):

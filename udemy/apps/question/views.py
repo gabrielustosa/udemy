@@ -11,6 +11,7 @@ class QuestionViewSet(
     view.AnnotatePermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.DynamicFieldViewMixin,
+    view.AnnotateModelMixin,
     ModelViewSet
 ):
     queryset = Question.objects.all()

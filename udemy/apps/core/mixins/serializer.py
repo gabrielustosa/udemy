@@ -1,5 +1,4 @@
-from django.core.exceptions import FieldError
-from django.db.models import Manager, F
+from django.db.models import Manager, ManyToManyField
 from django.utils.module_loading import import_string
 
 from rest_framework.exceptions import PermissionDenied
@@ -8,43 +7,37 @@ from rest_framework.permissions import AllowAny
 from udemy.apps.core.paginator import PaginatorRelatedObject
 
 
-class RelatedObjectExpandedFieldMixin:
-    """
-    A mixin for RelatedObjectMixin that allow access to object's field of related object.
-
-    Example:
-        https://example.com/fields[related_object]=object__title
-    """
-
-    def annotate_expanded_m2m_fields(self, related_object_name, queryset):
-        expanded_fields = self.get_expanded_m2m_fields(related_object_name)
-
-        to_remove = []
-        for field in expanded_fields:
-            try:
-                queryset = queryset.annotate(**{field: F(field)})
-            except FieldError:
-                to_remove.append(field)
-
-        [expanded_fields.remove(field) for field in to_remove]
-
+class RelatedObjetsOptimizeMixin:
+    def optimize_queryset(self, queryset, related_object):
+        queryset = self._optimize_queryset_prefetch_related(queryset, related_object)
+        queryset = self._optimize_queryset_annotations(queryset, related_object)
         return queryset
 
-    def get_annotated_expanded_foreign_fields(self, instance, related_object_name):
-        expanded_fields = self.get_expanded_foreign_fields(related_object_name)
+    def optimize_related_object(self, instance, related_object):
+        related_object = self._optimize_related_object_annotations(instance, related_object)
+        return related_object
 
-        result = dict()
-        for field in expanded_fields:
-            result[field] = getattr(instance, f'{related_object_name}_{field}')
-        return result
+    def _optimize_related_object_annotations(self, instance, related_object):
+        if hasattr(related_object, 'annotation_class'):
+            annotations = related_object.get_annotations('*')
+            model_name = related_object.__class__.__name__.lower()
+            for annotation_name in annotations.keys():
+                value = getattr(instance, f'{model_name}__{annotation_name}', None)
+                setattr(related_object, annotation_name, value)
+        return related_object
 
-    def get_expanded_foreign_fields(self, related_object_name):
-        expanded_foreign_fields = self.context.get('expanded_foreign_fields', dict())
-        return expanded_foreign_fields.get(related_object_name, [])
+    def _optimize_queryset_annotations(self, queryset, related_object):
+        if hasattr(related_object.model, 'annotation_class'):
+            annotations = related_object.model.get_annotations('*')
+            queryset = queryset.annotate(**annotations)
+        return queryset
 
-    def get_expanded_m2m_fields(self, related_object_name):
-        expanded_m2m_fields = self.context.get('expanded_m2m_fields', dict())
-        return expanded_m2m_fields.get(related_object_name, [])
+    def _optimize_queryset_prefetch_related(self, queryset, related_object):
+        for field_type in related_object.model._meta.get_fields():
+            if isinstance(field_type, ManyToManyField):
+                queryset = queryset.prefetch_related(field_type.name)
+        return queryset
+
 
 
 class RelatedObjectPermissionMixin:
@@ -79,13 +72,13 @@ class RelatedObjectFilterMixin:
         related_objects_filter = self.get_related_object_option(related_object_name, 'filter')
         if related_objects_filter:
             queryset = queryset.filter(**related_objects_filter)
-        return queryset.order_by('id')
+        return queryset.all()
 
 
 class RelatedObjectMixin(
     RelatedObjectPermissionMixin,
     RelatedObjectFilterMixin,
-    RelatedObjectExpandedFieldMixin,
+    RelatedObjetsOptimizeMixin
 ):
     """
     A mixin for ModelSerializer that retrieve related object (foreign keys, generic relations, m2m) that will be
@@ -123,7 +116,7 @@ class RelatedObjectMixin(
 
                 if isinstance(related_object, Manager):
                     queryset = self.filter_related_object_query(related_object, related_object_name)
-                    queryset = self.annotate_expanded_m2m_fields(related_object_name, queryset)
+                    queryset = self.optimize_queryset(queryset, related_object)
 
                     paginator = PaginatorRelatedObject(
                         queryset=queryset,
@@ -132,8 +125,7 @@ class RelatedObjectMixin(
                         request=self.context.get('request')
                     )
 
-                    expanded_fields = self.get_expanded_m2m_fields(related_object_name)
-                    serializer_kwargs.update({'many': True, 'context': {'expanded_m2m': expanded_fields}})
+                    serializer_kwargs.update({'many': True})
 
                     page = paginator.paginate_queryset()
                     if page:
@@ -143,8 +135,7 @@ class RelatedObjectMixin(
                     serializer = Serializer(queryset, **serializer_kwargs)
                     ret[related_object_name] = serializer.data
                 else:
-                    expanded_fields = self.get_annotated_expanded_foreign_fields(instance, related_object_name)
-                    serializer_kwargs.update({'context': {'expanded_foreign': expanded_fields}})
+                    related_object = self.optimize_related_object(instance, related_object)
                     serializer = Serializer(related_object, **serializer_kwargs)
                     ret[related_object_name] = serializer.data
         return ret
@@ -202,25 +193,6 @@ class PermissionForFieldMixin:
         for fields in permissions_for_field:
             [self.check_field_permission(field, attrs[field]) for field in fields if field in attrs]
         return attrs
-
-
-class ExpandedFieldMixin:
-    """
-    A mixin for ModelSerializer that add to the response expanded fields annotated by RelatedObject
-    """
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-
-        expanded_foreign = self.context.get('expanded_foreign', dict())
-        for field_name, value in expanded_foreign.items():
-            ret[field_name] = value
-
-        expanded_m2m = self.context.get('expanded_m2m', list())
-        for field_name in expanded_m2m:
-            ret[field_name] = getattr(instance, field_name)
-
-        return ret
 
 
 class DynamicModelFieldsMixin:
