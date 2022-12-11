@@ -12,10 +12,9 @@ class CourseViewSet(
     view.ActionPermissionMixin,
     view.RetrieveRelatedObjectMixin,
     view.DynamicFieldViewMixin,
-    view.AnnotateModelMixin,
     ModelViewSet
 ):
-    queryset = Course.objects.all()
+    queryset = Course.objects.prefetch_related('instructors', 'categories').all()
     serializer_class = CourseSerializer
     permission_classes_by_action = {
         ('default',): [IsAuthenticated, IsInstructor],

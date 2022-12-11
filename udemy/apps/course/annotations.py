@@ -1,33 +1,61 @@
-from django.db.models import Count, Avg, Q, Sum
+from django.db import models
+
+from udemy.apps.core.annotations import AnnotationBase
 
 
-class CourseAnnotations:
-    @staticmethod
-    def get_num_modules(related_field=''):
-        return {f'{related_field}_num_modules': Count(f'{related_field}modules')}
+class CourseAnnotations(AnnotationBase):
+    annotation_fields = (
+        'num_modules', 'num_lessons', 'num_contents',
+        'rating_avg', 'estimated_content_length_video',
+        'num_contents_info',
+    )
 
-    @staticmethod
-    def get_num_lessons(related_field=''):
-        return {f'{related_field}_num_lessons': Count(f'{related_field}lessons')}
+    def num_modules(self):
+        return {
+            'expression': models.Count,
+            'query_expression': 'modules',
+        }
 
-    @staticmethod
-    def get_num_contents(related_field=''):
-        return {f'{related_field}_num_contents': Count(f'{related_field}contents')}
+    def num_lessons(self):
+        return {
+            'expression': models.Count,
+            'query_expression': 'lessons'
+        }
 
-    @staticmethod
-    def get_avg_rating(related_field=''):
-        return {f'{related_field}_avg_rating': Avg(f'{related_field}ratings__rating')}
+    def num_contents(self):
+        return {
+            'expression': models.Count,
+            'query_expression': 'contents'
+        }
 
-    @staticmethod
-    def get_num_subscribers(related_field=''):
-        return {f'{related_field}_num_subscribers': Count(f'{related_field}students')}
+    def num_subscribers(self):
+        return {
+            'expression': models.Count,
+            'query_expression': 'students'
+        }
 
-    @staticmethod
-    def get_num_contents_info(related_field=''):
-        return {f'{related_field}_num_{option}': Count(f'{related_field}contents__id',
-                                                       filter=Q(**{f'{related_field}contents__content_type__model': option}))
-                for option in ['text', 'link', 'file', 'image']}
+    def num_contents_info(self):
+        return [{
+            'annotation_name': f'num_{option}',
+            'expression': models.Count,
+            'query_expression': 'contents__id',
+            'filter_expressions': {'contents__content_type__model': option},
+        } for option in ('text', 'link', 'file', 'image')]
 
-    @staticmethod
-    def get_estimated_content_length_video(related_field=''):
-        return {f'{related_field}_estimated_content_length_video': Sum(f'{related_field}lessons__video_duration')}
+    def rating_avg(self):
+        return {
+            'expression': models.Avg,
+            'query_expression': 'ratings__rating',
+            'extra_kwargs': {
+                'output_field': models.FloatField()
+            }
+        }
+
+    def estimated_content_length_video(self):
+        return {
+            'expression': models.Sum,
+            'query_expression': 'lessons__video_duration',
+            'extra_kwargs': {
+                'output_field': models.IntegerField()
+            }
+        }

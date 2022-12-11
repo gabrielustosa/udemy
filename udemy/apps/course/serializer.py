@@ -15,10 +15,9 @@ class CourseSerializer(ModelSerializer):
         model = Course
         fields = [
             'id', 'title', 'slug', 'headline', 'language', 'description',
-            'is_paid', 'price', 'created', 'modified', 'avg_rating',
-            'requirements', 'what_you_will_learn', 'num_contents_info',
-            'categories', 'instructors', 'num_modules', 'url', 'num_subscribers',
-            'num_lessons', 'num_contents', 'estimated_content_length_video'
+            'is_paid', 'price', 'created', 'modified',
+            'requirements', 'what_you_will_learn',
+            'categories', 'instructors', 'url',
         ]
         extra_kwargs = {
             'instructors': {'allow_empty': True},

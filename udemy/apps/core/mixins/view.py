@@ -111,24 +111,3 @@ class AnnotatePermissionMixin:
 
         return queryset
 
-
-class AnnotateModelMixin:
-    def get_annotation_fields(self):
-        method_fields = set(self.Meta.model.annotations_fields)
-        serializer_fields = self.request.query_params.get('fields')
-
-        if serializer_fields is None:
-            return method_fields
-
-        serializer_fields = set(serializer_fields.split(','))
-
-        return method_fields.intersection(serializer_fields)
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        annotation_fields = self.get_annotation_fields()
-        annotations = self.Meta.model.get_annotations(*annotation_fields)
-        queryset = queryset.annotate(**annotations)
-
-        return queryset

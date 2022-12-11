@@ -58,3 +58,18 @@ class GenericRelatedField(rest_serializer.Field):
             except Exception:
                 pass
         return serializer, model
+
+
+class AnnotationDictField(rest_serializer.DictField):
+    child = rest_serializer.IntegerField()
+
+    def __init__(self, *args, **kwargs):
+        self.annotation_fields = kwargs.pop('annotation_fields', None)
+
+        super().__init__(*args, **kwargs)
+
+    def get_attribute(self, instance):
+        return {
+            field: getattr(instance, field)
+            for field in self.annotation_fields
+        }

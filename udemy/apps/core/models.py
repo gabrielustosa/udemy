@@ -1,11 +1,11 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value
+from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value, Count
 from django.utils.translation import gettext_lazy as _
 
-from udemy.apps.core.annotations import AnnotationBase
-from udemy.apps.core.decorator import annotation_field
+from udemy.apps.core.annotations import AnnotationBase, AnnotationManager
 
 
 class TimeStampedBase(models.Model):
@@ -99,29 +99,31 @@ class OrderedModel(models.Model):
         return super().delete(using, keep_parents)
 
 
-class ModelTestAnnotations:
-    @staticmethod
-    def get_test_field(related_field=''):
-        return {f'{related_field}_test_field': Value('test field')}
+class ModelTestAnnotations(AnnotationBase):
+    annotation_fields = ('test_field', 'custom_field')
 
-    @staticmethod
-    def get_custom_field(related_field=''):
-        return {f'{related_field}_custom_field': Value('custom field')}
+    def test_field(self):
+        return {
+            'expression': Value,
+            'query_expression': 'test field'
+        }
+
+    def custom_field(self):
+        return [{
+            'annotation_name': f'test_{option}',
+            'expression': Count,
+            'query_expression': 'users__id',
+            'filter_expressions': {'users__name__in': [option]}
+        } for option in ['1', '2', '3']]
 
 
-class ModelTest(models.Model, AnnotationBase):
+class ModelTest(models.Model):
     title = models.CharField(max_length=100)
     num = models.PositiveIntegerField(default=0)
-    annotation_class = ModelTestAnnotations
-    annotations_fields = ('test_field', 'custom_field')
+    users = models.ManyToManyField(get_user_model())
+    annotation_class = ModelTestAnnotations()
+    objects = AnnotationManager()
 
-    @annotation_field()
-    def test_field(self):
-        return 'test field'
-
-    @annotation_field()
-    def custom_field(self):
-        return 'custom field'
 
 class ModelRelatedObject(OrderedModel):
     title = models.CharField(max_length=100)

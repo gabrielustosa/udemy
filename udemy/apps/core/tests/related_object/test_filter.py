@@ -73,6 +73,6 @@ class TestRelatedObjectFilter(TestCase):
 
     def test_related_object_filter_kwargs(self):
         serializer = ModelTestSerializer(context={'fields': {'model_related': '@all'}})
-        filter_kwargs = serializer.get_related_object_option('model_related', 'filter')
+        filter_kwargs = serializer._get_related_object_option('model_related', 'filter')
 
         assert filter_kwargs == {'title__startswith': 'test'}

@@ -46,7 +46,7 @@ class RelatedObjectPermissionMixin:
     """
 
     def get_permissions_for_object(self, related_object):
-        permissions = self.get_related_object_option(related_object, 'permissions', [AllowAny])
+        permissions = self._get_related_object_option(related_object, 'permissions', [AllowAny])
         return [permission() for permission in permissions]
 
     def check_related_object_permission(self, obj, related_object_name):
@@ -69,7 +69,7 @@ class RelatedObjectFilterMixin:
     """
 
     def filter_related_object_query(self, queryset, related_object_name):
-        related_objects_filter = self.get_related_object_option(related_object_name, 'filter')
+        related_objects_filter = self._get_related_object_option(related_object_name, 'filter')
         if related_objects_filter:
             queryset = queryset.filter(**related_objects_filter)
         return queryset.all()
@@ -85,17 +85,17 @@ class RelatedObjectMixin(
     returned in response data.
     """
 
-    def get_related_objects(self):
-        related_objects = getattr(self.Meta, 'related_objects', dict())
-        return related_objects
-
-    def get_related_object_option(self, related_object, option_name, default=None):
+    def _get_related_object_option(self, related_object, option_name, default=None):
         related_objects = self.get_related_objects()
         options = related_objects.get(related_object)
         return options.get(option_name, default)
 
+    def get_related_objects(self):
+        related_objects = getattr(self.Meta, 'related_objects', dict())
+        return related_objects
+
     def get_related_object_serializer(self, related_object):
-        serializer = self.get_related_object_option(related_object, 'serializer')
+        serializer = self._get_related_object_option(related_object, 'serializer')
         if isinstance(serializer, str):
             serializer = import_string(serializer)
         return serializer
@@ -228,3 +228,14 @@ class DynamicModelFieldsMixin:
             existing = set(self.fields)
             for field_name in existing - allowed:
                 self.fields.pop(field_name)
+
+
+class AnnotationFieldMixin:
+    def get_fields(self):
+        fields = super().get_fields()
+
+        annotation_class = getattr(self.Meta.model, 'annotation_class', None)
+        if annotation_class:
+            fields.update(annotation_class._get_annotation_serializer_fields())
+
+        return fields

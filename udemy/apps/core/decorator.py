@@ -72,19 +72,3 @@ def component(name=None, permission_classes=None):
     return decorator
 
 
-def annotation_field(field_group=None):
-    def decorator(func):
-        def inner(self, *args, **kwargs):
-            if field_group:
-                if not all([hasattr(self, f'_{field}') for field in field_group]):
-                    return func(self, *args, **kwargs)
-                return {field: getattr(self, f'_{field}') for field in field_group}
-
-            name = f'_{func.__name__}'
-            if not hasattr(self, name):
-                return func(self, *args, **kwargs)
-            return getattr(self, name)
-
-        return inner
-
-    return decorator
