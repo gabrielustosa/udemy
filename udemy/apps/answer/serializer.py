@@ -1,5 +1,3 @@
-from rest_framework import serializers
-
 from udemy.apps.answer.models import Answer
 from udemy.apps.core.fields import GenericRelatedField
 from udemy.apps.core.permissions import IsEnrolled
@@ -15,8 +13,6 @@ from udemy.apps.user.serializer import UserSerializer
 
 
 class AnswerSerializer(ModelSerializer):
-    likes_count = serializers.SerializerMethodField()
-    dislikes_count = serializers.SerializerMethodField()
     content_object = GenericRelatedField({
         Rating: RatingSerializer(),
         Question: QuestionSerializer(),
@@ -28,7 +24,6 @@ class AnswerSerializer(ModelSerializer):
         fields = [
             'id', 'creator', 'content',
             'created', 'modified', 'course',
-            'likes_count', 'dislikes_count',
             'content_object',
         ]
         related_objects = {
@@ -46,11 +41,6 @@ class AnswerSerializer(ModelSerializer):
             ('course',): [IsEnrolled]
         }
 
-    def get_likes_count(self, instance):
-        return instance.actions.filter(action=1).count()
-
-    def get_dislikes_count(self, instance):
-        return instance.actions.filter(action=2).count()
 
     def create(self, validated_data):
         Model = self.context.get('model')

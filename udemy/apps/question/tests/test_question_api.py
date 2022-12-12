@@ -40,14 +40,11 @@ class TestQuestionAuthenticatedRequests(TestCase):
         }
         response = self.client.post(QUESTION_LIST_URL, payload)
 
-        question = Question.objects.get(id=response.data['id'])
-
-        serializer = QuestionSerializer(question)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, serializer.data)
+        self.assertTrue(Question.objects.filter(id=response.data['id']).exists())
 
-    def test_module_retrieve(self):
+    def test_question_retrieve(self):
         question = QuestionFactory(creator=self.user)
         CourseRelation.objects.create(course=question.course, creator=self.user)
 

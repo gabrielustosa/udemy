@@ -1,12 +1,13 @@
 import factory
 
+from tests.base import AnnotationModelTest
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
 
 from udemy.apps.message.models import Message
 
 
-class MessageFactory(factory.django.DjangoModelFactory):
+class MessageFactory(AnnotationModelTest):
     class Meta:
         model = Message
 

@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.test import TestCase
 from rest_framework.reverse import reverse
 
@@ -7,7 +5,6 @@ from rest_framework.test import APIClient
 
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
-from udemy.apps.course.models import Course
 from udemy.apps.course.serializer import CourseSerializer
 
 CART_LIST = reverse('cart:list')

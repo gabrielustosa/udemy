@@ -13,7 +13,7 @@ class QuestionSerializer(ModelSerializer):
         fields = [
             'id', 'creator', 'lesson', 'title',
             'content', 'created', 'modified',
-            'course', 'likes_count', 'dislikes_count'
+            'course',
         ]
         related_objects = {
             'creator': {

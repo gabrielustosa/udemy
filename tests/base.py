@@ -1,4 +1,5 @@
 import base64
+import factory
 
 from test_plus.test import CBVTestCase
 
@@ -7,7 +8,7 @@ from rest_framework import HTTP_HEADER_ENCODING
 
 from tests.factories.user import UserFactory
 
-factory = APIRequestFactory()
+request_factory = APIRequestFactory()
 
 
 def basic_auth_header(username, password):
@@ -21,7 +22,7 @@ class TestViewBase(CBVTestCase):
 
     def setUp(self):
         self.user = UserFactory()
-        self.request = factory.get(
+        self.request = request_factory.get(
             '/',
             format='json',
             HTTP_AUTHORIZATION=self.permitted_credentials,
@@ -29,3 +30,12 @@ class TestViewBase(CBVTestCase):
         self.request.user = self.user
         self.request.data = dict()
         self.request.query_params = {}
+
+
+class AnnotationModelTest(factory.django.DjangoModelFactory):
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        obj = super()._create(model_class, *args, **kwargs)
+
+        manager = cls._get_manager(model_class)
+        return manager.get(id=obj.id)

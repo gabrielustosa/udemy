@@ -2,7 +2,7 @@ import factory
 
 from django.contrib.contenttypes.models import ContentType
 
-from tests.factories.course import CourseFactory
+from tests.base import AnnotationModelTest
 from tests.factories.message import MessageFactory
 from tests.factories.question import QuestionFactory
 from tests.factories.rating import RatingFactory
@@ -10,7 +10,7 @@ from tests.factories.rating import RatingFactory
 from udemy.apps.question.models import Answer
 
 
-class AnswerFactory(factory.django.DjangoModelFactory):
+class AnswerFactory(AnnotationModelTest):
     class Meta:
         exclude = ['content_object']
         abstract = True

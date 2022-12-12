@@ -61,7 +61,6 @@ class GenericRelatedField(rest_serializer.Field):
 
 
 class AnnotationDictField(rest_serializer.DictField):
-    child = rest_serializer.IntegerField()
 
     def __init__(self, *args, **kwargs):
         self.annotation_fields = kwargs.pop('annotation_fields', None)
@@ -72,4 +71,5 @@ class AnnotationDictField(rest_serializer.DictField):
         return {
             field: getattr(instance, field)
             for field in self.annotation_fields
+            if hasattr(instance, field)
         }

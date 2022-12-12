@@ -4,10 +4,11 @@ from factory import fuzzy
 
 from django.utils.text import slugify
 
+from tests.base import AnnotationModelTest
 from udemy.apps.course.models import Course
 
 
-class CourseFactory(factory.django.DjangoModelFactory):
+class CourseFactory(AnnotationModelTest):
     class Meta:
         model = Course
 

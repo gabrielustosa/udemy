@@ -2,13 +2,14 @@ import factory
 
 from factory import fuzzy
 
+from tests.base import AnnotationModelTest
 from tests.factories.course import CourseFactory
 from tests.factories.user import UserFactory
 
 from udemy.apps.rating.models import Rating
 
 
-class RatingFactory(factory.django.DjangoModelFactory):
+class RatingFactory(AnnotationModelTest):
     class Meta:
         model = Rating
 

@@ -1,11 +1,8 @@
-from unittest.mock import patch
-
 from django.db.models import Count, Q
 from django.test import TestCase, RequestFactory
 
 from udemy.apps.core.annotations import AnnotationBase
 from udemy.apps.core.models import ModelTest
-from udemy.apps.core.serializer import ModelSerializer
 
 
 class TestAnnotations(AnnotationBase):
@@ -179,5 +176,3 @@ class TestAnnotationManager(TestCase):
             annotation_fields = ('test_field', 'test_1', 'test_2', 'test_3')
 
             assert all([hasattr(model_test, field) for field in annotation_fields])
-
-

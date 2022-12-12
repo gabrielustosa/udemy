@@ -1,5 +1,5 @@
 from udemy.apps.core.serializer import ModelSerializer
-from udemy.apps.core.permissions import IsEnrolled, IsInstructor
+from udemy.apps.core.permissions import IsInstructor
 from udemy.apps.course.serializer import CourseSerializer
 from udemy.apps.module.serializer import ModuleSerializer
 from udemy.apps.quiz.models import Quiz, Question

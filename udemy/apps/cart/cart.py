@@ -11,9 +11,8 @@ class Cart:
         self.cart = cart
 
     def to_representation(self):
-        course_annotations = Course.get_annotations('avg_rating', 'num_subscribers')
         courses_ids = self.cart
-        courses = Course.objects.filter(id__in=courses_ids).annotate(**course_annotations)
+        courses = Course.objects.filter(id__in=courses_ids)
 
         serializer = CourseSerializer(
             courses,

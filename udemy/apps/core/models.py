@@ -105,7 +105,10 @@ class ModelTestAnnotations(AnnotationBase):
     def test_field(self):
         return {
             'expression': Value,
-            'query_expression': 'test field'
+            'query_expression': 'test field',
+            'extra_kwargs': {
+                'output_field': models.CharField()
+            }
         }
 
     def custom_field(self):

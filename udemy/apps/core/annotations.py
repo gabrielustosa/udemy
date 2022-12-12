@@ -18,13 +18,7 @@ class AnnotationBase:
 
         return annotation_fields
 
-    def _get_annotation_serializer_field(self, annotation_name):
-        annotation_info = self.get_annotation_info(annotation_name)
-
-        if isinstance(annotation_info, list):
-            annotation_fields = [annotation['annotation_name'] for annotation in annotation_info]
-            return AnnotationDictField(annotation_fields=annotation_fields, read_only=True)
-
+    def _get_rest_serializer_field(self, annotation_info, annotation_name):
         extra_kwargs = annotation_info.pop('extra_kwargs', {})
         output_field = extra_kwargs.pop('output_field', None)
 
@@ -38,7 +32,20 @@ class AnnotationBase:
             output_field = expression.output_field
 
         output_name = output_field.__class__.__name__
-        return vars(rest_fields)[output_name](read_only=True)
+
+        return vars(rest_fields)[output_name]
+
+    def _get_annotation_serializer_field(self, annotation_name):
+        annotation_info = self.get_annotation_info(annotation_name)
+
+        if isinstance(annotation_info, list):
+            annotation_fields = [annotation['annotation_name'] for annotation in annotation_info]
+            serializer_field = self._get_rest_serializer_field(annotation_info[0], annotation_name)
+
+            return AnnotationDictField(annotation_fields=annotation_fields, child=serializer_field(), read_only=True)
+
+        serializer_field = self._get_rest_serializer_field(annotation_info, annotation_name)
+        return serializer_field(read_only=True)
 
     def get_annotation_info(self, annotation_name):
         annotation = getattr(self, annotation_name, None)
@@ -94,7 +101,6 @@ class AnnotationManager(models.Manager):
         annotation_fields = ('*',)
 
         current_request = get_current_request()
-        print(current_request)
         if current_request:
             fields = current_request.GET.get('fields')
             if fields:

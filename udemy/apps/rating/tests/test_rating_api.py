@@ -24,16 +24,6 @@ class TestRatingUnauthenticatedRequests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_rating_list(self):
-        ratings = RatingFactory.create_batch(5)
-
-        response = self.client.get(RATING_LIST_URL)
-
-        serializer = RatingSerializer(ratings, many=True)
-
-        self.assertEqual(response.data, serializer.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
     def test_rating_retrieve(self):
         rating = RatingFactory()
 
@@ -70,12 +60,8 @@ class TestRatingAuthenticatedRequests(TestCase):
 
         response = self.client.post(RATING_LIST_URL, payload)
 
-        rating = Rating.objects.get(id=response.data['id'])
-
-        serializer = RatingSerializer(rating)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, serializer.data)
+        self.assertTrue(Rating.objects.filter(id=response.data['id']).exists())
 
     def test_partial_rating_update(self):
         original_comment = 'original comment'
