@@ -4,11 +4,6 @@ from udemy.apps.core.annotations import AnnotationBase
 
 
 class CourseAnnotations(AnnotationBase):
-    annotation_fields = (
-        'num_modules', 'num_lessons', 'num_contents',
-        'rating_avg', 'estimated_content_length_video',
-        'num_contents_info',
-    )
 
     def num_modules(self):
         return {

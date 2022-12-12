@@ -19,7 +19,7 @@ class RelatedObjetsOptimizeMixin:
 
     def _optimize_related_object_annotations(self, instance, related_object):
         if hasattr(related_object, 'annotation_class'):
-            annotations = related_object.get_annotations('*')
+            annotations = related_object._get_annotations('*')
             model_name = related_object.__class__.__name__.lower()
             for annotation_name in annotations.keys():
                 value = getattr(instance, f'{model_name}__{annotation_name}', None)
@@ -28,7 +28,7 @@ class RelatedObjetsOptimizeMixin:
 
     def _optimize_queryset_annotations(self, queryset, related_object):
         if hasattr(related_object.model, 'annotation_class'):
-            annotations = related_object.model.get_annotations('*')
+            annotations = related_object.model._get_annotations('*')
             queryset = queryset.annotate(**annotations)
         return queryset
 

@@ -54,7 +54,7 @@ class RetrieveRelatedObjectMixin:
 
     def _optimize_foreign_annotations(self, queryset, field):
         if hasattr(field.related_model, 'annotation_class'):
-            annotations = field.related_model.get_annotations('*', related_field=f'{field.name}__')
+            annotations = field.related_model._get_annotations('*', related_field=f'{field.name}__')
             queryset = queryset.annotate(**annotations)
         return queryset
 

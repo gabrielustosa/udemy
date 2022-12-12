@@ -100,7 +100,6 @@ class OrderedModel(models.Model):
 
 
 class ModelTestAnnotations(AnnotationBase):
-    annotation_fields = ('test_field', 'custom_field')
 
     def test_field(self):
         return {
