@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import Manager
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers as rest_serializer
@@ -60,16 +61,76 @@ class GenericRelatedField(rest_serializer.Field):
         return serializer, model
 
 
-class AnnotationDictField(rest_serializer.DictField):
+class AnnotationDictField(rest_serializer.Field):
 
     def __init__(self, *args, **kwargs):
-        self.annotation_fields = kwargs.pop('annotation_fields', None)
+        self.children = kwargs.pop('children')
+        kwargs['read_only'] = True
 
         super().__init__(*args, **kwargs)
 
+    def bind(self, field_name, parent):
+        [child.bind('', parent) for child in self.children]
+        return super().bind(field_name, parent)
+
     def get_attribute(self, instance):
         return {
-            field: getattr(instance, field)
-            for field in self.annotation_fields
-            if hasattr(instance, field)
+            child.field_name: child.get_attribute(instance)
+            for child in self.children
         }
+
+    def to_representation(self, value):
+        return {
+            key: child.to_representation(val) if val is not None else None
+            for child in self.children
+            for key, val in value.items()
+        }
+
+
+class AnnotationField(rest_serializer.Field):
+
+    def __init__(self, *args, **kwargs):
+        self.child = kwargs.pop('child')
+        self.annotation_name = kwargs.pop('annotation_name', None)
+        kwargs['read_only'] = True
+
+        super().__init__(*args, **kwargs)
+
+    def bind(self, field_name, parent):
+        if self.annotation_name is not None:
+            field_name = self.annotation_name
+        return super().bind(field_name, parent)
+
+    def get_attribute(self, instance):
+        return getattr(instance, self.field_name, None)
+
+    def to_representation(self, value):
+        return self.child.to_representation(value)
+
+
+class PaginetedListSerializer(rest_serializer.ListSerializer):
+    def __init__(self, *args, **kwargs):
+        self.filter = kwargs.pop('filter', None)
+        self.paginator = kwargs.pop('paginator', None)
+
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, data):
+        if isinstance(data, Manager):
+            if self.filter:
+                data = data.filter(**self.filter)
+            iterable = data.all()
+
+            if self.paginator:
+                iterable = self.paginator.paginate_queryset(iterable)
+        else:
+            iterable = data
+
+        ret = [self.child.to_representation(item) for item in iterable]
+
+        if self.paginator:
+            if self.paginator.num_pages == 1:
+                return ret
+            return self.paginator.get_paginated_data(ret)
+
+        return ret

@@ -8,7 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.test import APIClient
 
 from tests.factories.user import UserFactory
-from udemy.apps.core.mixins.view import RetrieveRelatedObjectMixin
+from udemy.apps.core.mixins.view import RelatedObjectViewMixin
 from udemy.apps.core.models import ModelTest, ModelRelatedObject
 from udemy.apps.core.serializer import ModelSerializer
 
@@ -33,16 +33,14 @@ class RelatedObjectSerializer(ModelSerializer):
         }
 
 
-class RelatedObjectViewSet(RetrieveRelatedObjectMixin, ModelViewSet):
+class RelatedObjectViewSetView(RelatedObjectViewMixin, ModelViewSet):
     queryset = ModelRelatedObject.objects.all()
     serializer_class = RelatedObjectSerializer
 
-    class Meta:
-        model = ModelRelatedObject
 
 
 urlpatterns = [
-    path('test/', RelatedObjectViewSet.as_view({'post': 'create'}), name='test-retrieve')
+    path('test/', RelatedObjectViewSetView.as_view({'post': 'create'}), name='test-retrieve')
 ]
 
 

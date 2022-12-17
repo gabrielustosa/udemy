@@ -1,7 +1,6 @@
 import re
 
-from django.core.exceptions import FieldDoesNotExist
-from django.db.models import ManyToManyField, ForeignKey, ManyToOneRel, Exists, OuterRef
+from django.db.models import Exists, OuterRef, Value
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
@@ -24,7 +23,7 @@ class DynamicFieldViewMixin:
         return super().get_serializer(*args, **kwargs)
 
 
-class RetrieveRelatedObjectMixin:
+class RelatedObjectViewMixin:
     """
     Mixin for API View that optimize queryset with related objects and update the serializer context with related
     objects fields get by query_params.
@@ -32,6 +31,13 @@ class RetrieveRelatedObjectMixin:
     Example:
           https://example.com/resource/?fields[related_object_name]=@min,image
     """
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        queryset = self.get_auto_optimized_queryset(queryset)
+
+        return queryset
 
     @cached_property
     def related_fields(self):
@@ -44,42 +50,13 @@ class RetrieveRelatedObjectMixin:
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['fields'] = self.related_fields
+        context['related_fields'] = self.related_fields
         return context
 
-    def optimize_foreign_field(self, queryset, field):
-        queryset = self._optimize_foreign_annotations(queryset, field)
-        queryset = self._optimize_foreign_prefetch_related(queryset, field)
+    def get_auto_optimized_queryset(self, queryset):
+        serializer = self.get_serializer_class()(context={'related_fields': self.related_fields})
+        queryset = serializer.auto_optimize_related_object(queryset)
         return queryset
-
-    def _optimize_foreign_annotations(self, queryset, field):
-        if hasattr(field.related_model, 'annotation_class'):
-            annotations = field.related_model._get_annotations('*', related_field=f'{field.name}__')
-            queryset = queryset.annotate(**annotations)
-        return queryset
-
-    def _optimize_foreign_prefetch_related(self, queryset, field):
-        for field_type in field.related_model._meta.get_fields():
-            if isinstance(field_type, ManyToManyField):
-                queryset = queryset.prefetch_related(f'{field.name}__{field_type.name}')
-        return queryset
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        for field_name in self.related_fields.keys():
-            try:
-                field = self.Meta.model._meta.get_field(field_name)
-                if isinstance(field, ManyToManyField) or isinstance(field, ManyToOneRel):
-                    queryset = queryset.prefetch_related(field_name)
-                if isinstance(field, ForeignKey):
-                    queryset = queryset.select_related(field_name)
-                    queryset = self.optimize_foreign_field(queryset, field)
-            except FieldDoesNotExist:
-                pass
-
-        return queryset
-
 
 class ActionPermissionMixin:
     permission_classes_by_action = {

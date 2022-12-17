@@ -9,7 +9,7 @@ from udemy.apps.core.permissions import IsInstructor, IsEnrolled
 
 class ContentViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet

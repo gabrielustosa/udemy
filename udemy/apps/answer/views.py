@@ -12,7 +12,7 @@ from udemy.apps.rating.models import Rating
 
 class AnswerViewSet(
     view.AnnotatePermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet
 ):

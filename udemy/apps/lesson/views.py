@@ -9,7 +9,7 @@ from udemy.apps.lesson.serializer import LessonSerializer
 
 class LessonViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet

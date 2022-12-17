@@ -24,47 +24,58 @@ class CourseSerializer(ModelSerializer):
         }
         related_objects = {
             'instructors': {
-                'serializer': UserSerializer
+                'serializer': UserSerializer,
+                'many': True,
             },
             'categories': {
                 'serializer': CategorySerializer,
+                'many': True,
             },
             'quizzes': {
                 'serializer': 'udemy.apps.quiz.serializer.QuizSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled],
+                'permissions': [IsEnrolled],
                 'filter': {'is_published': True},
+                'many': True,
             },
             'lessons': {
                 'serializer': 'udemy.apps.lesson.serializer.LessonSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'modules': {
                 'serializer': 'udemy.apps.module.serializer.ModuleSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'contents': {
                 'serializer': 'udemy.apps.content.serializer.ContentSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'ratings': {
                 'serializer': 'udemy.apps.rating.serializer.RatingSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'warning_messages': {
                 'serializer': 'udemy.apps.message.serializer.MessageSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'questions': {
                 'serializer': 'udemy.apps.question.serializer.QuestionSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'notes': {
                 'serializer': 'udemy.apps.note.serializer.NoteSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             },
             'lesson_relations': {
                 'serializer': 'udemy.apps.lesson.serializer.LessonRelationSerializer',
-                'permissions': [IsAuthenticated, IsEnrolled]
+                'permissions': [IsEnrolled],
+                'many': True,
             }
         }
         min_fields = ('id', 'title', 'url')
@@ -73,8 +84,8 @@ class CourseSerializer(ModelSerializer):
     def get_url(self, instance):
         return f'https://udemy.com/course/{instance.slug}'
 
-    def get_related_objects(self):
-        related_objects = super().get_related_objects()
+    def related_objects(self):
+        related_objects = super().related_objects()
         if self.context.get('request'):
             related_objects['notes']['filter'] = {
                 'creator': self.context.get('request').user

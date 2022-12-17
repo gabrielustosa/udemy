@@ -17,6 +17,7 @@ class ModelTestSerializer(ModelSerializer):
         related_objects = {
             'model_related': {
                 'serializer': RelatedObjectSerializer,
+                'many': True,
                 'filter': {'title__startswith': 'test'}
             }
         }
@@ -30,7 +31,8 @@ class TestRelatedObjectFilter(TestCase):
         model_2 = ModelRelatedObject.objects.create(title='test_', model_test=model_test)
         ModelRelatedObject.objects.create(title='no_test', model_test=model_test)
 
-        serializer = ModelTestSerializer(context={'fields': {'model_related': '@all'}})
+        serializer = ModelTestSerializer(fields=('id', 'title', 'model_related'),
+                                         context={'related_fields': {'model_related': ['@all']}})
         data = serializer.to_representation(model_test)
 
         expected_data = {
@@ -48,7 +50,6 @@ class TestRelatedObjectFilter(TestCase):
                     'model_test': model_test.id
                 }
             ]
-
         }
 
         assert data == expected_data
@@ -60,7 +61,8 @@ class TestRelatedObjectFilter(TestCase):
         ModelRelatedObject.objects.create(title='no_test', model_test=model_test)
         ModelRelatedObject.objects.create(title='no_test', model_test=model_test)
 
-        serializer = ModelTestSerializer(context={'fields': {'model_related': '@all'}})
+        serializer = ModelTestSerializer(fields=('id', 'title', 'model_related'),
+                                         context={'related_fields': {'model_related': ['@all']}})
         data = serializer.to_representation(model_test)
 
         expected_data = {
@@ -72,7 +74,7 @@ class TestRelatedObjectFilter(TestCase):
         assert data == expected_data
 
     def test_related_object_filter_kwargs(self):
-        serializer = ModelTestSerializer(context={'fields': {'model_related': '@all'}})
+        serializer = ModelTestSerializer(context={'related_fields': {'model_related': ['@all']}})
         filter_kwargs = serializer._get_related_object_option('model_related', 'filter')
 
         assert filter_kwargs == {'title__startswith': 'test'}

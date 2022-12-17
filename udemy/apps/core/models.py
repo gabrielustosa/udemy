@@ -134,6 +134,7 @@ class ModelRelatedObject(OrderedModel):
         on_delete=models.CASCADE,
         related_name='model_related'
     )
+    models_tests = models.ManyToManyField(ModelTest)
     order_in_respect = ('model_test',)
 
     def do_after_create(self):

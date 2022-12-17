@@ -1,15 +1,17 @@
 from rest_framework import serializers
 
 from udemy.apps.core.mixins import serializer
+from udemy.apps.core.mixins.related_object import RelatedObjectMixin
 
 
 class ModelSerializer(
+    RelatedObjectMixin,
     serializer.DynamicModelFieldsMixin,
-    serializer.RelatedObjectMixin,
     serializer.CreateAndUpdateOnlyFieldsMixin,
     serializer.PermissionForFieldMixin,
     serializer.AnnotationFieldMixin,
-    serializers.ModelSerializer
+    serializer.PaginatedSerializerMixin,
+    serializers.ModelSerializer,
 ):
     """
     Custom ModelSerializer

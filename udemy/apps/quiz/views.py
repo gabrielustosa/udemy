@@ -12,7 +12,7 @@ from udemy.apps.quiz.serializer import QuizSerializer, QuestionSerializer
 
 class QuizViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet
@@ -30,7 +30,7 @@ class QuizViewSet(
 
 class QuestionViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     ModelViewSet
 ):

@@ -9,7 +9,7 @@ from udemy.apps.rating.serializer import RatingSerializer
 
 class RatingViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet

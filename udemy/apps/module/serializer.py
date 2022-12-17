@@ -19,10 +19,12 @@ class ModuleSerializer(ModelSerializer):
             },
             'lessons': {
                 'serializer': 'udemy.apps.lesson.serializer.LessonSerializer',
+                'many': True
             },
             'quizzes': {
                 'serializer': 'udemy.apps.quiz.serializer.QuizSerializer',
-                'filter': {'is_published': True}
+                'filter': {'is_published': True},
+                'many': True
             }
         }
         create_only_fields = ('course',)

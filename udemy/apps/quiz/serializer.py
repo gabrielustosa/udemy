@@ -22,7 +22,8 @@ class QuizSerializer(ModelSerializer):
                 'serializer': CourseSerializer
             },
             'questions': {
-                'serializer': 'udemy.apps.quiz.serializer.QuestionSerializer'
+                'serializer': 'udemy.apps.quiz.serializer.QuestionSerializer',
+                'many': True
             },
         }
         create_only_fields = ('course', 'module')

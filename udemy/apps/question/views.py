@@ -9,7 +9,7 @@ from udemy.apps.question.serializer import QuestionSerializer
 
 class QuestionViewSet(
     view.AnnotatePermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet
 ):

@@ -10,11 +10,11 @@ from udemy.apps.course.serializer import CourseSerializer
 class CourseViewSet(
     view.AnnotatePermissionMixin,
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet
 ):
-    queryset = Course.objects.prefetch_related('instructors', 'categories').all()
+    queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes_by_action = {
         ('default',): [IsAuthenticated, IsInstructor],

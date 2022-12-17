@@ -13,7 +13,7 @@ from udemy.apps.rating.models import Rating
 
 class ActionViewSetBase(
     view.AnnotatePermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet
 ):

@@ -8,7 +8,7 @@ from rest_framework.reverse import reverse
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.test import APIClient
 
-from udemy.apps.core.mixins.view import RetrieveRelatedObjectMixin
+from udemy.apps.core.mixins.view import RelatedObjectViewMixin, DynamicFieldViewMixin
 from udemy.apps.core.models import ModelTest, ModelRelatedObject
 from udemy.apps.core.serializer import ModelSerializer
 
@@ -26,6 +26,7 @@ class ModelTestSerializer(ModelSerializer):
         related_objects = {
             'model_related': {
                 'serializer': RelatedObjectSerializer,
+                'many': True
             }
         }
 
@@ -34,7 +35,7 @@ factory = RequestFactory()
 request = factory.get('/')
 
 
-class ModelTestViewSet(RetrieveRelatedObjectMixin, ModelViewSet):
+class ModelTestViewSet(RelatedObjectViewMixin, DynamicFieldViewMixin, ModelViewSet):
     queryset = ModelTest.objects.all()
     serializer_class = ModelTestSerializer
 
@@ -60,15 +61,15 @@ class TestRelatedObjectPaginator(TestCase):
 
     @patch('udemy.apps.core.paginator.RELATED_OBJECT_PAGINATED_BY', 1)
     def test_related_objects_are_paginated(self):
-        response = self.client.get(f'{self.url}?fields[model_related]=@all,page(2)')
+        response = self.client.get(f'{self.url}?fields[model_related]=@all,page(2)&fields=id,title,model_related')
 
         expected_response = {
             'id': self.model_test.id,
             'title': self.model_test.title,
             'model_related': {
                 'count': 4,
-                'next': f'http://testserver/test/{self.model_test.id}/?fields%5Bmodel_related%5D=%40all%2Cpage%283%29',
-                'previous': f'http://testserver/test/{self.model_test.id}/?fields%5Bmodel_related%5D=%40all',
+                'next': f'http://testserver/test/{self.model_test.id}/?fields=id%2Ctitle%2Cmodel_related&fields%5Bmodel_related%5D=%40all%2Cpage%283%29',
+                'previous': f'http://testserver/test/{self.model_test.id}/?fields=id%2Ctitle%2Cmodel_related&fields%5Bmodel_related%5D=%40all',
                 'results': [{
                     'id': self.model_2.id,
                     'title': self.model_2.title,
@@ -81,14 +82,14 @@ class TestRelatedObjectPaginator(TestCase):
         assert response.data == expected_response
 
     def test_setting_page_size(self):
-        response = self.client.get(f'{self.url}?fields[model_related]=@all,page_size(2)')
+        response = self.client.get(f'{self.url}?fields[model_related]=@all,page_size(2)&fields=id,title,model_related')
 
         expected_response = {
             'id': self.model_test.id,
             'title': self.model_test.title,
             'model_related': {
                 'count': 4,
-                'next': f'http://testserver/test/{self.model_test.id}/?fields%5Bmodel_related%5D=%40all%2Cpage_size%282%29%2Cpage%282%29',
+                'next': f'http://testserver/test/{self.model_test.id}/?fields=id%2Ctitle%2Cmodel_related&fields%5Bmodel_related%5D=%40all%2Cpage_size%282%29%2Cpage%282%29',
                 'previous': None,
                 'results': [
                     {

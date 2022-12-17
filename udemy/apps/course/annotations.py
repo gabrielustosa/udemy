@@ -9,24 +9,36 @@ class CourseAnnotations(AnnotationBase):
         return {
             'expression': models.Count,
             'query_expression': 'modules',
+            'extra_kwargs': {
+                'distinct': True
+            }
         }
 
     def num_lessons(self):
         return {
             'expression': models.Count,
-            'query_expression': 'lessons'
+            'query_expression': 'lessons',
+            'extra_kwargs': {
+                'distinct': True
+            }
         }
 
     def num_contents(self):
         return {
             'expression': models.Count,
-            'query_expression': 'contents'
+            'query_expression': 'contents',
+            'extra_kwargs': {
+                'distinct': True
+            }
         }
 
     def num_subscribers(self):
         return {
             'expression': models.Count,
-            'query_expression': 'students'
+            'query_expression': 'students',
+            'extra_kwargs': {
+                'distinct': True
+            }
         }
 
     def num_contents_info(self):
@@ -46,7 +58,7 @@ class CourseAnnotations(AnnotationBase):
             }
         }
 
-    def estimated_content_length_video(self):
+    def estimated_content_video_duration(self):
         return {
             'expression': models.Sum,
             'query_expression': 'lessons__video_duration',

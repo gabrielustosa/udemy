@@ -9,7 +9,7 @@ from udemy.apps.module.serializer import ModuleSerializer
 
 class ModuleViewSet(
     view.ActionPermissionMixin,
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet

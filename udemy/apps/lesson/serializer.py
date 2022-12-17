@@ -27,12 +27,15 @@ class LessonSerializer(ModelSerializer):
             },
             'contents': {
                 'serializer': 'udemy.apps.content.serializer.ContentSerializer',
+                'many': True
             },
             'questions': {
                 'serializer': 'udemy.apps.question.serializer.QuestionSerializer',
+                'many': True
             },
             'notes': {
                 'serializer': 'udemy.apps.note.serializer.NoteSerializer',
+                'many': True
             }
         }
         create_only_fields = ('course', 'module')

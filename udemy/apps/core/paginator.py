@@ -10,36 +10,35 @@ from rest_framework.utils.urls import replace_query_param
 
 from django.core.paginator import Paginator, InvalidPage
 from django.utils.functional import cached_property
-from django.db.models import QuerySet
 
 RELATED_OBJECT_PAGINATED_BY = 100
 
 
 @dataclass
 class PaginatorRelatedObject:
-    queryset: QuerySet
     related_object_name: str
     related_object_fields: List[str]
     request: Request
 
-    def paginate_queryset(self):
+    def paginate_queryset(self, queryset):
         page_size = self.get_page_size
 
         if int(page_size) <= 0:
             raise NotFound(f'Invalid page size for `{self.related_object_name}`.')
 
-        paginator = Paginator(self.queryset, page_size)
+        self.paginator = Paginator(queryset, page_size)
         page_number = self.get_page_number
 
         try:
-            self.page = paginator.page(page_number)
+            self.page = self.paginator.page(page_number)
         except InvalidPage:
             raise NotFound(f'Invalid page for `{self.related_object_name}`.')
 
-        if paginator.num_pages == 1:
-            return None
-
         return list(self.page)
+
+    @property
+    def num_pages(self):
+        return self.paginator.num_pages
 
     @cached_property
     def get_page_number(self):
@@ -89,7 +88,7 @@ class PaginatorRelatedObject:
 
     def get_paginated_data(self, data):
         return OrderedDict([
-            ('count', self.queryset.count()),
+            ('count', self.paginator.count),
             ('next', self.get_next_link()),
             ('previous', self.get_previous_link()),
             ('results', data)

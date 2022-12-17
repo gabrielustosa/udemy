@@ -8,7 +8,7 @@ from udemy.apps.note.serializer import NoteSerializer
 
 
 class NoteViewSet(
-    view.RetrieveRelatedObjectMixin,
+    view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,
     view.DynamicFieldViewMixin,
     ModelViewSet

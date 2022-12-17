@@ -8,6 +8,9 @@ class IsInstructor(permissions.BasePermission):
     """Object permission to allow only course instructors."""
 
     def has_object_permission(self, request, view, obj):
+        if not request.user or request.user.is_anonymous:
+            return False
+
         if hasattr(obj, 'is_instructor'):
             return obj.is_instructor
 
@@ -40,6 +43,9 @@ class IsEnrolled(permissions.BasePermission):
     """Allow access only for enrolled students or course's instructors."""
 
     def has_object_permission(self, request, view, obj):
+        if not request.user or request.user.is_anonymous:
+            return False
+
         if hasattr(obj, 'is_enrolled') or hasattr(obj, 'is_instructor'):
             return obj.is_enrolled or obj.is_instructor
 

@@ -1,25 +1,28 @@
+import inspect
+
 from collections import ChainMap, OrderedDict
 
 from django.db import models
 from django.utils.functional import cached_property
 
-from rest_framework import fields as rest_fields
+from rest_framework.serializers import ModelSerializer
 
-from udemy.apps.core.fields import AnnotationDictField
+from udemy.apps.core.fields import AnnotationDictField, AnnotationField
 from udemy.apps.core.middleware import get_current_request
+
+QUERYSET_DELIMITER = '__'
 
 
 class AnnotationBase:
-    def _get_annotation_serializer_fields(self):
+    def get_annotation_serializer_fields(self):
         annotation_fields = OrderedDict()
 
-        for annotation_name in self._annotation_fields:
-            serializer_field = self._get_annotation_serializer_field(annotation_name)
-            annotation_fields[annotation_name] = serializer_field
+        for annotation_name in self.annotation_fields:
+            annotation_fields[annotation_name] = self.get_annotation_serializer_field(annotation_name)
 
         return annotation_fields
 
-    def _get_rest_serializer_field(self, annotation_info, annotation_name):
+    def get_rest_serializer_field(self, annotation_info, annotation_name):
         extra_kwargs = annotation_info.pop('extra_kwargs', {})
         output_field = extra_kwargs.pop('output_field', None)
 
@@ -32,71 +35,89 @@ class AnnotationBase:
 
             output_field = expression.output_field
 
-        output_name = output_field.__class__.__name__
+        return ModelSerializer.serializer_field_mapping.get(output_field.__class__)()
 
-        return vars(rest_fields)[output_name]
-
-    def _get_annotation_serializer_field(self, annotation_name):
-        annotation_info = self._get_annotation_info(annotation_name)
+    def get_annotation_serializer_field(self, annotation_name):
+        annotation_info = self.get_annotation_info(annotation_name)
 
         if isinstance(annotation_info, list):
-            annotation_fields = [annotation['annotation_name'] for annotation in annotation_info]
-            serializer_field = self._get_rest_serializer_field(annotation_info[0], annotation_name)
+            children = [
+                AnnotationField(
+                    annotation_name=annotation['annotation_name'],
+                    child=self.get_rest_serializer_field(annotation, annotation['annotation_name'])
+                )
+                for annotation in annotation_info
+            ]
+            return AnnotationDictField(children=children)
 
-            return AnnotationDictField(annotation_fields=annotation_fields, child=serializer_field(), read_only=True)
+        serializer_field = self.get_rest_serializer_field(annotation_info, annotation_name)
+        return AnnotationField(child=serializer_field)
 
-        serializer_field = self._get_rest_serializer_field(annotation_info, annotation_name)
-        return serializer_field(read_only=True)
-
-    def _get_annotation_info(self, annotation_name):
+    def get_annotation_info(self, annotation_name):
         annotation = getattr(self, annotation_name, None)
         if annotation is None:
             return None
         return annotation()
 
-    def _generate_annotation_dict(self, annotation_name, annotation_info, additional_path=None):
+    def generate_annotation_dict(self, annotation_name, annotation_info, additional_path=None):
         expression = annotation_info.pop('expression')
         query_expression = annotation_info.pop('query_expression')
         filter_expressions = annotation_info.pop('filter_expressions', None)
         extra_kwargs = annotation_info.pop('extra_kwargs', {})
 
         if additional_path is not None:
-            annotation_name = f'{additional_path}__{annotation_name}'
-            query_expression = f'{additional_path}__{query_expression}'
+            annotation_name = f'{additional_path}{QUERYSET_DELIMITER}{annotation_name}'
+            query_expression = f'{additional_path}{QUERYSET_DELIMITER}{query_expression}'
 
             if filter_expressions:
-                filter_expressions = {f'{additional_path}__{key}': value for key, value in filter_expressions.items()}
+                filter_expressions = {f'{additional_path}{QUERYSET_DELIMITER}{key}': value
+                                      for key, value in filter_expressions.items()}
 
         if filter_expressions:
             extra_kwargs.update({'filter': models.Q(**filter_expressions)})
 
         return {annotation_name: expression(query_expression, **extra_kwargs)}
 
-    def _assemble_annotation(self, annotation_name, additional_path=None):
-        annotation_info = self._get_annotation_info(annotation_name)
+    def assemble_annotation(self, annotation_name, additional_path=None):
+        annotation_info = self.get_annotation_info(annotation_name)
 
         if isinstance(annotation_info, list):
             annotations_list = [
-                self._generate_annotation_dict(annotation['annotation_name'], annotation, additional_path)
+                self.generate_annotation_dict(annotation['annotation_name'], annotation, additional_path)
                 for annotation in annotation_info
             ]
             return dict(ChainMap(*annotations_list))
 
-        return self._generate_annotation_dict(annotation_name, annotation_info, additional_path)
+        return self.generate_annotation_dict(annotation_name, annotation_info, additional_path)
 
-    def _get_annotations(self, *fields, additional_path=None):
+    def get_annotations(self, *fields, additional_path=None):
         if '*' in fields:
-            fields = self._annotation_fields
+            fields = self.annotation_fields
 
         annotations_list = [
-            self._assemble_annotation(field, additional_path)
-            for field in fields if field in self._annotation_fields
+            self.assemble_annotation(field, additional_path)
+            for field in fields if field in self.annotation_fields
         ]
         return dict(ChainMap(*annotations_list))
 
+    def intersection_fields(self, fields):
+        if isinstance(fields, str):
+            fields = fields.split(',')
+
+        if '@all' in fields:
+            return self.annotation_fields
+
+        return set(self.annotation_fields).intersection(fields)
+
     @cached_property
-    def _annotation_fields(self):
-        return [name for name in dir(self) if not name.startswith('_')]
+    def annotation_fields(self):
+        annotation_fields = []
+        for klass in [klass for klass in self.__class__.mro() if klass.__name__ != 'AnnotationBase']:
+            for name, attr in vars(klass).items():
+                if inspect.isfunction(attr):
+                    assert QUERYSET_DELIMITER not in name, f'Do not use `{QUERYSET_DELIMITER}` in annotations names'
+                    annotation_fields.append(name)
+        return annotation_fields
 
 class AnnotationManager(models.Manager):
 
@@ -108,10 +129,8 @@ class AnnotationManager(models.Manager):
         if current_request:
             fields = current_request.GET.get('fields')
             if fields:
-                fields = set(fields.split(','))
-                avaliable_fields = set(self.model.annotation_class._annotation_fields)
-                annotation_fields = avaliable_fields.intersection(fields)
+                annotation_fields = self.model.annotation_class.intersection_fields(fields)
 
-        annotations = self.model.annotation_class._get_annotations(*annotation_fields)
+        annotations = self.model.annotation_class.get_annotations(*annotation_fields)
 
         return queryset.annotate(**annotations)
