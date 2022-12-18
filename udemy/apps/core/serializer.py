@@ -10,7 +10,6 @@ class ModelSerializer(
     serializer.CreateAndUpdateOnlyFieldsMixin,
     serializer.PermissionForFieldMixin,
     serializer.AnnotationFieldMixin,
-    serializer.PaginatedSerializerMixin,
     serializers.ModelSerializer,
 ):
     """

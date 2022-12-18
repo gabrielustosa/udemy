@@ -68,10 +68,7 @@ class AnnotationDictField(rest_serializer.Field):
         kwargs['read_only'] = True
 
         super().__init__(*args, **kwargs)
-
-    def bind(self, field_name, parent):
-        [child.bind('', parent) for child in self.children]
-        return super().bind(field_name, parent)
+        [child.bind('', self) for child in self.children]
 
     def get_attribute(self, instance):
         return {
@@ -108,10 +105,11 @@ class AnnotationField(rest_serializer.Field):
         return self.child.to_representation(value)
 
 
-class PaginetedListSerializer(rest_serializer.ListSerializer):
+class RelatedObjectListSerializer(rest_serializer.ListSerializer):
     def __init__(self, *args, **kwargs):
         self.filter = kwargs.pop('filter', None)
         self.paginator = kwargs.pop('paginator', None)
+        self.annotations = kwargs.pop('annotations', None)
 
         super().__init__(*args, **kwargs)
 
@@ -120,6 +118,9 @@ class PaginetedListSerializer(rest_serializer.ListSerializer):
             if self.filter:
                 data = data.filter(**self.filter)
             iterable = data.all()
+
+            if self.annotations:
+                iterable = iterable.annotate(**self.annotations)
 
             if self.paginator:
                 iterable = self.paginator.paginate_queryset(iterable)

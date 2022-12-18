@@ -91,6 +91,8 @@ class AnnotationBase:
         return self.generate_annotation_dict(annotation_name, annotation_info, additional_path)
 
     def get_annotations(self, *fields, additional_path=None):
+        fields = self._intersection_fields(fields)
+
         if '*' in fields:
             fields = self.annotation_fields
 
@@ -100,11 +102,8 @@ class AnnotationBase:
         ]
         return dict(ChainMap(*annotations_list))
 
-    def intersection_fields(self, fields):
-        if isinstance(fields, str):
-            fields = fields.split(',')
-
-        if '@all' in fields:
+    def _intersection_fields(self, fields):
+        if '@all' in fields or '*' in fields:
             return self.annotation_fields
 
         return set(self.annotation_fields).intersection(fields)
@@ -123,14 +122,12 @@ class AnnotationManager(models.Manager):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        annotation_fields = ('*',)
+        annotations = self.model.annotation_class.get_annotations('*')
 
         current_request = get_current_request()
         if current_request:
             fields = current_request.GET.get('fields')
             if fields:
-                annotation_fields = self.model.annotation_class.intersection_fields(fields)
-
-        annotations = self.model.annotation_class.get_annotations(*annotation_fields)
+                annotations = self.model.annotation_class.get_annotations(fields)
 
         return queryset.annotate(**annotations)

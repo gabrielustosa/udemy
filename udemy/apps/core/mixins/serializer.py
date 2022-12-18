@@ -1,8 +1,6 @@
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
 
-from udemy.apps.core.fields import PaginetedListSerializer
-
 
 class CreateAndUpdateOnlyFieldsMixin:
     """
@@ -103,9 +101,3 @@ class AnnotationFieldMixin:
 
         return fields
 
-
-class PaginatedSerializerMixin:
-    @classmethod
-    def many_init(cls, *args, **kwargs):
-        kwargs['child'] = cls(fields=kwargs.pop('fields', None))
-        return PaginetedListSerializer(*args, **kwargs)

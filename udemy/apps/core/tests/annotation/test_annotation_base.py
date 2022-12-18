@@ -164,21 +164,21 @@ class TestAnnotation(TestCase):
     def test_annotation_intersection_fields(self):
         fields = ('id', 'title', 'annotation_one')
 
-        annotation_fields = self.annotation_class.intersection_fields(fields)
+        annotation_fields = self.annotation_class._intersection_fields(fields)
 
         assert annotation_fields == {'annotation_one', }
 
     def test_annotation_intersection_string_fields(self):
         fields = 'id,title,annotation_one'
 
-        annotation_fields = self.annotation_class.intersection_fields(fields)
+        annotation_fields = self.annotation_class._intersection_fields(fields)
 
         assert annotation_fields == {'annotation_one', }
 
     def test_annotation_intersection_with_all_in_fields(self):
         fields = ('id', '@all')
 
-        annotation_fields = self.annotation_class.intersection_fields(fields)
+        annotation_fields = self.annotation_class._intersection_fields(fields)
 
         assert annotation_fields == ['annotation_one', 'annotation_two', 'annotation_list']
 
