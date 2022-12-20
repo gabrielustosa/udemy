@@ -15,7 +15,7 @@ RELATED_OBJECT_PAGINATED_BY = 100
 
 
 @dataclass
-class PaginatorRelatedObject:
+class RelatedObjectPaginator:
     related_object_name: str
     related_object_fields: List[str]
     request: Request

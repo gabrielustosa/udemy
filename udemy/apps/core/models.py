@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Max, F, ExpressionWrapper, PositiveIntegerField, Value, Count
 from django.utils.translation import gettext_lazy as _
 
-from udemy.apps.core.annotations import AnnotationBase, AnnotationManager
+from udemy.apps.core.annotations import AnnotationBase
 
 
 class TimeStampedBase(models.Model):
@@ -124,7 +124,6 @@ class ModelTest(models.Model):
     num = models.PositiveIntegerField(default=0)
     users = models.ManyToManyField(get_user_model())
     annotation_class = ModelTestAnnotations()
-    objects = AnnotationManager()
 
 
 class ModelRelatedObject(OrderedModel):

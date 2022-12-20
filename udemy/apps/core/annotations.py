@@ -2,15 +2,12 @@ import inspect
 
 from collections import ChainMap, OrderedDict
 
-from django.db import models
 from django.utils.functional import cached_property
 
+from rest_framework.fields import _UnvalidatedField
 from rest_framework.serializers import ModelSerializer
 
 from udemy.apps.core.fields import AnnotationDictField, AnnotationField
-from udemy.apps.core.middleware import get_current_request
-
-QUERYSET_DELIMITER = '__'
 
 
 class AnnotationBase:
@@ -22,36 +19,29 @@ class AnnotationBase:
 
         return annotation_fields
 
-    def get_rest_serializer_field(self, annotation_info, annotation_name):
-        extra_kwargs = annotation_info.pop('extra_kwargs', {})
-        output_field = extra_kwargs.pop('output_field', None)
-
-        if output_field is None:
-            expression = annotation_info.pop('expression')
-
-            assert isinstance(
-                expression.output_field, models.Field
-            ), f'You must declare the output_field of the annotation `{annotation_name}`'
-
-            output_field = expression.output_field
-
-        return ModelSerializer.serializer_field_mapping.get(output_field.__class__)()
+    def _get_rest_field_by_annotation(self, annotation):
+        try:
+            output_field = annotation.output_field
+        except AttributeError:
+            return _UnvalidatedField()
+        try:
+            return ModelSerializer.serializer_field_mapping[output_field.__class__]()
+        except KeyError:
+            return _UnvalidatedField()
 
     def get_annotation_serializer_field(self, annotation_name):
         annotation_info = self.get_annotation_info(annotation_name)
 
-        if isinstance(annotation_info, list):
-            children = [
+        if isinstance(annotation_info, dict):
+            return AnnotationDictField(children=[
                 AnnotationField(
-                    annotation_name=annotation['annotation_name'],
-                    child=self.get_rest_serializer_field(annotation, annotation['annotation_name'])
+                    annotation_name=name,
+                    child=self._get_rest_field_by_annotation(annotation)
                 )
-                for annotation in annotation_info
-            ]
-            return AnnotationDictField(children=children)
+                for name, annotation in annotation_info.items()
+            ])
 
-        serializer_field = self.get_rest_serializer_field(annotation_info, annotation_name)
-        return AnnotationField(child=serializer_field)
+        return AnnotationField(child=self._get_rest_field_by_annotation(annotation_info))
 
     def get_annotation_info(self, annotation_name):
         annotation = getattr(self, annotation_name, None)
@@ -59,50 +49,21 @@ class AnnotationBase:
             return None
         return annotation()
 
-    def generate_annotation_dict(self, annotation_name, annotation_info, additional_path=None):
-        expression = annotation_info.pop('expression')
-        query_expression = annotation_info.pop('query_expression')
-        filter_expressions = annotation_info.pop('filter_expressions', None)
-        extra_kwargs = annotation_info.pop('extra_kwargs', {})
-
-        if additional_path is not None:
-            annotation_name = f'{additional_path}{QUERYSET_DELIMITER}{annotation_name}'
-            query_expression = f'{additional_path}{QUERYSET_DELIMITER}{query_expression}'
-
-            if filter_expressions:
-                filter_expressions = {f'{additional_path}{QUERYSET_DELIMITER}{key}': value
-                                      for key, value in filter_expressions.items()}
-
-        if filter_expressions:
-            extra_kwargs.update({'filter': models.Q(**filter_expressions)})
-
-        return {annotation_name: expression(query_expression, **extra_kwargs)}
-
-    def assemble_annotation(self, annotation_name, additional_path=None):
+    def assemble_annotation(self, annotation_name):
         annotation_info = self.get_annotation_info(annotation_name)
 
-        if isinstance(annotation_info, list):
-            annotations_list = [
-                self.generate_annotation_dict(annotation['annotation_name'], annotation, additional_path)
-                for annotation in annotation_info
-            ]
-            return dict(ChainMap(*annotations_list))
+        if isinstance(annotation_info, dict):
+            return annotation_info
 
-        return self.generate_annotation_dict(annotation_name, annotation_info, additional_path)
+        return {annotation_name: annotation_info}
 
-    def get_annotations(self, *fields, additional_path=None):
-        fields = self._intersection_fields(fields)
+    def get_annotations(self, *fields):
+        fields = self.intersection_fields(fields)
 
-        if '*' in fields:
-            fields = self.annotation_fields
-
-        annotations_list = [
-            self.assemble_annotation(field, additional_path)
-            for field in fields if field in self.annotation_fields
-        ]
+        annotations_list = [self.assemble_annotation(field) for field in fields]
         return dict(ChainMap(*annotations_list))
 
-    def _intersection_fields(self, fields):
+    def intersection_fields(self, fields):
         if '@all' in fields or '*' in fields:
             return self.annotation_fields
 
@@ -110,24 +71,8 @@ class AnnotationBase:
 
     @cached_property
     def annotation_fields(self):
-        annotation_fields = []
-        for klass in [klass for klass in self.__class__.mro() if klass.__name__ != 'AnnotationBase']:
-            for name, attr in vars(klass).items():
-                if inspect.isfunction(attr):
-                    assert QUERYSET_DELIMITER not in name, f'Do not use `{QUERYSET_DELIMITER}` in annotations names'
-                    annotation_fields.append(name)
-        return annotation_fields
-
-class AnnotationManager(models.Manager):
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        annotations = self.model.annotation_class.get_annotations('*')
-
-        current_request = get_current_request()
-        if current_request:
-            fields = current_request.GET.get('fields')
-            if fields:
-                annotations = self.model.annotation_class.get_annotations(fields)
-
-        return queryset.annotate(**annotations)
+        return [
+            name
+            for klass in [klass for klass in self.__class__.mro() if klass != AnnotationBase]
+            for name, attr in vars(klass).items() if inspect.isfunction(attr)
+        ]

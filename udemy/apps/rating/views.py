@@ -20,6 +20,3 @@ class RatingViewSet(
         ('default',): [IsAuthenticated, IsCreatorObject, IsEnrolled],
         ('retrieve', 'list'): [AllowAny],
     }
-
-    class Meta:
-        model = Rating

@@ -6,63 +6,34 @@ from udemy.apps.core.annotations import AnnotationBase
 class CourseAnnotations(AnnotationBase):
 
     def num_modules(self):
-        return {
-            'expression': models.Count,
-            'query_expression': 'modules',
-            'extra_kwargs': {
-                'distinct': True
-            }
-        }
+        return models.Count('modules', distinct=True)
 
     def num_lessons(self):
-        return {
-            'expression': models.Count,
-            'query_expression': 'lessons',
-            'extra_kwargs': {
-                'distinct': True
-            }
-        }
+        return models.Count('lessons', distinct=True)
 
     def num_contents(self):
-        return {
-            'expression': models.Count,
-            'query_expression': 'contents',
-            'extra_kwargs': {
-                'distinct': True
-            }
-        }
+        return models.Count('contents', distinct=True)
 
     def num_subscribers(self):
-        return {
-            'expression': models.Count,
-            'query_expression': 'students',
-            'extra_kwargs': {
-                'distinct': True
-            }
-        }
+        return models.Count('students', distinct=True)
+
+    def num_questions(self):
+        return models.Count('questions', distinct=True)
+
+    def num_quizzes(self):
+        return models.Count('quizzes', distinct=True)
+
+    def num_ratings(self):
+        return models.Count('ratings', distinct=True)
 
     def num_contents_info(self):
-        return [{
-            'annotation_name': f'num_{option}',
-            'expression': models.Count,
-            'query_expression': 'contents__id',
-            'filter_expressions': {'contents__content_type__model': option},
-        } for option in ('text', 'link', 'file', 'image')]
+        return {
+            f'num_{option}': models.Count('contents__id', filter=models.Q(contents__content_type__model=option))
+            for option in ('text', 'link', 'file', 'image')
+        }
 
     def rating_avg(self):
-        return {
-            'expression': models.Avg,
-            'query_expression': 'ratings__rating',
-            'extra_kwargs': {
-                'output_field': models.FloatField()
-            }
-        }
+        return models.Avg('ratings__rating', output_field=models.FloatField(), default=0)
 
-    def estimated_content_video_duration(self):
-        return {
-            'expression': models.Sum,
-            'query_expression': 'lessons__video_duration',
-            'extra_kwargs': {
-                'output_field': models.IntegerField()
-            }
-        }
+    def content_video_minute_duration(self):
+        return models.Sum('lessons__video_duration', output_field=models.IntegerField())

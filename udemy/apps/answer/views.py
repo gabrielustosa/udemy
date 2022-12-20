@@ -21,9 +21,6 @@ class AnswerViewSet(
     permission_classes = [IsAuthenticated, IsEnrolled, IsCreatorObject]
     lookup_url_kwarg = 'answer_id'
 
-    class Meta:
-        model = Answer
-
 
 class AnswerViewSetBase(AnswerViewSet):
 

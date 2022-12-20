@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db import models
 
 from udemy.apps.core.annotations import AnnotationBase
 
@@ -6,15 +6,7 @@ from udemy.apps.core.annotations import AnnotationBase
 class ActionAnnotations(AnnotationBase):
 
     def likes_count(self):
-        return {
-            'expression': Count,
-            'query_expression': 'actions__id',
-            'filter_expression': {'actions__action': 1},
-        }
+        return models.Count('actions__id', filter=models.Q(actions__action=1))
 
     def dislikes_count(self):
-        return {
-            'expression': Count,
-            'query_expression': 'actions__id',
-            'filter_expression': {'actions__action': 2},
-        }
+        return models.Count('actions__id', filter=models.Q(actions__action=2))

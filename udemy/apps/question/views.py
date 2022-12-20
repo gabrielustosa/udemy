@@ -16,6 +16,3 @@ class QuestionViewSet(
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [IsAuthenticated, IsEnrolled, IsCreatorObject]
-
-    class Meta:
-        model = Question

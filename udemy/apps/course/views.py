@@ -8,6 +8,7 @@ from udemy.apps.course.serializer import CourseSerializer
 
 
 class CourseViewSet(
+    view.AnnotationViewMixin,
     view.AnnotatePermissionMixin,
     view.ActionPermissionMixin,
     view.RelatedObjectViewMixin,
@@ -21,6 +22,3 @@ class CourseViewSet(
         ('create',): [IsAuthenticated],
         ('retrieve', 'list'): [AllowAny],
     }
-
-    class Meta:
-        model = Course

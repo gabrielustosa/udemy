@@ -4,7 +4,6 @@ from django.db import models
 
 from udemy.apps.action.models import Action
 from udemy.apps.answer.models import Answer
-from udemy.apps.core.annotations import AnnotationManager
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.course.models import Course
 from udemy.apps.lesson.models import Lesson
@@ -35,7 +34,6 @@ class Question(CreatorBase, TimeStampedBase):
     actions = GenericRelation(Action)
     answers = GenericRelation(Answer)
     annotation_class = QuestionAnnotations()
-    objects = AnnotationManager()
 
     def __str__(self):
         return self.title

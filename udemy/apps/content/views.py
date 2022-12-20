@@ -20,6 +20,3 @@ class ContentViewSet(
         ('default',): [IsAuthenticated, IsInstructor],
         ('retrieve', 'list'): [IsAuthenticated, IsEnrolled]
     }
-
-    class Meta:
-        model = Content

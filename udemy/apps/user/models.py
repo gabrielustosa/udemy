@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
+from udemy.apps.user.annotations import UserAnnotations
+
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -42,6 +44,7 @@ class User(AbstractUser):
     job_title = models.CharField(max_length=255)
     locale = models.CharField(max_length=255)
     bio = models.TextField()
+    annotation_class = UserAnnotations()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'username']

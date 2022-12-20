@@ -1,48 +1,16 @@
 from collections import OrderedDict
 
-from django.db.models import QuerySet
+from django.db.models import Prefetch
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 
 from rest_framework.exceptions import PermissionDenied
 
-from udemy.apps.core.annotations import QUERYSET_DELIMITER
 from udemy.apps.core.fields import RelatedObjectListSerializer
-from udemy.apps.core.paginator import PaginatorRelatedObject
+from udemy.apps.core.paginator import RelatedObjectPaginator
 
 
-class RelatedObjectAnnotationMixin:
-    @property
-    def related_objects_annotations(self):
-        annotations = {}
-        for field_name, fields in self.related_objects_fields.items():
-            annotation_class = getattr(self.get_related_object_model(field_name), 'annotation_class', None)
-            if annotation_class is not None:
-                additional_path = None if self.related_object_is_prefetch(field_name) else field_name
-                annotations[field_name] = annotation_class.get_annotations(*fields, additional_path=additional_path)
-        return annotations
-
-    def optimize_related_objects_annotations(self, queryset):
-        for annotations in self.related_objects_annotations.values():
-            queryset = queryset.annotate(**annotations)
-        return queryset
-
-    def to_representation(self, instance):
-        for field_name, annotations in self.related_objects_annotations.items():
-            if not self.related_object_is_prefetch(field_name):
-                related_instance = getattr(instance, field_name)
-
-                for annotation_name in annotations.keys():
-                    annotation_value = getattr(instance, annotation_name)
-
-                    annotation_name = annotation_name.split(QUERYSET_DELIMITER)[-1]
-
-                    setattr(related_instance, annotation_name, annotation_value)
-
-        return super().to_representation(instance)
-
-
-class RelatedObjectMixin(RelatedObjectAnnotationMixin):
+class RelatedObjectMixin:
 
     @classmethod
     def many_init(cls, *args, **kwargs):
@@ -50,18 +18,27 @@ class RelatedObjectMixin(RelatedObjectAnnotationMixin):
         return RelatedObjectListSerializer(*args, **kwargs)
 
     @cached_property
-    def related_objects_fields(self):
+    def related_objects_annotations(self):
+        annotations = {}
+        for field_name, fields in self.related_objects.items():
+            annotation_class = getattr(self.get_related_object_model(field_name), 'annotation_class', None)
+            if annotation_class is not None:
+                annotations[field_name] = annotation_class.get_annotations(*fields)
+        return annotations
+
+    @cached_property
+    def related_objects(self):
         related_fields = {}
         for field_name, fields in self.context.get('related_fields', {}).items():
-            if field_name in self.related_objects():
+            if field_name in self.get_related_objects():
                 related_fields[field_name] = fields
         return related_fields
 
-    def related_objects(self):
+    def get_related_objects(self):
         return getattr(self.Meta, 'related_objects', {})
 
     def _get_related_object_option(self, related_object, option_name, default=None):
-        options = self.related_objects().get(related_object)
+        options = self.get_related_objects().get(related_object)
         return options.get(option_name, default)
 
     def get_related_object_serializer(self, related_object):
@@ -82,14 +59,18 @@ class RelatedObjectMixin(RelatedObjectAnnotationMixin):
                 )
 
     def auto_optimize_related_object(self, queryset):
-        queryset = self.optimize_related_object_queryset(queryset)
-        queryset = self.optimize_related_objects_annotations(queryset)
-        return queryset
-
-    def optimize_related_object_queryset(self, queryset):
-        for field_name in self.related_objects_fields.keys():
+        for field_name in self.related_objects.keys():
+            model_annotations = self.related_objects_annotations.get(field_name)
+            if model_annotations:
+                queryset = queryset.prefetch_related(Prefetch(
+                    field_name,
+                    self.get_related_object_model(field_name).objects.annotate(**model_annotations).order_by('id')
+                ))
+                continue
             if self.related_object_is_prefetch(field_name):
-                queryset = queryset.prefetch_related(field_name)
+                queryset = queryset.prefetch_related(
+                    Prefetch(field_name, self.get_related_object_model(field_name).order_by('id'))
+                )
             else:
                 queryset = queryset.select_related(field_name)
         return queryset
@@ -104,7 +85,7 @@ class RelatedObjectMixin(RelatedObjectAnnotationMixin):
     def _get_related_objects_fields(self):
         related_objects_fields = OrderedDict()
 
-        for field_name, fields in self.related_objects_fields.items():
+        for field_name, fields in self.related_objects.items():
             self.check_related_object_permission(self.instance, field_name)
 
             Serializer = self.get_related_object_serializer(field_name)
@@ -114,8 +95,7 @@ class RelatedObjectMixin(RelatedObjectAnnotationMixin):
                 serializer_kwargs.update({
                     'many': True,
                     'filter': self._get_related_object_option(field_name, 'filter'),
-                    'annotations': self.related_objects_annotations.get(field_name),
-                    'paginator': PaginatorRelatedObject(
+                    'paginator': RelatedObjectPaginator(
                         related_object_name=field_name,
                         related_object_fields=fields,
                         request=self.context.get('request')

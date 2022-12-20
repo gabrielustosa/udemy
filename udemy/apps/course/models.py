@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.category.models import Category
-from udemy.apps.core.annotations import AnnotationManager
 from udemy.apps.core.models import TimeStampedBase, CreatorBase
 from udemy.apps.course.annotations import CourseAnnotations
 from udemy.apps.user.models import User
@@ -32,7 +31,6 @@ class Course(TimeStampedBase):
         Category,
         related_name='categories_courses',
     )
-    objects = AnnotationManager()
     annotation_class = CourseAnnotations()
 
     def __str__(self):

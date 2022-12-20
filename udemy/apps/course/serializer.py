@@ -84,14 +84,15 @@ class CourseSerializer(ModelSerializer):
     def get_url(self, instance):
         return f'https://udemy.com/course/{instance.slug}'
 
-    def related_objects(self):
-        related_objects = super().related_objects()
-        if self.context.get('request'):
+    def get_related_objects(self):
+        related_objects = super().get_related_objects()
+        user = getattr(self.context.get('request'), 'user', None)
+        if user:
             related_objects['notes']['filter'] = {
-                'creator': self.context.get('request').user
+                'creator': user
             }
             related_objects['lesson_relations']['filter'] = {
-                'creator': self.context.get('request').user
+                'creator': user
             }
         return related_objects
 

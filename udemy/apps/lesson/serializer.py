@@ -47,18 +47,19 @@ class LessonSerializer(ModelSerializer):
             ('module', 'course'): [IsInstructor],
         }
 
-        def get_related_objects(self):
-            related_objects = super().get_related_objects()
-            if self.context.get('request'):
-                related_objects['notes']['filter'] = {
-                    'creator': self.context.get('request').user
-                }
-            return related_objects
+    def get_related_objects(self):
+        related_objects = super().get_related_objects()
+        user = getattr(self.context.get('request'), 'user', None)
+        if user:
+            related_objects['notes']['filter'] = {
+                'creator': user
+            }
+        return related_objects
 
 
 class LessonRelationSerializer(ModelSerializer):
     class Meta:
         model = LessonRelation
-        fields = ('creator', 'lesson', 'course', 'done', 'created', 'modified')
+        fields = ('id', 'creator', 'lesson', 'course', 'done', 'created', 'modified')
         min_fields = ('creator', 'lesson', 'done')
         default_fields = (*min_fields, 'course')

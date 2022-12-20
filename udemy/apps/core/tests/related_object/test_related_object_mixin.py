@@ -50,7 +50,7 @@ class TestRelatedObjectMixin(TestCase):
             }
         }
 
-        assert related_serializer.related_objects() == expected_objects
+        assert related_serializer.get_related_objects() == expected_objects
 
     def test_get_related_object_serializer(self):
         test_serializer = RelatedObjectSerializer(self.related_object)
@@ -79,7 +79,7 @@ class TestRelatedObjectMixin(TestCase):
             'model_test': ['id', 'title']
         }
 
-        assert test_serializer.related_objects_fields == expected_related_objects_fields
+        assert test_serializer.related_objects == expected_related_objects_fields
 
     def test_get_related_object_model(self):
         test_serializer = RelatedObjectSerializer(self.related_object)

@@ -1,11 +1,36 @@
 import re
 
-from django.db.models import Exists, OuterRef, Value
+from django.db.models import Exists, OuterRef
 from django.utils.functional import cached_property
 
 from rest_framework.permissions import AllowAny
 
 from udemy.apps.course.models import Course
+
+
+class AnnotationViewMixin:
+    """
+    """
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        model = self.get_serializer_class().Meta.model
+
+        annotation_class = getattr(model, 'annotation_class', None)
+        if annotation_class:
+            annotations = None
+
+            fields = self.request.query_params.get('fields')
+            if fields:
+                annotations = annotation_class.get_annotations(fields)
+
+            if annotations is None:
+                annotations = annotation_class.get_annotations('*')
+
+            queryset = queryset.annotate(**annotations)
+
+        return queryset
 
 
 class DynamicFieldViewMixin:
@@ -78,7 +103,7 @@ class AnnotatePermissionMixin:
         queryset = super().get_queryset()
 
         if self.request.user.is_authenticated:
-            ref_name = 'id' if self.Meta.model == Course else 'course__id'
+            ref_name = 'id' if self.get_serializer_class().Meta.model == Course else 'course__id'
 
             queryset = queryset.annotate(is_enrolled=Exists(
                 self.request.user.enrolled_courses.filter(id=OuterRef(ref_name))

@@ -2,10 +2,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Manager
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import serializers as rest_serializer
+from rest_framework import serializers
 
 
-class GenericRelatedField(rest_serializer.Field):
+class GenericRelatedField(serializers.Field):
     """
     Represents a generic relation / foreign key. It's actually more of a wrapper, that delegates the logic to registered
     serializers based on the `Model` class.
@@ -31,7 +31,7 @@ class GenericRelatedField(rest_serializer.Field):
         try:
             serializer, Model = self.get_serializer_for_data(data)
         except ImproperlyConfigured as e:
-            raise rest_serializer.ValidationError(e)
+            raise serializers.ValidationError(e)
         ret = serializer.to_internal_value(data)
 
         model_object = Model.objects.create(**ret)
@@ -46,7 +46,7 @@ class GenericRelatedField(rest_serializer.Field):
         for klass in instance.__class__.mro():
             if klass in self.serializers:
                 return self.serializers[klass]
-        raise rest_serializer.ValidationError(self.error_messages['no_model_match'])
+        raise serializers.ValidationError(self.error_messages['no_model_match'])
 
     def get_serializer_for_data(self, value):
         serializer = model = None
@@ -61,7 +61,7 @@ class GenericRelatedField(rest_serializer.Field):
         return serializer, model
 
 
-class AnnotationDictField(rest_serializer.Field):
+class AnnotationDictField(serializers.Field):
 
     def __init__(self, *args, **kwargs):
         self.children = kwargs.pop('children')
@@ -84,7 +84,7 @@ class AnnotationDictField(rest_serializer.Field):
         }
 
 
-class AnnotationField(rest_serializer.Field):
+class AnnotationField(serializers.Field):
 
     def __init__(self, *args, **kwargs):
         self.child = kwargs.pop('child')
@@ -105,11 +105,10 @@ class AnnotationField(rest_serializer.Field):
         return self.child.to_representation(value)
 
 
-class RelatedObjectListSerializer(rest_serializer.ListSerializer):
+class RelatedObjectListSerializer(serializers.ListSerializer):
     def __init__(self, *args, **kwargs):
         self.filter = kwargs.pop('filter', None)
         self.paginator = kwargs.pop('paginator', None)
-        self.annotations = kwargs.pop('annotations', None)
 
         super().__init__(*args, **kwargs)
 
@@ -119,9 +118,6 @@ class RelatedObjectListSerializer(rest_serializer.ListSerializer):
                 data = data.filter(**self.filter)
             iterable = data.all()
 
-            if self.annotations:
-                iterable = iterable.annotate(**self.annotations)
-
             if self.paginator:
                 iterable = self.paginator.paginate_queryset(iterable)
         else:
@@ -129,9 +125,7 @@ class RelatedObjectListSerializer(rest_serializer.ListSerializer):
 
         ret = [self.child.to_representation(item) for item in iterable]
 
-        if self.paginator:
-            if self.paginator.num_pages == 1:
-                return ret
+        if self.paginator and self.paginator.num_pages > 1:
             return self.paginator.get_paginated_data(ret)
 
         return ret

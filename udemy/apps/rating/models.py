@@ -6,7 +6,6 @@ from django.utils.translation import gettext_lazy as _
 
 from udemy.apps.action.models import Action
 from udemy.apps.answer.models import Answer
-from udemy.apps.core.annotations import AnnotationManager
 from udemy.apps.core.models import CreatorBase, TimeStampedBase
 from udemy.apps.course.models import Course
 from udemy.apps.rating.annotations import RatingAnnotations
@@ -28,7 +27,6 @@ class Rating(CreatorBase, TimeStampedBase):
     actions = GenericRelation(Action)
     answers = GenericRelation(Answer)
     annotation_class = RatingAnnotations()
-    objects = AnnotationManager()
 
     class Meta:
         ordering = ['created', ]

@@ -16,6 +16,3 @@ class NoteViewSet(
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated, IsEnrolled, IsCreatorObject]
-
-    class Meta:
-        model = Note

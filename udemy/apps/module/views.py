@@ -20,6 +20,3 @@ class ModuleViewSet(
         ('default',): [IsAuthenticated, IsInstructor],
         ('retrieve', 'list'): [IsAuthenticated, IsEnrolled]
     }
-
-    class Meta:
-        model = Module
