@@ -4,10 +4,16 @@ from collections import ChainMap, OrderedDict
 
 from django.utils.functional import cached_property
 
-from rest_framework.fields import _UnvalidatedField
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ReadOnlyField
 
 from udemy.apps.core.fields import AnnotationDictField, AnnotationField
+
+
+def _get_rest_field_by_annotation(annotation):
+    try:
+        return ModelSerializer.serializer_field_mapping[annotation.output_field.__class__]()
+    except (AttributeError, KeyError):
+        return ReadOnlyField()
 
 
 class AnnotationBase:
@@ -19,49 +25,39 @@ class AnnotationBase:
 
         return annotation_fields
 
-    def _get_rest_field_by_annotation(self, annotation):
-        try:
-            output_field = annotation.output_field
-        except AttributeError:
-            return _UnvalidatedField()
-        try:
-            return ModelSerializer.serializer_field_mapping[output_field.__class__]()
-        except KeyError:
-            return _UnvalidatedField()
-
     def get_annotation_serializer_field(self, annotation_name):
-        annotation_info = self.get_annotation_info(annotation_name)
+        annotation = self.get_annotation(annotation_name)
 
-        if isinstance(annotation_info, dict):
+        if isinstance(annotation, dict):
             return AnnotationDictField(children=[
                 AnnotationField(
-                    annotation_name=name,
-                    child=self._get_rest_field_by_annotation(annotation)
+                    annotation_name=annotation_name,
+                    child=_get_rest_field_by_annotation(annotation)
                 )
-                for name, annotation in annotation_info.items()
+                for annotation_name, annotation in annotation.items()
             ])
 
-        return AnnotationField(child=self._get_rest_field_by_annotation(annotation_info))
+        return AnnotationField(annotation_name=annotation_name, child=_get_rest_field_by_annotation(annotation))
 
-    def get_annotation_info(self, annotation_name):
+    def get_annotation(self, annotation_name):
         annotation = getattr(self, annotation_name, None)
         if annotation is None:
             return None
         return annotation()
 
     def assemble_annotation(self, annotation_name):
-        annotation_info = self.get_annotation_info(annotation_name)
+        annotation = self.get_annotation(annotation_name)
 
-        if isinstance(annotation_info, dict):
-            return annotation_info
+        if isinstance(annotation, dict):
+            return annotation
 
-        return {annotation_name: annotation_info}
+        return {annotation_name: annotation}
 
     def get_annotations(self, *fields):
         fields = self.intersection_fields(fields)
 
         annotations_list = [self.assemble_annotation(field) for field in fields]
-        return dict(ChainMap(*annotations_list))
+        return ChainMap(*annotations_list)
 
     def intersection_fields(self, fields):
         if '@all' in fields or '*' in fields:

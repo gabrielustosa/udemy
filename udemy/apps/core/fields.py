@@ -68,11 +68,10 @@ class AnnotationDictField(serializers.Field):
         kwargs['read_only'] = True
 
         super().__init__(*args, **kwargs)
-        [child.bind('', self) for child in self.children]
 
     def get_attribute(self, instance):
         return {
-            child.field_name: child.get_attribute(instance)
+            child.annotation_name: child.get_attribute(instance)
             for child in self.children
         }
 
@@ -93,13 +92,8 @@ class AnnotationField(serializers.Field):
 
         super().__init__(*args, **kwargs)
 
-    def bind(self, field_name, parent):
-        if self.annotation_name is not None:
-            field_name = self.annotation_name
-        return super().bind(field_name, parent)
-
     def get_attribute(self, instance):
-        return getattr(instance, self.field_name, None)
+        return getattr(instance, self.annotation_name, None)
 
     def to_representation(self, value):
         return self.child.to_representation(value)

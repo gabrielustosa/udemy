@@ -15,7 +15,8 @@ class AnnotationViewMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        model = self.get_serializer_class().Meta.model
+        serializer = self.get_serializer_class()
+        model = serializer.Meta.model
 
         annotation_class = getattr(model, 'annotation_class', None)
         if annotation_class:
@@ -23,7 +24,8 @@ class AnnotationViewMixin:
 
             fields = self.request.query_params.get('fields')
             if fields:
-                annotations = annotation_class.get_annotations(fields)
+                fields = serializer(fields=fields.split(',')).fields.keys()
+                annotations = annotation_class.get_annotations(*fields)
 
             if annotations is None:
                 annotations = annotation_class.get_annotations('*')
@@ -65,7 +67,7 @@ class RelatedObjectViewMixin:
         return queryset
 
     @cached_property
-    def related_fields(self):
+    def related_objects(self):
         nested_fields = dict()
         for field_name, fields in self.request.query_params.items():
             match = re.search(r'fields\[([A-Za-z0-9_]+)]', field_name)
@@ -75,11 +77,11 @@ class RelatedObjectViewMixin:
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['related_fields'] = self.related_fields
+        context['related_objects'] = self.related_objects
         return context
 
     def get_auto_optimized_queryset(self, queryset):
-        serializer = self.get_serializer_class()(context={'related_fields': self.related_fields})
+        serializer = self.get_serializer_class()(context={'related_objects': self.related_objects})
         queryset = serializer.auto_optimize_related_object(queryset)
         return queryset
 

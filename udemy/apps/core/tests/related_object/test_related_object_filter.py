@@ -32,7 +32,7 @@ class TestRelatedObjectFilter(TestCase):
         ModelRelatedObject.objects.create(title='no_test', model_test=model_test)
 
         serializer = ModelTestSerializer(fields=('id', 'title', 'model_related'),
-                                         context={'related_fields': {'model_related': ['@all']}})
+                                         context={'related_objects': {'model_related': ['@all']}})
         data = serializer.to_representation(model_test)
 
         expected_data = {
@@ -62,7 +62,7 @@ class TestRelatedObjectFilter(TestCase):
         ModelRelatedObject.objects.create(title='no_test', model_test=model_test)
 
         serializer = ModelTestSerializer(fields=('id', 'title', 'model_related'),
-                                         context={'related_fields': {'model_related': ['@all']}})
+                                         context={'related_objects': {'model_related': ['@all']}})
         data = serializer.to_representation(model_test)
 
         expected_data = {
@@ -74,7 +74,7 @@ class TestRelatedObjectFilter(TestCase):
         assert data == expected_data
 
     def test_related_object_filter_kwargs(self):
-        serializer = ModelTestSerializer(context={'related_fields': {'model_related': ['@all']}})
+        serializer = ModelTestSerializer(context={'related_objects': {'model_related': ['@all']}})
         filter_kwargs = serializer._get_related_object_option('model_related', 'filter')
 
         assert filter_kwargs == {'title__startswith': 'test'}

@@ -52,7 +52,7 @@ class TestRelatedObjectAnnotations(TestCase):
         self.related_object = ModelRelatedObject.objects.create(title='related_test', model_test=self.model_test)
 
     def test_related_object_annotations_dict(self):
-        context = {'related_fields': {'model_test': ['test_field', 'custom_field']}}
+        context = {'related_objects': {'model_test': ['test_field', 'custom_field']}}
         related_object = ModelRelatedObject.objects.get(id=self.related_object.id)
 
         serializer = RelatedObjectSerializer(related_object, context=context)

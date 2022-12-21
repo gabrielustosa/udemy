@@ -33,7 +33,7 @@ class CourseAnnotations(AnnotationBase):
         }
 
     def rating_avg(self):
-        return models.Avg('ratings__rating', output_field=models.FloatField(), default=0)
+        return models.Avg('ratings__rating', default=0)
 
     def content_video_minute_duration(self):
-        return models.Sum('lessons__video_duration', output_field=models.IntegerField())
+        return models.Sum('lessons__video_duration', output_field=models.IntegerField(), default=0)

@@ -8,6 +8,7 @@ from udemy.apps.module.serializer import ModuleSerializer
 
 
 class ModuleViewSet(
+    view.AnnotationViewMixin,
     view.ActionPermissionMixin,
     view.RelatedObjectViewMixin,
     view.AnnotatePermissionMixin,

@@ -68,7 +68,7 @@ class TestRelatedObjectMixin(TestCase):
 
     def test_related_objects_fields(self):
         context = {
-            'related_fields': {
+            'related_objects': {
                 'models_tests': ['id', 'title'], 'model_test': ['id', 'title'], 'invalid_model': ['id', 'name']
             }
         }

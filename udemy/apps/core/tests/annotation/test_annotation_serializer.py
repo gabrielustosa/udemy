@@ -19,13 +19,13 @@ class TestAnnotationSerializer(TestCase):
         self.model_test = ModelTest.objects.create(title='a')
 
     def test_annotation_rest_serializer_field(self):
-        annotation_info = self.annotation_class.get_annotation_info('annotation_two')
+        annotation_info = self.annotation_class.get_annotation('annotation_two')
         rest_serializer_field = self.annotation_class.get_rest_serializer_field(annotation_info, 'annotation_two')
 
         assert isinstance(rest_serializer_field, IntegerField)
 
     def test_annotation_rest_serializer_field_assert_error(self):
-        annotation_info = self.annotation_class.get_annotation_info('annotation_one')
+        annotation_info = self.annotation_class.get_annotation('annotation_one')
         with self.assertRaises(AssertionError):
             self.annotation_class.get_rest_serializer_field(annotation_info, 'annotation_one')
 

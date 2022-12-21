@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 from udemy.apps.core.models import TimeStampedBase, OrderedModel, CreatorBase
 from udemy.apps.course.models import Course
 from udemy.apps.module.models import Module
+from udemy.apps.quiz.annotations import QuizAnnotations
 
 
 class Quiz(TimeStampedBase, OrderedModel):
@@ -27,6 +28,7 @@ class Quiz(TimeStampedBase, OrderedModel):
         on_delete=models.CASCADE,
     )
     order_in_respect = ('course', 'module')
+    annotation_class = QuizAnnotations()
 
 
 class Question(TimeStampedBase, OrderedModel):

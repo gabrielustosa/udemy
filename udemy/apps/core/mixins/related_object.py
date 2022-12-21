@@ -19,20 +19,22 @@ class RelatedObjectMixin:
 
     @cached_property
     def related_objects_annotations(self):
-        annotations = {}
+        object_annotations = {}
         for field_name, fields in self.related_objects.items():
             annotation_class = getattr(self.get_related_object_model(field_name), 'annotation_class', None)
             if annotation_class is not None:
-                annotations[field_name] = annotation_class.get_annotations(*fields)
-        return annotations
+                annotations = annotation_class.get_annotations(*fields)
+                if annotations:
+                    object_annotations[field_name] = annotations
+        return object_annotations
 
     @cached_property
     def related_objects(self):
-        related_fields = {}
-        for field_name, fields in self.context.get('related_fields', {}).items():
+        related_objects = {}
+        for field_name, fields in self.context.get('related_objects', {}).items():
             if field_name in self.get_related_objects():
-                related_fields[field_name] = fields
-        return related_fields
+                related_objects[field_name] = fields
+        return related_objects
 
     def get_related_objects(self):
         return getattr(self.Meta, 'related_objects', {})
@@ -58,21 +60,29 @@ class RelatedObjectMixin:
                     detail=f'You do not have permission to access the related object `{related_object_name}`'
                 )
 
-    def auto_optimize_related_object(self, queryset):
-        for field_name in self.related_objects.keys():
-            model_annotations = self.related_objects_annotations.get(field_name)
-            if model_annotations:
-                queryset = queryset.prefetch_related(Prefetch(
+    def optimize_related_object_annotations(self, queryset):
+        for field_name, annotations in self.related_objects_annotations.items():
+            queryset = queryset.prefetch_related(
+                Prefetch(
                     field_name,
-                    self.get_related_object_model(field_name).objects.annotate(**model_annotations).order_by('id')
-                ))
-                continue
+                    self.get_related_object_model(field_name).objects.annotate(**annotations).order_by('id')
+                )
+            )
+        return queryset
+
+    def optimize_related_objects(self, queryset):
+        for field_name in set(self.related_objects.keys()) - set(self.related_objects_annotations.keys()):
             if self.related_object_is_prefetch(field_name):
                 queryset = queryset.prefetch_related(
-                    Prefetch(field_name, self.get_related_object_model(field_name).order_by('id'))
+                    Prefetch(field_name, self.get_related_object_model(field_name).objects.order_by('id'))
                 )
             else:
                 queryset = queryset.select_related(field_name)
+        return queryset
+
+    def auto_optimize_related_object(self, queryset):
+        queryset = self.optimize_related_objects(queryset)
+        queryset = self.optimize_related_object_annotations(queryset)
         return queryset
 
     def get_related_object_model(self, field_name):

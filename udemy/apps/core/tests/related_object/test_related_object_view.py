@@ -66,14 +66,14 @@ class TestRelatedObjectView(TestCase):
         view = RelatedObjectViewSet(request=request)
         request.query_params = {'teste': 1, 'new': 2, 'fields[model_test]': 'id,name'}
 
-        assert view.related_fields == {'model_test': ['id', 'name']}
+        assert view.related_objects == {'model_test': ['id', 'name']}
 
     def test_fields_in_serializer_context(self):
         view = RelatedObjectViewSet(request=request)
         view.format_kwarg = None
         request.query_params = {'teste': 1, 'new': 2, 'fields[model_test]': 'id,name'}
 
-        assert view.get_serializer_context()['related_fields'] == {'model_test': ['id', 'name']}
+        assert view.get_serializer_context()['related_objects'] == {'model_test': ['id', 'name']}
 
     def test_related_object_foreign_key_optimization(self):
         url = reverse('related-retrieve', kwargs={'pk': self.related_object.id})

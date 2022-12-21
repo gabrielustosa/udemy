@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.permissions import IsAuthenticated
 
 from udemy.apps.category.serializer import CategorySerializer
 from udemy.apps.core.serializer import ModelSerializer
@@ -79,7 +78,7 @@ class CourseSerializer(ModelSerializer):
             }
         }
         min_fields = ('id', 'title', 'url')
-        default_fields = (*min_fields, 'price', 'is_paid', 'instructors')
+        default_fields = (*min_fields, 'price', 'is_paid')
 
     def get_url(self, instance):
         return f'https://udemy.com/course/{instance.slug}'

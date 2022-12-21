@@ -38,7 +38,7 @@ class TestRelatedObjectSerializer(TestCase):
         self.related_object.models_tests.add(self.model_test)
 
     def test_related_object_serializer_foreign(self):
-        context = {'related_fields': {'model_test': ['id', 'title']}}
+        context = {'related_objects': {'model_test': ['id', 'title']}}
         related_serializer = RelatedObjectSerializer(self.related_object, context=context)
 
         expected_data = {
@@ -54,7 +54,7 @@ class TestRelatedObjectSerializer(TestCase):
         assert related_serializer.data == expected_data
 
     def test_related_object_serializer_many_to_many(self):
-        context = {'related_fields': {'models_tests': ['id', 'title']}}
+        context = {'related_objects': {'models_tests': ['id', 'title']}}
         related_serializer = RelatedObjectSerializer(self.related_object, context=context)
 
         expected_data = {
@@ -72,7 +72,7 @@ class TestRelatedObjectSerializer(TestCase):
         assert related_serializer.data == expected_data
 
     def test_related_object_serializer_many_to_one(self):
-        context = {'related_fields': {'model_related': ['id', 'title']}}
+        context = {'related_objects': {'model_related': ['id', 'title']}}
         related_serializer = ModelTestSerializer(self.model_test, fields=('id', 'model_related'), context=context)
 
         expected_data = {
@@ -88,7 +88,7 @@ class TestRelatedObjectSerializer(TestCase):
         assert related_serializer.data == expected_data
 
     def test_related_object_serializer_with_two_related_objects(self):
-        context = {'related_fields': {'models_tests': ['id', 'title'], 'model_test': ['id', 'title']}}
+        context = {'related_objects': {'models_tests': ['id', 'title'], 'model_test': ['id', 'title']}}
         related_serializer = RelatedObjectSerializer(self.related_object, context=context)
 
         expected_data = {
@@ -109,7 +109,7 @@ class TestRelatedObjectSerializer(TestCase):
         assert related_serializer.data == expected_data
 
     def test_related_object_serializer_with_invalid_related_object(self):
-        context = {'related_fields': {'invalid_model': ['id', 'title']}}
+        context = {'related_objects': {'invalid_model': ['id', 'title']}}
         related_serializer = RelatedObjectSerializer(self.related_object, context=context)
 
         expected_data = {
